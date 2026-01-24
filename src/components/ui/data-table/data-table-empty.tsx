@@ -78,3 +78,4 @@ export function DataTableEmpty({
     </tr>
   );
 }
+

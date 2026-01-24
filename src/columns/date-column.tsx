@@ -151,3 +151,4 @@ export class DateColumn<TData> extends BaseColumn<TData, DateColumnConfig<TData>
         };
     }
 }
+

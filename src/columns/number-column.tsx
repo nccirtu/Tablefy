@@ -125,3 +125,4 @@ export class NumberColumn<TData> extends BaseColumn<TData, NumberColumnConfig<TD
         };
     }
 }
+

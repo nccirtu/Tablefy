@@ -91,3 +91,4 @@ export class ImageColumn<TData> extends BaseColumn<TData, ImageColumnConfig<TDat
         };
     }
 }
+

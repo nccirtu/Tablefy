@@ -21,3 +21,4 @@ export interface SearchConfig {
   columns?: string[]; // Which columns to search
   debounce?: number;
 }
+

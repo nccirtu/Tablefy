@@ -493,3 +493,4 @@ export class IconColumn<TData> extends BaseColumn<TData, IconColumnConfig<TData>
         };
     }
 }
+

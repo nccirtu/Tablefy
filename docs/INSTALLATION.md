@@ -153,3 +153,4 @@ If you see TypeScript errors:
 - Read the [Usage Guide](./USAGE.md) for detailed examples
 - Check out the [Column Types](./USAGE.md#column-types) reference
 - Explore [Advanced Features](./USAGE.md#advanced-features)
+

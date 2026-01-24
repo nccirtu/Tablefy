@@ -560,3 +560,4 @@ const columns = TableSchema.make<TeamMember>()
 ```
 
 For more examples and advanced use cases, check the [GitHub repository](https://github.com/yourusername/tablefy).
+

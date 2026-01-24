@@ -183,3 +183,4 @@ export class ProgressColumn<TData> extends BaseColumn<TData, ProgressColumnConfi
         };
     }
 }
+
