@@ -132,3 +132,4 @@ export class BadgeColumn<TData> extends BaseColumn<
     };
   }
 }
+

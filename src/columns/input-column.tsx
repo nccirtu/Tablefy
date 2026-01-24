@@ -30,3 +30,4 @@ export const InputColumn = (config: InputColumnConfig) => {
 };
 
 export { InputColumn as inputColumn };
+

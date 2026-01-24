@@ -87,3 +87,4 @@ export abstract class BaseColumn<TData, TConfig extends BaseColumnConfig<TData>>
         }
     }
 }
+

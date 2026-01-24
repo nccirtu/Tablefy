@@ -113,3 +113,4 @@ export class TextColumn<TData> extends BaseColumn<TData, FormattedColumnConfig<T
         };
     }
 }
+

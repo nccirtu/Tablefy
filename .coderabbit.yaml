@@ -2,10 +2,10 @@
 language: de-DE
 reviews:
   profile: "assertive"
-  # Strikte Filter für React/TypeScript Package
   path_filters:
     - "src/**"
     - "docs/**"
+    - "**/*.md"
     - "!**/node_modules/**"
     - "!**/dist/**"
     - "!**/*.d.ts"
@@ -13,97 +13,11 @@ reviews:
     - "!package-lock.json"
     - "!yarn.lock"
     - "!pnpm-lock.yaml"
-instructions: |
-  Du bist ein Elite-Experte für TypeScript, React 18, TanStack Table und shadcn/ui.
-  Erzwinge die 'Tablefy Best Practices' strikt:
-
-  ## Architektur & TypeScript
-  - TypeScript 5.0+: Nutze strikte Typisierung, keine 'any' Types
-  - Explizite Return Types für alle Funktionen
-  - Generics für wiederverwendbare Komponenten
-  - Type Guards für Runtime-Validierung
-  - Nutze 'unknown' statt 'any' wo nötig
-
-  ## React & Komponenten
-  - React 18: Nutze funktionale Komponenten mit Hooks
-  - "use client" Direktive für Client-Komponenten
-  - Prop Types mit TypeScript Interfaces
-  - Keine Default Exports, nur Named Exports
-  - Komponenten müssen memoized werden wenn sinnvoll (React.memo)
-
-  ## Builder Pattern
-  - Fluent API: Alle Builder-Methoden müssen 'this' zurückgeben
-  - Chainable Methods: Methoden müssen verkettbar sein
-  - Type-Safe: Builder müssen generische Typen nutzen
-  - Immutability: Builder sollten unveränderliche Konfigurationen erstellen
-
-  ## TanStack Table
-  - Nutze ColumnDef<TData, TValue> für Spalten-Definitionen
-  - Keine direkten Table-Manipulationen, nur über API
-  - Type-Safe Accessors mit generischen Typen
-  - Custom Cell Renderer mit korrekten Props
-
-  ## shadcn/ui Integration
-  - Importiere Komponenten aus '@/components/ui'
-  - Nutze cn() Utility für Klassennamen
-  - Tailwind CSS Klassen bevorzugen
-  - Keine inline Styles, nur Tailwind
-
-  ## Code-Organisation
-  - Separate Dateien für Types (src/lib/types/)
-  - Builder-Klassen in src/lib/builders/
-  - Komponenten in src/components/
-  - Columns in src/columns/
-  - Index-Dateien für Re-Exports
-
-  ## Performance
-  - Lazy Loading für große Komponenten
-  - Memoization für teure Berechnungen
-  - Virtualisierung für große Listen
-  - Debouncing für Search/Filter
-
-  ## Testing (wenn vorhanden)
-  - Vitest für Unit Tests
-  - React Testing Library für Komponenten-Tests
-  - Type-Tests für TypeScript Definitionen
-  - E2E Tests mit Playwright
-
-  ## Dokumentation
-  - JSDoc für öffentliche APIs
-  - README mit Beispielen
-  - TypeScript Typen als Dokumentation
-  - Inline-Kommentare nur für komplexe Logik
-
-  ## Package-Spezifisch
-  - Exports über src/index.ts
-  - Peer Dependencies korrekt definieren
-  - Build mit Rollup für ESM und CJS
-  - Type Declarations (.d.ts) generieren
-
-  ## Code Style
-  - 2 Spaces Indentation
-  - Single Quotes für Strings
-  - Trailing Commas
-  - Semicolons erforderlich
-  - Arrow Functions bevorzugen
-  - Destructuring wo möglich
-
-  ## Fehlerbehandlung
-  - Try-Catch für async Operationen
-  - Error Boundaries für React Komponenten
-  - Aussagekräftige Error Messages
-  - Type-Safe Error Handling
-
-  ## Accessibility
-  - ARIA Labels für interaktive Elemente
-  - Keyboard Navigation
-  - Screen Reader Support
-  - Semantic HTML
-
-  Prüfe besonders auf:
-  - Fehlende Type Definitions
-  - Nicht verkettbare Builder-Methoden
-  - Fehlende Exports in Index-Dateien
-  - Inkonsistente Namenskonventionen
-  - Performance-Probleme bei großen Datasets
-  - Fehlende Dokumentation für öffentliche APIs
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false

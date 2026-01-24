@@ -22,3 +22,4 @@ export class TableSchema<TData> {
     return this.columnBuilders.map((builder) => builder.build());
   }
 }
+

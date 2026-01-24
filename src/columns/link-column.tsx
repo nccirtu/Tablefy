@@ -160,3 +160,4 @@ export class LinkColumn<TData> extends BaseColumn<TData, LinkColumnConfig<TData>
         };
     }
 }
+

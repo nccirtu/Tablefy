@@ -14,3 +14,4 @@ export const DataTableSchema = (props: DataTableSchemaProps) => {
     </div>
   );
 };
+

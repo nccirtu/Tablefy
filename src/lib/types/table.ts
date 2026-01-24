@@ -53,3 +53,4 @@ export interface DataTableConfig<TData> {
   striped?: boolean;
   hoverable?: boolean;
 }
+

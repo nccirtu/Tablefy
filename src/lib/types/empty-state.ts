@@ -18,3 +18,4 @@ export interface EmptyStateConfig {
   // Different states
   variant?: "default" | "search" | "filter" | "error" | "custom";
 }
+

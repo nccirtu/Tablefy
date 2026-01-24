@@ -22,3 +22,4 @@ export interface HeaderAction<TData = unknown> {
   // Dropdown for multiple actions
   children?: Omit<HeaderAction<TData>, "children" | "bulk">[];
 }
+

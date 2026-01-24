@@ -46,3 +46,4 @@ export interface ActionConfig<TData> {
     hidden?: (row: TData) => boolean;
     disabled?: (row: TData) => boolean;
 }
+

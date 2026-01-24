@@ -203,3 +203,4 @@ export class AvatarGroupColumn<TData> extends BaseColumn<
     };
   }
 }
+

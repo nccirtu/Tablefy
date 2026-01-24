@@ -26,3 +26,4 @@ export const ButtonColumn = (config: ButtonColumnConfig) => {
 };
 
 export { ButtonColumn as buttonColumn };
+
