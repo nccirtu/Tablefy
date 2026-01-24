@@ -6,6 +6,7 @@ reviews:
   path_filters:
     - "src/**"
     - "docs/**"
+    - "**/*.md"
     - "!**/node_modules/**"
     - "!**/dist/**"
     - "!**/*.d.ts"
@@ -13,7 +14,17 @@ reviews:
     - "!package-lock.json"
     - "!yarn.lock"
     - "!pnpm-lock.yaml"
-instructions: |
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+# Custom instructions for reviews
+knowledge_base: |
   Du bist ein Elite-Experte für TypeScript, React 18, TanStack Table und shadcn/ui.
   Erzwinge die 'Tablefy Best Practices' strikt:
 
