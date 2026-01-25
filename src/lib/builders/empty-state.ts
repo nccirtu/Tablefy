@@ -90,5 +90,64 @@ export class EmptyStateBuilder {
   build(): EmptyStateConfig {
     return this.config;
   }
-}
 
+  // Static helper methods for quick configuration
+  static noData(config: {
+    title: string;
+    description: string;
+    createLabel?: string;
+    createHref?: string;
+    createOnClick?: () => void;
+  }): EmptyStateConfig {
+    return {
+      variant: "default",
+      title: config.title,
+      description: config.description,
+      action: config.createLabel
+        ? {
+            label: config.createLabel,
+            href: config.createHref,
+            onClick: config.createOnClick,
+          }
+        : undefined,
+    };
+  }
+
+  static noSearchResults(config: {
+    title: string;
+    description: string;
+    clearLabel?: string;
+    onClear?: () => void;
+  }): EmptyStateConfig {
+    return {
+      variant: "search",
+      title: config.title,
+      description: config.description,
+      action: config.clearLabel
+        ? {
+            label: config.clearLabel,
+            onClick: config.onClear,
+          }
+        : undefined,
+    };
+  }
+
+  static noFilterResults(config: {
+    title: string;
+    description: string;
+    resetLabel?: string;
+    onReset?: () => void;
+  }): EmptyStateConfig {
+    return {
+      variant: "filter",
+      title: config.title,
+      description: config.description,
+      action: config.resetLabel
+        ? {
+            label: config.resetLabel,
+            onClick: config.onReset,
+          }
+        : undefined,
+    };
+  }
+}
