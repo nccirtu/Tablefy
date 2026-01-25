@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -127,12 +128,19 @@ export class InputColumn<TData> extends BaseColumn<
         );
       },
       cell: ({ getValue, row }) => {
-        const value = getValue() as string;
+        const initialValue = getValue() as string;
+        const [localValue, setLocalValue] = useState(initialValue || "");
         const isDisabled =
           typeof disabled === "function" ? disabled(row.original) : disabled;
 
+        // Sync local value with table data when it changes externally
+        useEffect(() => {
+          setLocalValue(initialValue || "");
+        }, [initialValue]);
+
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           const newValue = e.target.value;
+          setLocalValue(newValue);
           if (onChange) {
             onChange(row.original, newValue);
           }
@@ -140,7 +148,7 @@ export class InputColumn<TData> extends BaseColumn<
 
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           const newValue = e.target.value;
-          if (onSave && newValue !== value) {
+          if (onSave && newValue !== initialValue) {
             onSave(row.original, newValue);
           }
         };
@@ -148,7 +156,7 @@ export class InputColumn<TData> extends BaseColumn<
         return (
           <Input
             type={type || "text"}
-            value={value || ""}
+            value={localValue}
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder={placeholder}

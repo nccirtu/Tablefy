@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -109,11 +110,18 @@ export class SelectColumn<TData> extends BaseColumn<
         );
       },
       cell: ({ getValue, row }) => {
-        const value = getValue() as string;
+        const initialValue = getValue() as string;
+        const [localValue, setLocalValue] = useState(initialValue || "");
         const isDisabled =
           typeof disabled === "function" ? disabled(row.original) : disabled;
 
+        // Sync local value with table data when it changes externally
+        useEffect(() => {
+          setLocalValue(initialValue || "");
+        }, [initialValue]);
+
         const handleValueChange = (newValue: string) => {
+          setLocalValue(newValue);
           if (onValueChange) {
             onValueChange(row.original, newValue);
           }
@@ -121,7 +129,7 @@ export class SelectColumn<TData> extends BaseColumn<
 
         return (
           <Select
-            value={value || ""}
+            value={localValue}
             onValueChange={handleValueChange}
             disabled={isDisabled}
           >
