@@ -17,7 +17,7 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PaginationConfig } from "@/lib/types";
+import { PaginationConfig } from "@nccirtu/tablefy";
 
 interface DataTablePaginationProps<TData> {
   table: TanstackTable<TData>;
@@ -64,7 +64,9 @@ export function DataTablePagination<TData>({
             </span>
             <Select
               value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value: string) => table.setPageSize(Number(value))}
+              onValueChange={(value: string) =>
+                table.setPageSize(Number(value))
+              }
             >
               <SelectTrigger className="h-8 w-[70px]">
                 <SelectValue

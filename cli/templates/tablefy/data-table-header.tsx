@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HeaderAction, SearchConfig } from "@/lib/types";
+import { HeaderAction, SearchConfig } from "@nccirtu/tablefy";
 
 interface DataTableHeaderProps<TData> {
   title?: string;
@@ -176,7 +176,9 @@ export function DataTableHeader<TData>({
               <Input
                 placeholder={search.placeholder || "Suchen..."}
                 value={searchValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange?.(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onSearchChange?.(e.target.value)
+                }
                 className="pl-9 pr-9"
               />
               {searchValue && (

@@ -23,11 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DataTableConfig } from "@/lib/types";
+import { DataTableConfig } from "../lib/types";
 import { DataTableHeader } from "./data-table-header";
 import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";
-import { EmptyStateBuilder } from "@/lib/builders";
+import { EmptyStateBuilder } from "../lib/builders";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -67,7 +67,8 @@ export function DataTable<TData, TValue>({
       globalFilter,
     },
     enableRowSelection: config.enableRowSelection ?? false,
-    enableMultiRowSelection: config.enableMultiRowSelection ?? config.enableRowSelection ?? false,
+    enableMultiRowSelection:
+      config.enableMultiRowSelection ?? config.enableRowSelection ?? false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
