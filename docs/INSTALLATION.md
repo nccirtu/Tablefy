@@ -1,156 +1,227 @@
-# Installation Guide
+# Tablefy - Installation Guide
 
-## Quick Install
+## 🚀 Quick Install (Recommended)
 
-Install Tablefy via npm:
-
-```bash
-npm install tablefy
-```
-
-Or with yarn:
+The easiest way to set up Tablefy is using the CLI:
 
 ```bash
-yarn add tablefy
+# Install the package
+npm install @nccirtu/tablefy
+
+# Run the setup wizard
+npx tablefy init
 ```
 
-Or with pnpm:
+The CLI will automatically:
+1. ✅ Check if shadcn/ui is initialized
+2. ✅ Install missing peer dependencies
+3. ✅ Install required shadcn/ui components
+4. ✅ Copy Tablefy components to your project
+
+---
+
+## 📦 Manual Installation
+
+If you prefer to set up manually, follow these steps:
+
+### Step 1: Install the Package
 
 ```bash
-pnpm add tablefy
+npm install @nccirtu/tablefy
 ```
 
-## Prerequisites
-
-Tablefy is built on top of shadcn/ui components and TanStack Table. You'll need the following peer dependencies:
-
-### Required Dependencies
+### Step 2: Install Peer Dependencies
 
 ```bash
 npm install @tanstack/react-table lucide-react class-variance-authority clsx tailwind-merge
 ```
 
-### Framework Requirements
+### Step 3: Install shadcn/ui Components
 
-- **React**: 18.0.0 or higher
-- **TypeScript**: 5.0.0 or higher (recommended)
-- **Tailwind CSS**: 3.0.0 or higher
+Tablefy uses shadcn/ui components. Install them in your project:
 
-## Tailwind CSS Configuration
+```bash
+npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip
+```
 
-Add the following to your `tailwind.config.js`:
+### Step 4: Add Tablefy Components
+
+Use the CLI to add Tablefy's custom components:
+
+```bash
+npx tablefy add data-table avatar-list
+```
+
+Or add all components at once:
+
+```bash
+npx tablefy init --skip-shadcn
+```
+
+### Step 5: Configure Tailwind
+
+#### For Tailwind v4 (Laravel 12, etc.)
+
+Add to your `resources/css/app.css`:
+
+```css
+@import "tailwindcss";
+
+@source '../../node_modules/@nccirtu/tablefy/dist';
+```
+
+#### For Tailwind v3 (Next.js, Vite, etc.)
+
+Add to your `tailwind.config.js`:
 
 ```js
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/tablefy/**/*.{js,ts,jsx,tsx}", // Add this line
+    "./node_modules/@nccirtu/tablefy/dist/**/*.{js,mjs}",
   ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+  // ...
 };
 ```
 
-## TypeScript Configuration
+---
 
-If you're using TypeScript, ensure your `tsconfig.json` includes:
+## 🛠️ CLI Commands
 
-```json
-{
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "strict": true
-  }
-}
+### `npx tablefy init`
+
+Initialize Tablefy in your project. This is the recommended way to get started.
+
+**Options:**
+- `-y, --yes` - Skip all confirmation prompts
+- `--skip-shadcn` - Skip shadcn/ui component installation
+- `-c, --components <path>` - Custom path to components directory
+
+**Examples:**
+```bash
+# Interactive setup
+npx tablefy init
+
+# Non-interactive setup (CI/CD)
+npx tablefy init -y
+
+# Custom components path
+npx tablefy init -c src/components
 ```
 
-## Path Aliases (Optional)
+### `npx tablefy add [components...]`
 
-If you want to use path aliases like `@/components`, add this to your `tsconfig.json`:
+Add specific Tablefy components to your project.
 
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  }
-}
+**Available components:**
+- `data-table` - Main DataTable component with pagination, search, and more
+- `avatar-list` - Avatar list component for displaying user groups
+
+**Examples:**
+```bash
+# Add specific components
+npx tablefy add data-table
+
+# Add multiple components
+npx tablefy add data-table avatar-list
+
+# Interactive selection
+npx tablefy add
 ```
 
-And configure your bundler accordingly (Vite, Next.js, etc.).
+---
 
-## Verify Installation
+## ✅ Verify Installation
 
-Create a simple test component to verify everything is working:
+Create a test component:
 
 ```tsx
-import { DataTable, TableSchema, TextColumn } from "tablefy";
+import { DataTable, TableSchema, EmptyStateBuilder } from "@nccirtu/tablefy";
+import { TextColumn } from "@nccirtu/tablefy/columns";
 
 type User = {
   id: string;
   name: string;
+  email: string;
 };
 
-const columns = TableSchema.make<User>()
-  .columns(TextColumn.make("name").label("Name"))
+const users: User[] = [
+  { id: "1", name: "Alice Johnson", email: "alice@example.com" },
+  { id: "2", name: "Bob Smith", email: "bob@example.com" },
+];
+
+const { columns, config } = TableSchema.make<User>()
+  .searchable()
+  .paginated()
+  .columns(
+    TextColumn.make("name").label("Name").sortable(),
+    TextColumn.make("email").label("Email"),
+  )
+  .emptyState(
+    EmptyStateBuilder.noData({
+      title: "No users",
+      description: "Get started by creating your first user",
+    }),
+  )
   .build();
 
-export function TestTable() {
-  const data = [{ id: "1", name: "John Doe" }];
-  return <DataTable columns={columns} data={data} />;
+export function UsersTable() {
+  return <DataTable data={users} columns={columns} config={config} />;
 }
 ```
 
-If this renders without errors, you're all set! 🎉
+---
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
-### Module not found errors
+### "Components not found" errors
 
-If you see errors like `Cannot find module 'tablefy'`:
+Make sure you ran the CLI to copy Tablefy components:
 
-1. Clear your node_modules and reinstall:
+```bash
+npx tablefy init
+```
 
+### Styles not appearing
+
+1. Check your Tailwind configuration includes the Tablefy path
+2. Clear your build cache:
    ```bash
-   rm -rf node_modules package-lock.json
-   npm install
+   rm -rf node_modules/.vite
+   npm run dev
    ```
 
-2. Restart your development server
+### shadcn/ui not initialized
 
-### Styling issues
+Run the shadcn init command first:
 
-If components don't look right:
+```bash
+npx shadcn@latest init
+```
 
-1. Ensure Tailwind CSS is properly configured
-2. Check that the Tablefy content path is included in `tailwind.config.js`
-3. Import Tailwind CSS in your main CSS file:
-   ```css
-   @tailwind base;
-   @tailwind components;
-   @tailwind utilities;
-   ```
+Then run Tablefy setup:
 
-### TypeScript errors
+```bash
+npx tablefy init
+```
 
-If you see TypeScript errors:
+### Import errors
 
-1. Ensure you're using TypeScript 5.0.0 or higher
-2. Check that `strict` mode is enabled in `tsconfig.json`
-3. Restart your TypeScript server in your IDE
+Make sure you're importing from the correct paths:
 
-## Next Steps
+```tsx
+// ✅ Correct
+import { TableSchema, DataTable, EmptyStateBuilder } from "@nccirtu/tablefy";
+import { TextColumn, BadgeColumn } from "@nccirtu/tablefy/columns";
 
-- Read the [Usage Guide](./USAGE.md) for detailed examples
-- Check out the [Column Types](./USAGE.md#column-types) reference
-- Explore [Advanced Features](./USAGE.md#advanced-features)
+// ❌ Wrong - EmptyStateBuilder is not in /columns
+import { EmptyStateBuilder } from "@nccirtu/tablefy/columns";
+```
 
+---
+
+## 📚 Next Steps
+
+- [Usage Guide](./docs/USAGE.md) - Learn how to use all column types
+- [Examples](./README.md#example-project-management-table) - See full examples
+- [GitHub](https://github.com/nccirtu/Tablefy) - Report issues and contribute
