@@ -1,6 +1,6 @@
 {
   "name": "@nccirtu/tablefy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A powerful, type-safe React table package built with TanStack Table and shadcn/ui components",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
