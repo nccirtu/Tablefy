@@ -6,6 +6,7 @@ import { defineConfig } from "rollup";
 const external = [
   "react",
   "react-dom",
+  "react/jsx-runtime",
   "@tanstack/react-table",
   "lucide-react",
   "@radix-ui/react-icons",
