@@ -17,15 +17,31 @@ A powerful, type-safe React table package built with TanStack Table and shadcn/u
 ## Installation
 
 ```bash
-npm install tablefy
+npm install @nccirtu/tablefy
 ```
 
-### Prerequisites
+**⚠️ Important:** Tablefy requires additional setup steps to work correctly.
 
-Tablefy requires the following peer dependencies:
+### What you need to install
+
+1. **Peer dependencies** (required libraries)
+2. **shadcn/ui components** (UI building blocks)
+3. **Tailwind configuration** (for styling)
+
+👉 **[Follow the complete installation guide →](./INSTALLATION.md)**
+
+### Quick Overview
 
 ```bash
+# 1. Install dependencies
 npm install @tanstack/react-table lucide-react class-variance-authority clsx tailwind-merge
+
+# 2. Install shadcn components
+npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip
+
+# 3. Configure Tailwind (see [INSTALLATION.md](./INSTALLATION.md) for instructions for React, Next.js, Vue and Svelte)
+
+# 4. Restart dev server
 ```
 
 ## Quick Start
@@ -173,7 +189,7 @@ export const projectColumns = TableSchema.make<Project>()
 
 ## Documentation
 
-- [Installation Guide](./docs/INSTALLATION.md) - Detailed installation instructions
+- [Installation Guide](./INSTALLATION.md) - Detailed installation instructions
 - [Usage Guide](./docs/USAGE.md) - Complete API reference and examples
 - [Column Types](./docs/USAGE.md#column-types) - All column types and their methods
 
