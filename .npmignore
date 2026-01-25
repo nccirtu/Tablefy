@@ -1,0 +1,29 @@
+# Source files
+src/
+tsconfig.json
+rollup.config.js
+
+# Development
+node_modules/
+.git/
+.gitignore
+
+# Documentation (keep only README.md)
+docs/
+CODERABBIT_REVIEW.md
+
+# Config files
+.coderabbit.yaml
+.eslintrc.js
+.prettierrc
+
+# Build artifacts
+*.log
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
