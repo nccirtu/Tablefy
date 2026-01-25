@@ -11,6 +11,8 @@ A powerful, type-safe React table package built with TanStack Table and shadcn/u
 - **Fluent API** - Chainable builder pattern for easy configuration
 - **Responsive** - Mobile-friendly responsive design
 - **Rich Columns** - 12+ specialized column types with custom builders
+- **Custom Actions** - Render complex UI in actions with custom render functions
+- **Confirm Dialogs** - Built-in confirmation system for destructive actions
 - **Performance** - Optimized for large datasets
 - **Customizable** - Extensive theming and styling options
 
@@ -221,7 +223,18 @@ export const projectColumns = TableSchema.make<Project>()
     ActionsColumn.make<Project>()
       .view((row) => (window.location.href = `/projects/${row.id}`))
       .edit((row) => console.log("Edit", row.id))
-      .delete((row) => console.log("Delete", row.id)),
+      .action({
+        label: "Delete",
+        variant: "destructive",
+        onClick: async (row) => {
+          const ok = await confirm({
+            title: "Delete Project?",
+            description: `Delete "${row.name}"?`,
+            variant: "destructive",
+          });
+          if (ok) console.log("Delete", row.id);
+        },
+      }),
   )
   .build();
 ```
@@ -231,6 +244,8 @@ export const projectColumns = TableSchema.make<Project>()
 - [Installation Guide](./INSTALLATION.md) - Detailed installation instructions
 - [Usage Guide](./docs/USAGE.md) - Complete API reference and examples
 - [Column Types](./docs/USAGE.md#column-types) - All column types and their methods
+- [Actions Column](./docs/ACTIONS_COLUMN.md) - Custom render functions and confirm dialogs
+- [Editable Columns](./docs/EDITABLE_COLUMNS.md) - InputColumn and SelectColumn guide
 
 ## Advanced Features
 

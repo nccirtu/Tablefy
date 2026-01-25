@@ -58,6 +58,11 @@ export {
 export { TextColumn, TextColumn as textColumn } from "./columns/text-column";
 
 export { ActionsColumn } from "./columns/actions-column";
+export type { ActionItem } from "./columns/actions-column";
+
+// Confirm utilities
+export { ConfirmProvider, confirm } from "./confirm";
+export type { ConfirmOptions } from "./confirm";
 
 // Types
 export type {

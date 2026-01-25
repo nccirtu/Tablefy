@@ -11,11 +11,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { ReactNode } from "react";
 
-interface ActionItem<TData> {
-  label: string;
+export interface ActionItem<TData> {
+  label?: string; // optional when render is used
   icon?: ReactNode;
   onClick?: (row: TData) => void;
   href?: (row: TData) => string;
+  render?: (row: TData) => ReactNode; // custom renderer for complex UI
   variant?: "default" | "destructive";
   separator?: boolean;
   hidden?: (row: TData) => boolean;
@@ -109,23 +110,31 @@ export class ActionsColumn<TData> {
             <DropdownMenuContent align="end">
               {visibleActions.map((action, index) => (
                 <div key={index}>
-                  <DropdownMenuItem
-                    disabled={action.disabled?.(data)}
-                    className={cn(
-                      action.variant === "destructive" &&
-                        "text-destructive focus:text-destructive",
-                    )}
-                    onClick={() => {
-                      if (action.href) {
-                        window.location.href = action.href(data);
-                      } else if (action.onClick) {
-                        action.onClick(data);
-                      }
-                    }}
-                  >
-                    {action.icon && <span className="mr-2">{action.icon}</span>}
-                    {action.label}
-                  </DropdownMenuItem>
+                  {action.render ? (
+                    // Custom render function takes priority
+                    action.render(data)
+                  ) : (
+                    // Standard menu item
+                    <DropdownMenuItem
+                      disabled={action.disabled?.(data)}
+                      className={cn(
+                        action.variant === "destructive" &&
+                          "text-destructive focus:text-destructive",
+                      )}
+                      onClick={() => {
+                        if (action.href) {
+                          window.location.href = action.href(data);
+                        } else if (action.onClick) {
+                          action.onClick(data);
+                        }
+                      }}
+                    >
+                      {action.icon && (
+                        <span className="mr-2">{action.icon}</span>
+                      )}
+                      {action.label}
+                    </DropdownMenuItem>
+                  )}
                   {action.separator && index < visibleActions.length - 1 && (
                     <DropdownMenuSeparator />
                   )}
