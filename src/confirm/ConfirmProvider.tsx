@@ -27,7 +27,6 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
 
   useEffect(() => {
     registerConfirm(async (options: ConfirmOptions) => {
-      console.log("ConfirmProvider received options:", options);
       return new Promise<boolean>((resolve) => {
         setQueue((q) => [...q, { options, resolve }]);
       });
