@@ -17,7 +17,7 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PaginationConfig } from "../lib/types";
+import { PaginationConfig } from "../types";
 
 interface DataTablePaginationProps<TData> {
   table: TanstackTable<TData>;

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HeaderAction, SearchConfig } from "../lib/types";
+import { HeaderAction, SearchConfig } from "../types";
 
 interface DataTableHeaderProps<TData> {
   title?: string;

@@ -23,11 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DataTableConfig } from "../lib/types";
+import { DataTableConfig } from "../types";
 import { DataTableHeader } from "./data-table-header";
 import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";
-import { EmptyStateBuilder } from "../lib/builders";
+import { EmptyStateBuilder } from "../builders";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

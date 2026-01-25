@@ -3,7 +3,7 @@
 // shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { EmptyStateConfig } from "../lib/types";
+import { EmptyStateConfig } from "../types";
 
 interface DataTableEmptyProps {
   config: EmptyStateConfig;

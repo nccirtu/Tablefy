@@ -3,7 +3,7 @@ export { DataTable } from "./tablefy/data-table";
 export { DataTableSchema } from "./tablefy/data-table-schema";
 
 // Builders
-export { TableSchema, EmptyStateBuilder } from "./lib/builders";
+export { TableSchema, EmptyStateBuilder } from "./builders";
 
 // Columns - export with both PascalCase and camelCase for flexibility
 export {
@@ -68,4 +68,4 @@ export type {
   HeaderAction,
   PaginationConfig,
   SearchConfig,
-} from "./lib/types";
+} from "./types";
