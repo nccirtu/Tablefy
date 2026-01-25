@@ -13,6 +13,7 @@ npx tablefy init
 ```
 
 The CLI will automatically:
+
 1. ✅ Check if shadcn/ui is initialized
 2. ✅ Install missing peer dependencies
 3. ✅ Install required shadcn/ui components
@@ -84,6 +85,34 @@ module.exports = {
 };
 ```
 
+### Step 6: Configure Vite (Laravel/Vite Projects)
+
+If you're using Laravel with Vite, add the following alias configuration to your `vite.config.js`:
+
+```js
+import { defineConfig } from "vite";
+import laravel from "laravel-vite-plugin";
+import react from "@vitejs/plugin-react"; // or vue, etc.
+import path from "path";
+
+export default defineConfig({
+  plugins: [
+    laravel({
+      input: ["resources/css/app.css", "resources/js/app.tsx"],
+      refresh: true,
+    }),
+    react(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./resources/js"),
+    },
+  },
+});
+```
+
+This configures Vite to resolve `@/` imports to your `resources/js` directory, which is required for Tablefy's internal imports to work correctly.
+
 ---
 
 ## 🛠️ CLI Commands
@@ -93,11 +122,13 @@ module.exports = {
 Initialize Tablefy in your project. This is the recommended way to get started.
 
 **Options:**
+
 - `-y, --yes` - Skip all confirmation prompts
 - `--skip-shadcn` - Skip shadcn/ui component installation
 - `-c, --components <path>` - Custom path to components directory
 
 **Examples:**
+
 ```bash
 # Interactive setup
 npx tablefy init
@@ -114,10 +145,12 @@ npx tablefy init -c src/components
 Add specific Tablefy components to your project.
 
 **Available components:**
+
 - `data-table` - Main DataTable component with pagination, search, and more
 - `avatar-list` - Avatar list component for displaying user groups
 
 **Examples:**
+
 ```bash
 # Add specific components
 npx tablefy add data-table

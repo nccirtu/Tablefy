@@ -1,7 +1,6 @@
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
-import alias from "@rollup/plugin-alias";
 import { defineConfig } from "rollup";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -25,18 +24,12 @@ const external = [
 // Check if import should be external
 function isExternal(id) {
   if (external.includes(id)) return true;
-  // @/components/ui/* are shadcn components from user's project
-  if (id.startsWith("@/components/ui/")) return true;
+  // All @/ imports are from user's project (shadcn components and utils)
+  if (id.startsWith("@/")) return true;
   return false;
 }
 
 const plugins = [
-  alias({
-    entries: [
-      // @/lib resolves to our lib folder
-      { find: "@/lib", replacement: path.resolve(__dirname, "src/lib") },
-    ],
-  }),
   resolve({
     extensions: [".ts", ".tsx", ".js", ".jsx"],
   }),
@@ -71,7 +64,11 @@ export default defineConfig([
       // Ignore "use client" warnings
       if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
       // Ignore unresolved @/components/ui (they're external - from user's project)
-      if (warning.code === "UNRESOLVED_IMPORT" && warning.exporter?.startsWith("@/components/ui")) return;
+      if (
+        warning.code === "UNRESOLVED_IMPORT" &&
+        warning.exporter?.startsWith("@/components/ui")
+      )
+        return;
       warn(warning);
     },
   },
@@ -96,7 +93,11 @@ export default defineConfig([
       // Ignore "use client" warnings
       if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
       // Ignore unresolved @/components/ui (they're external - from user's project)
-      if (warning.code === "UNRESOLVED_IMPORT" && warning.exporter?.startsWith("@/components/ui")) return;
+      if (
+        warning.code === "UNRESOLVED_IMPORT" &&
+        warning.exporter?.startsWith("@/components/ui")
+      )
+        return;
       warn(warning);
     },
   },

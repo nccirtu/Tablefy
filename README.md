@@ -39,10 +39,15 @@ npm install @tanstack/react-table lucide-react class-variance-authority clsx tai
 # 2. Install shadcn components
 npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip
 
-# 3. Configure Tailwind (see [INSTALLATION.md](./INSTALLATION.md) for instructions for React, Next.js, Vue and Svelte)
+# 3. Configure Tailwind (see INSTALLATION.md for framework-specific instructions)
 
-# 4. Restart dev server
+# 4. For Laravel/Vite: Add alias configuration to vite.config.js
+# See INSTALLATION.md Step 6 for details
+
+# 5. Restart dev server
 ```
+
+**Laravel/Vite Users:** You must configure the `@` alias in your `vite.config.js` to resolve imports correctly. See [INSTALLATION.md](./INSTALLATION.md#step-6-configure-vite-laravelvite-projects) for details.
 
 ## Quick Start
 
