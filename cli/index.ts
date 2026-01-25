@@ -36,4 +36,4 @@ program
   .option("-y, --yes", "Skip confirmation prompts")
   .action(addCommand);
 
-program.parse();
+program.parse(process.argv);

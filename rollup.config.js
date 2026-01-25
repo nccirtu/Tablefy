@@ -1,8 +1,14 @@
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
+import alias from "@rollup/plugin-alias";
 import { defineConfig } from "rollup";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// External dependencies - these won't be bundled
 const external = [
   "react",
   "react-dom",
@@ -11,17 +17,40 @@ const external = [
   "lucide-react",
   "@radix-ui/react-icons",
   "tailwindcss",
+  "clsx",
+  "class-variance-authority",
+  "tailwind-merge",
 ];
 
+// Check if import should be external
+function isExternal(id) {
+  if (external.includes(id)) return true;
+  // @/components/ui/* are shadcn components from user's project
+  if (id.startsWith("@/components/ui/")) return true;
+  return false;
+}
+
 const plugins = [
-  resolve(),
+  alias({
+    entries: [
+      // @/lib resolves to our lib folder
+      { find: "@/lib", replacement: path.resolve(__dirname, "src/lib") },
+    ],
+  }),
+  resolve({
+    extensions: [".ts", ".tsx", ".js", ".jsx"],
+  }),
   commonjs(),
   typescript({
-    tsconfig: "./tsconfig.json",
+    tsconfig: "./tsconfig.build.json",
+    declaration: true,
+    declarationDir: "dist",
+    noEmitOnError: false,
   }),
 ];
 
 export default defineConfig([
+  // Main library bundle
   {
     input: "src/index.ts",
     output: [
@@ -37,8 +66,16 @@ export default defineConfig([
       },
     ],
     plugins,
-    external,
+    external: isExternal,
+    onwarn(warning, warn) {
+      // Ignore "use client" warnings
+      if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+      // Ignore unresolved @/components/ui (they're external - from user's project)
+      if (warning.code === "UNRESOLVED_IMPORT" && warning.exporter?.startsWith("@/components/ui")) return;
+      warn(warning);
+    },
   },
+  // Columns bundle
   {
     input: "src/columns/index.ts",
     output: [
@@ -54,6 +91,13 @@ export default defineConfig([
       },
     ],
     plugins,
-    external,
+    external: isExternal,
+    onwarn(warning, warn) {
+      // Ignore "use client" warnings
+      if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+      // Ignore unresolved @/components/ui (they're external - from user's project)
+      if (warning.code === "UNRESOLVED_IMPORT" && warning.exporter?.startsWith("@/components/ui")) return;
+      warn(warning);
+    },
   },
 ]);

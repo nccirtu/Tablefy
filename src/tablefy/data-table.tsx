@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+// shadcn components - installed by user via `npx shadcn add table`
 import {
   Table,
   TableBody,
@@ -33,7 +34,6 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   config?: DataTableConfig<TData>;
   className?: string;
-  // Optional overrides
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
@@ -48,7 +48,6 @@ export function DataTable<TData, TValue>({
   isError = false,
   onRetry,
 }: DataTableProps<TData, TValue>) {
-  // State
   const [sorting, setSorting] = useState<SortingState>(
     config.defaultSort ? [config.defaultSort] : [],
   );
@@ -57,7 +56,6 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
 
-  // Table Instance
   const table = useReactTable({
     data,
     columns,
@@ -69,7 +67,7 @@ export function DataTable<TData, TValue>({
       globalFilter,
     },
     enableRowSelection: config.enableRowSelection ?? false,
-    enableMultiRowSelection: config.enableMultiRowSelection ?? true,
+    enableMultiRowSelection: config.enableMultiRowSelection ?? config.enableRowSelection ?? false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -83,7 +81,6 @@ export function DataTable<TData, TValue>({
       : undefined,
   });
 
-  // Empty State bestimmen
   const getEmptyState = () => {
     if (isError) {
       return (
@@ -108,7 +105,6 @@ export function DataTable<TData, TValue>({
     return config.emptyState || EmptyStateBuilder.make().noData().build();
   };
 
-  // Density Classes
   const densityClasses = {
     compact: "[&_td]:py-1 [&_th]:py-1",
     default: "[&_td]:py-3 [&_th]:py-3",
@@ -120,7 +116,6 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {/* Header */}
       <DataTableHeader
         title={config.title}
         description={config.description}
@@ -132,7 +127,6 @@ export function DataTable<TData, TValue>({
         selectedCount={selectedCount}
       />
 
-      {/* Table */}
       <div
         className={cn(
           "overflow-hidden",
@@ -164,7 +158,6 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              // Loading State
               <tr>
                 <td colSpan={columns.length} className="h-[400px]">
                   <div className="flex h-full items-center justify-center">
@@ -196,7 +189,6 @@ export function DataTable<TData, TValue>({
                 </td>
               </tr>
             ) : hasRows ? (
-              // Data Rows
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -213,7 +205,6 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))
             ) : (
-              // Empty State
               <DataTableEmpty
                 config={getEmptyState()}
                 colSpan={columns.length}
@@ -223,11 +214,9 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
       {config.pagination?.enabled && hasRows && (
         <DataTablePagination table={table} config={config.pagination} />
       )}
     </div>
   );
 }
-

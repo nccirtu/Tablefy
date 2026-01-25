@@ -5,13 +5,13 @@ export const AvatarList = ({
   maxVisible = 5,
   size = 32,
   ...props
-}: {
+}: React.HTMLAttributes<HTMLDivElement> & {
   items: Array<{ id: string; src?: string; alt?: string; initials?: string }>;
   maxVisible?: number;
   size?: number | string;
-  [key: string]: any;
 }) => {
-  const sizeValue = typeof size === "string" ? parseInt(size, 10) || 32 : size;
+}) => {
+  const sizeValue = size ?? 32;
   return (
     <div
       className="avatar-list"
@@ -40,8 +40,10 @@ export const AvatarList = ({
         <div
           className="avatar-count"
           style={{ width: `${sizeValue}px`, height: `${sizeValue}px` }}
+          aria-label={`${items.length - maxVisible} weitere Personen`}
+          role="img"
         >
-          +{items.length - maxVisible}
+          {items.length - maxVisible}
         </div>
       )}
     </div>
@@ -49,4 +51,3 @@ export const AvatarList = ({
 };
 
 export default AvatarList;
-

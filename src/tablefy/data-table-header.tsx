@@ -1,6 +1,7 @@
 "use client";
 
 import { Table as TanstackTable } from "@tanstack/react-table";
+// shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,12 +9,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderAction, SearchConfig } from "@/lib/types";
-import { ReactNode } from "react";
 
 interface DataTableHeaderProps<TData> {
   title?: string;
@@ -38,20 +37,16 @@ export function DataTableHeader<TData>({
   selectedCount = 0,
   className,
 }: DataTableHeaderProps<TData>) {
-  // Actions aufteilen in normale und Bulk-Actions
   const normalActions = actions.filter((a) => !a.bulk && !a.hidden);
   const bulkActions = actions.filter((a) => a.bulk && !a.hidden);
-
   const showBulkActions = selectedCount > 0 && bulkActions.length > 0;
 
-  // Selektierte Rows für Bulk-Actions
   const getSelectedRows = (): TData[] => {
     if (!table) return [];
     return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
   };
 
   const renderAction = (action: HeaderAction<TData>, index: number) => {
-    // Dropdown Action
     if (action.children && action.children.length > 0) {
       return (
         <DropdownMenu key={action.id || index}>
@@ -87,7 +82,6 @@ export function DataTableHeader<TData>({
       );
     }
 
-    // Link Action
     if (action.href) {
       return (
         <Button
@@ -109,7 +103,6 @@ export function DataTableHeader<TData>({
       );
     }
 
-    // Normal Button Action
     return (
       <Button
         key={action.id || index}
@@ -153,11 +146,11 @@ export function DataTableHeader<TData>({
     );
   };
 
-  // Kein Header wenn nichts konfiguriert
   if (
     !title &&
     !description &&
     normalActions.length === 0 &&
+    bulkActions.length === 0 &&
     !search?.enabled
   ) {
     return null;
@@ -165,7 +158,6 @@ export function DataTableHeader<TData>({
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
-      {/* Title Row */}
       {(title || description) && (
         <div className="space-y-1">
           {title && (
@@ -177,17 +169,17 @@ export function DataTableHeader<TData>({
         </div>
       )}
 
-      {/* Search & Actions Row */}
       {(search?.enabled || normalActions.length > 0 || showBulkActions) && (
         <div className="flex items-center justify-between gap-4 mb-4">
-          {/* Search */}
           {search?.enabled && (
             <div className="relative max-w-sm flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={search.placeholder || "Suchen..."}
                 value={searchValue}
-                onChange={(e) => onSearchChange?.(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onSearchChange?.(e.target.value)
+                }
                 className="pl-9 pr-9"
               />
               {searchValue && (
@@ -201,20 +193,14 @@ export function DataTableHeader<TData>({
             </div>
           )}
 
-          {/* Actions & Bulk Actions */}
           <div className="flex items-center gap-2">
-            {/* Bulk Actions Info */}
             {showBulkActions && (
               <span className="text-sm text-muted-foreground">
                 {selectedCount} ausgewählt
               </span>
             )}
-
-            {/* Bulk Actions Buttons */}
             {showBulkActions &&
               bulkActions.map((action, index) => renderAction(action, index))}
-
-            {/* Normal Actions */}
             {normalActions.length > 0 &&
               normalActions.map((action, index) => renderAction(action, index))}
           </div>
@@ -223,4 +209,3 @@ export function DataTableHeader<TData>({
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
-// Main components
-export { DataTable } from "./components/ui/data-table/data-table";
-export { DataTableSchema } from "./components/ui/data-table/data-table-schema";
+// Main components - from tablefy folder (our components)
+export { DataTable } from "./tablefy/data-table";
+export { DataTableSchema } from "./tablefy/data-table-schema";
 
 // Builders
 export { TableSchema, EmptyStateBuilder } from "./lib/builders";

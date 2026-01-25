@@ -2,6 +2,11 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import { execSync } from "child_process";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const SHADCN_COMPONENTS = [
   "button",
@@ -18,16 +23,16 @@ export const SHADCN_COMPONENTS = [
 export const TABLEFY_COMPONENTS = {
   "data-table": {
     files: [
-      "ui/data-table/data-table.tsx",
-      "ui/data-table/data-table-empty.tsx",
-      "ui/data-table/data-table-header.tsx",
-      "ui/data-table/data-table-pagination.tsx",
-      "ui/data-table/data-table-schema.tsx",
+      "tablefy/data-table.tsx",
+      "tablefy/data-table-empty.tsx",
+      "tablefy/data-table-header.tsx",
+      "tablefy/data-table-pagination.tsx",
+      "tablefy/data-table-schema.tsx",
     ],
     description: "Main DataTable component with pagination, search, and more",
   },
   "avatar-list": {
-    files: ["animata/list/avatar-list.tsx"],
+    files: ["tablefy/avatar-list.tsx"],
     description: "Avatar list component for displaying user groups",
   },
 } as const;

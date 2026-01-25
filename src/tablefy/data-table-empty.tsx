@@ -1,6 +1,6 @@
-// components/ui/data-table/data-table-empty.tsx
 "use client";
 
+// shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmptyStateConfig } from "@/lib/types";
@@ -22,7 +22,6 @@ export function DataTableEmpty({
     <tr>
       <td colSpan={colSpan} className={cn("h-[400px]", className)}>
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center p-8">
-          {/* Image or Icon */}
           {imageUrl ? (
             <img className="w-24 h-24" src={imageUrl} alt="Empty State" />
           ) : icon ? (
@@ -36,7 +35,6 @@ export function DataTableEmpty({
             </div>
           ) : null}
 
-          {/* Text */}
           <div className="w-full flex flex-col items-center justify-center gap-2">
             <h3 className="text-sm font-semibold text-foreground whitespace-normal break-words">
               {title}
@@ -48,7 +46,6 @@ export function DataTableEmpty({
             )}
           </div>
 
-          {/* Action */}
           {action && (
             <Button
               variant={variant === "error" ? "outline" : "default"}
@@ -78,4 +75,3 @@ export function DataTableEmpty({
     </tr>
   );
 }
-

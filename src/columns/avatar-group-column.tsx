@@ -1,5 +1,4 @@
-// lib/table/columns/avatar-group-column.tsx
-import AvatarList from "@/components/animata/list/avatar-list";
+import AvatarList from "../tablefy/avatar-list";
 import { cn } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { BaseColumn } from "./base-column";
@@ -13,7 +12,7 @@ interface AvatarItem {
 
 interface AvatarGroupColumnConfig<TData> extends BaseColumnConfig<TData> {
   maxVisible?: number;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: number;
   overlap?: "none" | "sm" | "md" | "lg";
   showTooltip?: boolean;
   nameField?: keyof TData | ((row: TData) => AvatarItem[]);
@@ -31,7 +30,7 @@ export class AvatarGroupColumn<TData> extends BaseColumn<
     super(accessor);
     const config = this.config as AvatarGroupColumnConfig<TData>;
     config.maxVisible = 4;
-    config.size = "md";
+    config.size = 40;
     config.overlap = "md";
     config.showTooltip = true;
     config.showNames = false;
@@ -50,7 +49,8 @@ export class AvatarGroupColumn<TData> extends BaseColumn<
 
   // Größe der Avatare
   size(size: "xs" | "sm" | "md" | "lg"): this {
-    (this.config as AvatarGroupColumnConfig<TData>).size = size;
+    const sizeMap = { xs: 24, sm: 32, md: 40, lg: 48 };
+    (this.config as AvatarGroupColumnConfig<TData>).size = sizeMap[size];
     return this;
   }
 
@@ -203,4 +203,3 @@ export class AvatarGroupColumn<TData> extends BaseColumn<
     };
   }
 }
-

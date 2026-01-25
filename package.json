@@ -10,9 +10,9 @@
     "tablefy": "./dist/cli/index.js"
   },
   "scripts": {
-    "build": "rollup -c && tsup cli/index.ts --outDir dist/cli --format esm",
+    "build": "npm run build:lib && npm run build:cli",
     "build:lib": "rollup -c",
-    "build:cli": "tsup cli/index.ts --outDir dist/cli --format esm",
+    "build:cli": "tsup cli/index.ts --outDir dist/cli --format esm --target node18",
     "dev": "rollup -c -w",
     "test": "jest",
     "prepublishOnly": "npm run build"
@@ -81,6 +81,7 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^11.0.0",
@@ -100,14 +101,14 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./columns": {
+      "types": "./dist/columns/index.d.ts",
       "import": "./dist/columns/index.esm.js",
-      "require": "./dist/columns/index.js",
-      "types": "./dist/columns/index.d.ts"
+      "require": "./dist/columns/index.js"
     }
   },
   "typesVersions": {

@@ -1,7 +1,7 @@
-// components/ui/data-table/data-table-pagination.tsx
 "use client";
 
 import { Table as TanstackTable } from "@tanstack/react-table";
+// shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -45,7 +45,6 @@ export function DataTablePagination<TData>({
         className,
       )}
     >
-      {/* Selection Info */}
       <div className="text-sm text-muted-foreground">
         {table.getFilteredSelectedRowModel().rows.length > 0 ? (
           <span>
@@ -58,7 +57,6 @@ export function DataTablePagination<TData>({
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-        {/* Page Size Selector */}
         {showPageSizeSelector && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
@@ -66,7 +64,7 @@ export function DataTablePagination<TData>({
             </span>
             <Select
               value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => table.setPageSize(Number(value))}
+              onValueChange={(value: string) => table.setPageSize(Number(value))}
             >
               <SelectTrigger className="h-8 w-[70px]">
                 <SelectValue
@@ -84,7 +82,6 @@ export function DataTablePagination<TData>({
           </div>
         )}
 
-        {/* Page Info */}
         {showPageInfo && (
           <div className="text-sm text-muted-foreground whitespace-nowrap">
             Seite {table.getState().pagination.pageIndex + 1} von{" "}
@@ -92,7 +89,6 @@ export function DataTablePagination<TData>({
           </div>
         )}
 
-        {/* Pagination Buttons */}
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
@@ -139,4 +135,3 @@ export function DataTablePagination<TData>({
     </div>
   );
 }
-
