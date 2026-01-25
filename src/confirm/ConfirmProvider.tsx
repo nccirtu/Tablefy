@@ -27,6 +27,7 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
 
   useEffect(() => {
     registerConfirm(async (options: ConfirmOptions) => {
+      console.log("ConfirmProvider received options:", options);
       return new Promise<boolean>((resolve) => {
         setQueue((q) => [...q, { options, resolve }]);
       });
@@ -61,9 +62,9 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {currentRequest?.options.title || "Bestätigung erforderlich"}
+              {currentRequest?.options?.title || "Bestätigung erforderlich"}
             </DialogTitle>
-            {currentRequest?.options.description && (
+            {currentRequest?.options?.description && (
               <DialogDescription>
                 {currentRequest.options.description}
               </DialogDescription>
