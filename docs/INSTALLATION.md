@@ -1,5 +1,66 @@
 # Tablefy - Installation Guide
 
+## 📖 Two Ways to Use Tablefy
+
+Tablefy offers **two approaches** depending on your needs:
+
+### 🚀 Approach 1: Direct Import (Quick Start)
+
+**Best for:** Getting started quickly, standard use cases
+
+Import components directly from the npm package:
+
+```tsx
+import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";
+import { BadgeColumn, DateColumn } from "@nccirtu/tablefy/columns";
+```
+
+**Advantages:**
+
+- ✅ Works immediately after `npm install`
+- ✅ No CLI setup required
+- ✅ Automatic updates when you upgrade the package
+- ✅ Smaller project footprint
+
+**Limitations:**
+
+- ❌ Cannot customize internal DataTable components
+- ❌ Limited control over component behavior
+
+### 🛠️ Approach 2: CLI Installation (Full Control)
+
+**Best for:** Custom styling, advanced modifications, full control
+
+Copy components to your project using the CLI:
+
+```bash
+npx tablefy init
+```
+
+This copies all Tablefy components to `components/tablefy/` in your project, allowing you to:
+
+- Modify component styles and behavior
+- Customize internal logic
+- Full ownership of the code
+
+**Advantages:**
+
+- ✅ Complete customization freedom
+- ✅ Modify any component to fit your needs
+- ✅ No dependency on package internals
+
+**Limitations:**
+
+- ❌ Manual updates required
+- ❌ More files in your project
+- ❌ Requires CLI setup step
+
+---
+
+**💡 Recommendation:** Start with **Approach 1** (direct import) for quick prototyping. Switch to **Approach 2** (CLI installation) when you need to customize internal components.
+
+---
+
 ## 🚀 Quick Install (Recommended)
 
 The easiest way to set up Tablefy is using the CLI:

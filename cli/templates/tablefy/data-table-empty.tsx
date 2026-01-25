@@ -1,6 +1,5 @@
 "use client";
 
-// shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmptyStateConfig } from "@nccirtu/tablefy";

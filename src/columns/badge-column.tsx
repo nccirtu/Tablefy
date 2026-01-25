@@ -1,4 +1,3 @@
-// lib/table/columns/badge-column.tsx
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -132,4 +131,3 @@ export class BadgeColumn<TData> extends BaseColumn<
     };
   }
 }
-

@@ -1,7 +1,6 @@
 "use client";
 
 import { Table as TanstackTable } from "@tanstack/react-table";
-// shadcn components - installed by user
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

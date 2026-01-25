@@ -22,6 +22,40 @@ npm install @nccirtu/tablefy
 
 **⚠️ Important:** Tablefy requires additional setup steps to work correctly.
 
+### Two Ways to Use Tablefy
+
+Tablefy offers **two approaches** to fit your workflow:
+
+#### 🚀 **Quick Start (Direct Import)**
+
+Import components directly from the package - perfect for getting started quickly:
+
+```tsx
+import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";
+```
+
+✅ **Pros:** Zero setup, works immediately after installation  
+❌ **Cons:** Limited customization of internal components
+
+#### 🛠️ **Full Control (CLI Installation)**
+
+Copy components to your project for complete customization:
+
+```bash
+npx tablefy init
+```
+
+This copies all components to your `components/tablefy/` directory, allowing you to:
+
+- Customize styles and behavior
+- Modify internal components
+- Full control over the code
+
+✅ **Pros:** Complete customization freedom  
+❌ **Cons:** Requires CLI setup step
+
+**Choose the approach that fits your needs!** Most users start with direct imports and switch to CLI installation when they need customization.
+
 ### What you need to install
 
 1. **Peer dependencies** (required libraries)

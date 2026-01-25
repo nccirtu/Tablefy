@@ -1,4 +1,3 @@
-// Main components - from tablefy folder (our components)
 export { DataTable } from "./tablefy/data-table";
 export { DataTableSchema } from "./tablefy/data-table-schema";
 

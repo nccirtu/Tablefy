@@ -1,9 +1,7 @@
 "use client";
 
 interface DataTableSchemaProps {
-  // Definieren Sie hier die spezifischen Props
   schema?: Record<string, unknown>;
-  // Weitere Props nach Bedarf hinzufügen
 }
 
 export const DataTableSchema = () => {

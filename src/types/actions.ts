@@ -14,12 +14,8 @@ export interface HeaderAction<TData = unknown> {
   href?: string;
   disabled?: boolean;
   loading?: boolean;
-  // For bulk actions (only visible when rows are selected)
   bulk?: boolean;
   bulkOnClick?: (selectedRows: TData[]) => void;
-  // Conditional rendering
   hidden?: boolean;
-  // Dropdown for multiple actions
   children?: Omit<HeaderAction<TData>, "children" | "bulk">[];
 }
-
