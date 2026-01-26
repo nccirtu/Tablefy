@@ -41,3 +41,5 @@ lerna-debug.log*
 # Design documents (not for git)
 FORM_SCHEMA_DESIGN.md
 FORM_EXAMPLE.tsx
+FORM_SCHEMA_DOCS.md
+FORM_FIELDS_REFERENCE.md
