@@ -13,4 +13,6 @@ export { ProgressColumn } from "./progress-column";
 export { SelectColumn } from "./select-column";
 export { TextColumn } from "./text-column";
 export { ActionsColumn } from "./actions-column";
+export { EnumColumn } from "./enum-column";
+export type { EnumOption } from "./enum-column";
 export type * from "./types";
