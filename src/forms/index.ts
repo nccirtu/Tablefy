@@ -19,12 +19,18 @@ export {
   Hidden,
   TagsInput,
   Combobox,
+  ImageUpload,
+  CheckboxGroup,
+  TimePicker,
+  DateRangePicker,
+  Rating,
 } from "./fields";
 export type {
   SelectOption,
   RadioOption,
   MultiSelectOption,
   ComboboxOption,
+  CheckboxGroupOption,
 } from "./fields";
 
 // Builder exports
