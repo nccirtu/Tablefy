@@ -45,20 +45,10 @@ export { LinkColumn } from "./columns/link-column";
 
 export { NumberColumn } from "./columns/number-column";
 
-export {
-  ProgressColumn,
-  ProgressColumn as progressColumn,
-} from "./columns/progress-column";
+export { ProgressColumn, SelectColumn } from "./columns";
 
-export {
-  SelectColumn,
-  SelectColumn as selectColumn,
-} from "./columns/select-column";
-
-export { TextColumn, TextColumn as textColumn } from "./columns/text-column";
-
-export { ActionsColumn } from "./columns/actions-column";
-export type { ActionItem } from "./columns/actions-column";
+export { EnumColumn, EnumColumn as enumColumn } from "./columns/enum-column";
+export type { EnumOption } from "./columns/enum-column";
 
 // Confirm utilities
 export { ConfirmProvider, confirm } from "./confirm";
