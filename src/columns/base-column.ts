@@ -38,6 +38,16 @@ export abstract class BaseColumn<
     return this;
   }
 
+  visibleByDefault(visible = true): this {
+    this.config.visibleByDefault = visible;
+    return this;
+  }
+
+  visibilityLabel(label: string): this {
+    this.config.visibilityLabel = label;
+    return this;
+  }
+
   alignLeft(): this {
     this.config.align = "left";
     return this;

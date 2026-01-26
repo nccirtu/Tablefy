@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Search, X, Columns } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderAction, SearchConfig } from "../types";
 
@@ -22,6 +25,8 @@ interface DataTableHeaderProps<TData> {
   onSearchChange?: (value: string) => void;
   table?: TanstackTable<TData>;
   selectedCount?: number;
+  enableColumnVisibility?: boolean;
+  columnVisibilityLabel?: string;
   className?: string;
 }
 
@@ -34,6 +39,8 @@ export function DataTableHeader<TData>({
   onSearchChange,
   table,
   selectedCount = 0,
+  enableColumnVisibility = false,
+  columnVisibilityLabel = "Spalten",
   className,
 }: DataTableHeaderProps<TData>) {
   const normalActions = actions.filter((a) => !a.bulk && !a.hidden);
@@ -200,6 +207,42 @@ export function DataTableHeader<TData>({
             )}
             {showBulkActions &&
               bulkActions.map((action, index) => renderAction(action, index))}
+
+            {enableColumnVisibility && table && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="default">
+                    <Columns className="h-4 w-4" />
+                    <span className="ml-2">{columnVisibilityLabel}</span>
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuLabel>{columnVisibilityLabel}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      const meta = column.columnDef.meta as any;
+                      const label = meta?.visibilityLabel || column.id;
+
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value: boolean) =>
+                            column.toggleVisibility(!!value)
+                          }
+                        >
+                          {label}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             {normalActions.length > 0 &&
               normalActions.map((action, index) => renderAction(action, index))}
           </div>

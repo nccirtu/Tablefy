@@ -52,7 +52,20 @@ export function DataTable<TData, TValue>({
     config.defaultSort ? [config.defaultSort] : [],
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  // Initialize column visibility based on visibleByDefault
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    () => {
+      const initialVisibility: VisibilityState = {};
+      columns.forEach((column: any) => {
+        if (column.meta?.visibleByDefault === false) {
+          initialVisibility[column.accessorKey || column.id] = false;
+        }
+      });
+      return initialVisibility;
+    },
+  );
+
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -126,6 +139,8 @@ export function DataTable<TData, TValue>({
         onSearchChange={setGlobalFilter}
         table={table}
         selectedCount={selectedCount}
+        enableColumnVisibility={config.enableColumnVisibility}
+        columnVisibilityLabel={config.columnVisibilityLabel}
       />
 
       <div

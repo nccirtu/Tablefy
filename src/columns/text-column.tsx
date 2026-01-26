@@ -77,10 +77,16 @@ export class TextColumn<TData> extends BaseColumn<
       suffix,
       placeholder,
       formatter,
+      visibleByDefault,
+      visibilityLabel,
     } = this.config;
 
     return {
       accessorKey: accessor as string,
+      meta: {
+        visibleByDefault,
+        visibilityLabel: visibilityLabel || label || String(accessor),
+      },
       header: ({ column }) => {
         const displayLabel = label || String(accessor);
 

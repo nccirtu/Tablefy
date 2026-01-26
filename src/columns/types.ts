@@ -8,6 +8,8 @@ export interface BaseColumnConfig<TData> {
   sortable?: boolean;
   searchable?: boolean;
   hidden?: boolean;
+  visibleByDefault?: boolean;
+  visibilityLabel?: string;
   align?: "left" | "center" | "right";
   width?: string | number;
   className?: string;

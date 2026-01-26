@@ -44,6 +44,7 @@ export interface DataTableConfig<TData> {
 
   // Visibility
   enableColumnVisibility?: boolean;
+  columnVisibilityLabel?: string;
 
   // Density
   density?: "compact" | "default" | "comfortable";
@@ -53,4 +54,3 @@ export interface DataTableConfig<TData> {
   striped?: boolean;
   hoverable?: boolean;
 }
-
