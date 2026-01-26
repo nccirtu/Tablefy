@@ -37,3 +37,7 @@ lerna-debug.log*
 *.tmp
 *.temp
 .cache/
+
+# Design documents (not for git)
+FORM_SCHEMA_DESIGN.md
+FORM_EXAMPLE.tsx
