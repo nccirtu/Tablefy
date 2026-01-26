@@ -14,8 +14,18 @@ export {
   DatePicker,
   MultiSelect,
   Slider,
+  FileUpload,
+  ColorPicker,
+  Hidden,
+  TagsInput,
+  Combobox,
 } from "./fields";
-export type { SelectOption, RadioOption, MultiSelectOption } from "./fields";
+export type {
+  SelectOption,
+  RadioOption,
+  MultiSelectOption,
+  ComboboxOption,
+} from "./fields";
 
 // Builder exports
 export { SectionBuilder, ActionsBuilder } from "./builders";
