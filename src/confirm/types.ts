@@ -4,6 +4,8 @@ export interface ConfirmOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "destructive" | "default";
+  icon?: React.ReactNode;
+  image?: string;
 }
 
 export type ConfirmHandler = (options: ConfirmOptions) => Promise<boolean>;

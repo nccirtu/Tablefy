@@ -1,14 +1,15 @@
 "use client";
 import { useState, useEffect, ReactNode } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { registerConfirm } from "./confirm";
 import { ConfirmOptions } from "./types";
 
@@ -51,37 +52,64 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
     }
   };
 
+  const {
+    title,
+    description,
+    confirmLabel,
+    cancelLabel,
+    variant,
+    icon,
+    image,
+  } = currentRequest?.options || {};
+
   return (
     <>
       {children}
-      <Dialog
+      <AlertDialog
         open={!!currentRequest}
         onOpenChange={(open: boolean) => !open && handleCancel()}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {currentRequest?.options?.title || "Bestätigung erforderlich"}
-            </DialogTitle>
-            {currentRequest?.options?.description && (
-              <DialogDescription>
-                {currentRequest.options.description}
-              </DialogDescription>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            {image && (
+              <div className="mb-4 flex justify-center">
+                <img
+                  src={image}
+                  alt="Confirmation"
+                  className="h-24 w-24 object-contain"
+                />
+              </div>
             )}
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancel}>
-              {currentRequest?.options.cancelLabel || "Abbrechen"}
-            </Button>
-            <Button
-              variant={currentRequest?.options.variant || "default"}
+            {icon && !image && (
+              <div className="mb-4 flex justify-center text-6xl">{icon}</div>
+            )}
+
+            <AlertDialogTitle className="text-center">
+              {title || "Bestätigung erforderlich"}
+            </AlertDialogTitle>
+            {description && (
+              <AlertDialogDescription className="text-center">
+                {description}
+              </AlertDialogDescription>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogCancel onClick={handleCancel}>
+              {cancelLabel || "Abbrechen"}
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleConfirm}
+              className={
+                variant === "destructive"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
             >
-              {currentRequest?.options.confirmLabel || "Bestätigen"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {confirmLabel || "Bestätigen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
