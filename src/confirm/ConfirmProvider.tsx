@@ -71,6 +71,16 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
       >
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">
+              {title || "Bestätigung erforderlich"}
+            </AlertDialogTitle>
+            {description && (
+              <AlertDialogDescription className="text-center">
+                {description}
+              </AlertDialogDescription>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogContent>
             {image && (
               <div className="mb-4 flex justify-center">
                 <img
@@ -83,17 +93,8 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
             {icon && !image && (
               <div className="mb-4 flex justify-center text-6xl">{icon}</div>
             )}
-
-            <AlertDialogTitle className="text-center">
-              {title || "Bestätigung erforderlich"}
-            </AlertDialogTitle>
-            {description && (
-              <AlertDialogDescription className="text-center">
-                {description}
-              </AlertDialogDescription>
-            )}
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
+          </AlertDialogContent>
+          <AlertDialogFooter className="sm:justify-between w-full">
             <AlertDialogCancel onClick={handleCancel}>
               {cancelLabel || "Abbrechen"}
             </AlertDialogCancel>
