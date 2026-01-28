@@ -92,16 +92,16 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
           {icon && !image && (
             <div className="flex justify-center py-4 text-6xl">{icon}</div>
           )}
-          <AlertDialogFooter className="flex-row gap-2 sm:flex-row">
-            <AlertDialogCancel onClick={handleCancel} className="w-full m-0">
+          <AlertDialogFooter className="flex flex-row gap-2 justify-between w-full">
+            <AlertDialogCancel onClick={handleCancel} className="mt-0">
               {cancelLabel || "Abbrechen"}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className={
                 variant === "destructive"
-                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full"
-                  : "w-full"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
               }
             >
               {confirmLabel || "Bestätigen"}
