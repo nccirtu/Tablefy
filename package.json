@@ -2,10 +2,10 @@
   "name": "@nccirtu/tablefy",
   "version": "0.8.0",
   "description": "A powerful, type-safe React table package built with TanStack Table and shadcn/ui components",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "tablefy": "./dist/cli/index.js"
   },
@@ -103,14 +103,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "default": "./dist/index.esm.js"
     },
     "./columns": {
       "types": "./dist/columns/index.d.ts",
       "import": "./dist/columns/index.esm.js",
-      "require": "./dist/columns/index.js"
-    }
+      "require": "./dist/columns/index.js",
+      "default": "./dist/columns/index.esm.js"
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "typesVersions": {
     "*": {
       "columns": [
