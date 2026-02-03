@@ -2,7 +2,13 @@ export { DataTable } from "./tablefy/data-table";
 export { DataTableSchema } from "./tablefy/data-table-schema";
 
 // Builders
-export { TableSchema, EmptyStateBuilder } from "./builders";
+export {
+  TableSchema,
+  EmptyStateBuilder,
+  HeaderActions,
+  HeaderActionGroup,
+} from "./builders";
+export type { HeaderActionItem } from "./builders";
 
 // Columns - export with both PascalCase and camelCase for flexibility
 export {
