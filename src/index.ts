@@ -47,6 +47,14 @@ export { NumberColumn } from "./columns/number-column";
 
 export { ProgressColumn, SelectColumn } from "./columns";
 
+export {
+  ActionsColumn,
+  ActionsColumn as actionsColumn,
+} from "./columns/actions-column";
+export type { ActionItem } from "./columns/actions-column";
+
+export { TextColumn, TextColumn as textColumn } from "./columns/text-column";
+
 export { EnumColumn, EnumColumn as enumColumn } from "./columns/enum-column";
 export type { EnumOption } from "./columns/enum-column";
 
