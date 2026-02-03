@@ -53,6 +53,11 @@ export function DataTableHeader<TData>({
   };
 
   const renderAction = (action: HeaderAction<TData>, index: number) => {
+    // Custom render function takes priority
+    if (action.render) {
+      return <div key={action.id || index}>{action.render()}</div>;
+    }
+
     if (action.children && action.children.length > 0) {
       return (
         <DropdownMenu key={action.id || index}>

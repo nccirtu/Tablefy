@@ -8,115 +8,6 @@ import React from "react";
 type ColumnBuilder<TData> = { build(): ColumnDef<TData, unknown> };
 
 /**
- * Header Actions Builder
- * Fluent API for building header actions
- */
-class HeaderActionsBuilder<TData> {
-  private actions: HeaderAction<TData>[] = [];
-
-  create(config: {
-    label: string;
-    href?: string;
-    onClick?: () => void;
-    icon?: React.ReactNode;
-  }): this {
-    this.actions.push({
-      id: "create",
-      label: config.label,
-      href: config.href,
-      onClick: config.onClick,
-      icon: config.icon,
-      variant: "default",
-    });
-    return this;
-  }
-
-  export(config: {
-    label: string;
-    icon?: React.ReactNode;
-    formats?: Array<{ label: string; onClick: () => void }>;
-  }): this {
-    if (config.formats && config.formats.length > 0) {
-      this.actions.push({
-        id: "export",
-        label: config.label,
-        icon: config.icon,
-        variant: "outline",
-        children: config.formats.map((format, index) => ({
-          id: `export-${index}`,
-          label: format.label,
-          onClick: format.onClick,
-        })),
-      });
-    } else {
-      this.actions.push({
-        id: "export",
-        label: config.label,
-        icon: config.icon,
-        variant: "outline",
-      });
-    }
-    return this;
-  }
-
-  import(config: {
-    label: string;
-    icon?: React.ReactNode;
-    onClick?: () => void;
-  }): this {
-    this.actions.push({
-      id: "import",
-      label: config.label,
-      icon: config.icon,
-      onClick: config.onClick,
-      variant: "outline",
-    });
-    return this;
-  }
-
-  bulkExport(config: {
-    label: string;
-    icon?: React.ReactNode;
-    onExport: (rows: TData[]) => void;
-  }): this {
-    this.actions.push({
-      id: "bulk-export",
-      label: config.label,
-      icon: config.icon,
-      bulk: true,
-      bulkOnClick: config.onExport,
-      variant: "outline",
-    });
-    return this;
-  }
-
-  bulkDelete(config: {
-    label: string;
-    icon?: React.ReactNode;
-    onDelete: (rows: TData[]) => void;
-  }): this {
-    this.actions.push({
-      id: "bulk-delete",
-      label: config.label,
-      icon: config.icon,
-      bulk: true,
-      bulkOnClick: config.onDelete,
-      variant: "destructive",
-    });
-    return this;
-  }
-
-  custom(action: HeaderAction<TData>): this {
-    this.actions.push(action);
-    return this;
-  }
-
-  build(): HeaderAction<TData>[] {
-    return this.actions;
-  }
-}
-
-/**
  * Table Schema Builder
  * Fluent API for building complete table configurations
  */
@@ -139,11 +30,8 @@ export class TableSchema<TData> {
     return this;
   }
 
-  headerActions(
-    builder: (b: HeaderActionsBuilder<TData>) => HeaderActionsBuilder<TData>,
-  ): this {
-    const actionsBuilder = new HeaderActionsBuilder<TData>();
-    this.config.headerActions = builder(actionsBuilder).build();
+  headerActions(actions: HeaderAction<TData>[]): this {
+    this.config.headerActions = actions;
     return this;
   }
 
