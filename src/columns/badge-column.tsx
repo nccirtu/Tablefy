@@ -61,8 +61,31 @@ export class BadgeColumn<TData> extends BaseColumn<
     return this;
   }
 
+  // Dynamische Variante basierend auf Row-Daten
+  variantFn(
+    fn: (
+      value: unknown,
+      row: TData,
+    ) => {
+      label?: string;
+      variant?: BadgeVariant;
+      className?: string;
+      icon?: ReactNode;
+    },
+  ): this {
+    this.config.variantFn = fn;
+    return this;
+  }
+
+  // Dynamische className basierend auf Row-Daten
+  classNameFn(fn: (value: unknown, row: TData) => string): this {
+    this.config.classNameFn = fn;
+    return this;
+  }
+
   build(): ColumnDef<TData, unknown> {
-    const { accessor, label, sortable, variants } = this.config;
+    const { accessor, label, sortable, variants, variantFn, classNameFn } =
+      this.config;
 
     return {
       accessorKey: accessor as string,
@@ -99,32 +122,70 @@ export class BadgeColumn<TData> extends BaseColumn<
           </Button>
         );
       },
-      cell: ({ getValue }) => {
-        const value = String(getValue());
-        const variantConfig = variants?.[value];
+      cell: ({ getValue, row }) => {
+        const value = getValue();
+        const stringValue = String(value);
 
-        if (!variantConfig) {
+        // Priority 1: Dynamic variantFn (highest priority)
+        if (variantFn) {
+          const dynamicConfig = variantFn(value, row.original);
           return (
-            <Badge variant="outline" className={this.config.cellClassName}>
-              {value}
+            <Badge
+              variant={
+                dynamicConfig.variant === "success" ||
+                dynamicConfig.variant === "warning" ||
+                dynamicConfig.variant === "info" ||
+                dynamicConfig.variant === "muted"
+                  ? "default"
+                  : dynamicConfig.variant || "default"
+              }
+              className={cn(
+                dynamicConfig.className,
+                classNameFn?.(value, row.original),
+                this.config.cellClassName,
+              )}
+            >
+              {dynamicConfig.icon}
+              {dynamicConfig.label || stringValue}
             </Badge>
           );
         }
 
+        // Priority 2: Static variants lookup
+        const variantConfig = variants?.[stringValue];
+        if (variantConfig) {
+          return (
+            <Badge
+              variant={
+                variantConfig.variant === "success" ||
+                variantConfig.variant === "warning" ||
+                variantConfig.variant === "info" ||
+                variantConfig.variant === "muted"
+                  ? "default"
+                  : variantConfig.variant || "default"
+              }
+              className={cn(
+                variantConfig.className,
+                classNameFn?.(value, row.original),
+                this.config.cellClassName,
+              )}
+            >
+              {variantConfig.icon}
+              {variantConfig.label || stringValue}
+            </Badge>
+          );
+        }
+
+        // Priority 3: Default badge with optional dynamic className
         return (
           <Badge
-            variant={
-              variantConfig.variant === "success" ||
-              variantConfig.variant === "warning" ||
-              variantConfig.variant === "info" ||
-              variantConfig.variant === "muted"
-                ? "default"
-                : variantConfig.variant || "default"
-            }
-            className={cn(variantConfig.className, this.config.cellClassName)}
+            variant="outline"
+            className={cn(
+              classNameFn?.(value, row.original),
+              this.config.cellClassName,
+            )}
           >
-            {variantConfig.icon}
-            {variantConfig.label || value}
+            {stringValue}
           </Badge>
         );
       },

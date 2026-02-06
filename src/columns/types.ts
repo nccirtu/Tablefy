@@ -44,6 +44,24 @@ export interface BadgeColumnConfig<TData> extends BaseColumnConfig<TData> {
       icon?: ReactNode;
     }
   >;
+  variantFn?: (
+    value: unknown,
+    row: TData,
+  ) => {
+    label?: string;
+    variant?:
+      | "default"
+      | "secondary"
+      | "destructive"
+      | "outline"
+      | "success"
+      | "warning"
+      | "info"
+      | "muted";
+    className?: string;
+    icon?: ReactNode;
+  };
+  classNameFn?: (value: unknown, row: TData) => string;
 }
 
 // Action-Konfiguration
