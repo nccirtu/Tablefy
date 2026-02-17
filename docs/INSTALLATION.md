@@ -1,10 +1,10 @@
 # Tablefy - Installation Guide
 
-## 📖 Two Ways to Use Tablefy
+## Two Ways to Use Tablefy
 
 Tablefy offers **two approaches** depending on your needs:
 
-### 🚀 Approach 1: Direct Import (Quick Start)
+### Approach 1: Direct Import (Quick Start)
 
 **Best for:** Getting started quickly, standard use cases
 
@@ -13,21 +13,22 @@ Import components directly from the npm package:
 ```tsx
 import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";
 import { BadgeColumn, DateColumn } from "@nccirtu/tablefy/columns";
+import { FormSchema, TextInput, Select } from "@nccirtu/tablefy/forms";
 ```
 
 **Advantages:**
 
-- ✅ Works immediately after `npm install`
-- ✅ No CLI setup required
-- ✅ Automatic updates when you upgrade the package
-- ✅ Smaller project footprint
+- Works immediately after `npm install`
+- No CLI setup required
+- Automatic updates when you upgrade the package
+- Smaller project footprint
 
 **Limitations:**
 
-- ❌ Cannot customize internal DataTable components
-- ❌ Limited control over component behavior
+- Cannot customize internal DataTable/FormRenderer components
+- Limited control over component behavior
 
-### 🛠️ Approach 2: CLI Installation (Full Control)
+### Approach 2: CLI Installation (Full Control)
 
 **Best for:** Custom styling, advanced modifications, full control
 
@@ -45,23 +46,23 @@ This copies all Tablefy components to `components/tablefy/` in your project, all
 
 **Advantages:**
 
-- ✅ Complete customization freedom
-- ✅ Modify any component to fit your needs
-- ✅ No dependency on package internals
+- Complete customization freedom
+- Modify any component to fit your needs
+- No dependency on package internals
 
 **Limitations:**
 
-- ❌ Manual updates required
-- ❌ More files in your project
-- ❌ Requires CLI setup step
+- Manual updates required
+- More files in your project
+- Requires CLI setup step
 
 ---
 
-**💡 Recommendation:** Start with **Approach 1** (direct import) for quick prototyping. Switch to **Approach 2** (CLI installation) when you need to customize internal components.
+**Recommendation:** Start with **Approach 1** (direct import) for quick prototyping. Switch to **Approach 2** (CLI installation) when you need to customize internal components.
 
 ---
 
-## 🚀 Quick Install (Recommended)
+## Quick Install (Recommended)
 
 The easiest way to set up Tablefy is using the CLI:
 
@@ -75,14 +76,14 @@ npx tablefy init
 
 The CLI will automatically:
 
-1. ✅ Check if shadcn/ui is initialized
-2. ✅ Install missing peer dependencies
-3. ✅ Install required shadcn/ui components
-4. ✅ Copy Tablefy components to your project
+1. Check if shadcn/ui is initialized
+2. Install missing peer dependencies
+3. Install required shadcn/ui components
+4. Copy Tablefy components to your project
 
 ---
 
-## 📦 Manual Installation
+## Manual Installation
 
 If you prefer to set up manually, follow these steps:
 
@@ -95,15 +96,36 @@ npm install @nccirtu/tablefy
 ### Step 2: Install Peer Dependencies
 
 ```bash
+# Core dependencies (required)
 npm install @tanstack/react-table lucide-react class-variance-authority clsx tailwind-merge
+
+# Inertia integration (optional - only if using Laravel + Inertia)
+npm install @inertiajs/react
+
+# Zod validation (optional - only if using schema validation)
+npm install zod
 ```
 
 ### Step 3: Install shadcn/ui Components
 
-Tablefy uses shadcn/ui components. Install them in your project:
+Tablefy uses shadcn/ui components. Install them based on what you need:
+
+**For Data Tables:**
 
 ```bash
 npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip
+```
+
+**For Forms (additional components):**
+
+```bash
+npx shadcn@latest add label card tabs textarea switch radio-group calendar popover separator
+```
+
+**Install everything at once:**
+
+```bash
+npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip label card tabs textarea switch radio-group calendar popover separator
 ```
 
 ### Step 4: Add Tablefy Components
@@ -153,7 +175,7 @@ If you're using Laravel with Vite, add the following alias configuration to your
 ```js
 import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
-import react from "@vitejs/plugin-react"; // or vue, etc.
+import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
@@ -176,7 +198,27 @@ This configures Vite to resolve `@/` imports to your `resources/js` directory, w
 
 ---
 
-## 🛠️ CLI Commands
+## Import Paths
+
+Tablefy provides multiple entry points for tree-shaking:
+
+```tsx
+// Main entry - everything
+import { DataTable, TableSchema, TextColumn, FormSchema, TextInput } from "@nccirtu/tablefy";
+
+// Columns only
+import { TextColumn, BadgeColumn, DateColumn } from "@nccirtu/tablefy/columns";
+
+// Forms only
+import { FormSchema, TextInput, Select, FormRenderer } from "@nccirtu/tablefy/forms";
+
+// Inertia integration only (requires @inertiajs/react)
+import { useInertiaForm, useServerTable } from "@nccirtu/tablefy/inertia";
+```
+
+---
+
+## CLI Commands
 
 ### `npx tablefy init`
 
@@ -225,13 +267,14 @@ npx tablefy add
 
 ---
 
-## ✅ Verify Installation
+## Verify Installation
 
-Create a test component:
+Create a test component to verify everything works:
+
+### Test Data Table
 
 ```tsx
-import { DataTable, TableSchema, EmptyStateBuilder } from "@nccirtu/tablefy";
-import { TextColumn } from "@nccirtu/tablefy/columns";
+import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";
 
 type User = {
   id: string;
@@ -251,12 +294,6 @@ const { columns, config } = TableSchema.make<User>()
     TextColumn.make("name").label("Name").sortable(),
     TextColumn.make("email").label("Email"),
   )
-  .emptyState(
-    EmptyStateBuilder.noData({
-      title: "No users",
-      description: "Get started by creating your first user",
-    }),
-  )
   .build();
 
 export function UsersTable() {
@@ -264,9 +301,55 @@ export function UsersTable() {
 }
 ```
 
+### Test Form
+
+```tsx
+import { FormSchema, TextInput, Select, FormRenderer } from "@nccirtu/tablefy/forms";
+import { useState } from "react";
+
+type ContactForm = {
+  name: string;
+  email: string;
+  subject: string;
+};
+
+const schema = FormSchema.make<ContactForm>()
+  .title("Contact Us")
+  .columns(2)
+  .fields(
+    TextInput.make<ContactForm>("name").label("Name").required(),
+    TextInput.make<ContactForm>("email").label("Email").email().required(),
+    Select.make<ContactForm>("subject")
+      .label("Subject")
+      .options([
+        { value: "support", label: "Support" },
+        { value: "sales", label: "Sales" },
+        { value: "other", label: "Other" },
+      ])
+      .columnSpan(2),
+  )
+  .actions((a) => a.submit({ label: "Send Message" }))
+  .build();
+
+export function ContactPage() {
+  const [data, setData] = useState<ContactForm>({ name: "", email: "", subject: "" });
+  const [errors, setErrors] = useState({});
+
+  return (
+    <FormRenderer
+      schema={schema}
+      data={data}
+      errors={errors}
+      onChange={(field, value) => setData((prev) => ({ ...prev, [field]: value }))}
+      onSubmit={() => console.log("Submitted:", data)}
+    />
+  );
+}
+```
+
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Components not found" errors
 
@@ -304,18 +387,21 @@ npx tablefy init
 Make sure you're importing from the correct paths:
 
 ```tsx
-// ✅ Correct
-import { TableSchema, DataTable, EmptyStateBuilder } from "@nccirtu/tablefy";
+// Correct
+import { TableSchema, DataTable } from "@nccirtu/tablefy";
 import { TextColumn, BadgeColumn } from "@nccirtu/tablefy/columns";
+import { FormSchema, TextInput } from "@nccirtu/tablefy/forms";
+import { useInertiaForm } from "@nccirtu/tablefy/inertia";
 
-// ❌ Wrong - EmptyStateBuilder is not in /columns
-import { EmptyStateBuilder } from "@nccirtu/tablefy/columns";
+// Wrong - useInertiaForm is not in /forms
+import { useInertiaForm } from "@nccirtu/tablefy/forms";
 ```
 
 ---
 
-## 📚 Next Steps
+## Next Steps
 
-- [Usage Guide](./docs/USAGE.md) - Learn how to use all column types
-- [Examples](./README.md#example-project-management-table) - See full examples
+- [Usage Guide](./USAGE.md) - Complete API reference for data tables
+- [Forms Guide](./FORMS.md) - Complete forms API with all field types
+- [Inertia Integration](./INERTIA.md) - Server-side tables and Inertia form hooks
 - [GitHub](https://github.com/nccirtu/Tablefy) - Report issues and contribute

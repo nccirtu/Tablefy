@@ -1,20 +1,34 @@
 # Tablefy
 
-A powerful, type-safe React table package built with TanStack Table and shadcn/ui components. Create beautiful, feature-rich data tables with a fluent, chainable API.
+A powerful, type-safe React toolkit for building schema-driven **Data Tables** and **Forms**. Built on [shadcn/ui](https://ui.shadcn.com/) and designed for [Laravel](https://laravel.com/) + [Inertia.js v2](https://inertiajs.com/) + [Wayfinder](https://github.com/laravel/wayfinder).
 
 ## Features
 
+### Data Tables
 - **Beautiful UI** - Built on shadcn/ui components with Tailwind CSS
 - **Search & Filter** - Built-in search and advanced filtering
-- **Sorting & Pagination** - Full sorting and pagination support
-- **Type-Safe** - Complete TypeScript support with type inference
-- **Fluent API** - Chainable builder pattern for easy configuration
-- **Responsive** - Mobile-friendly responsive design
-- **Rich Columns** - 12+ specialized column types with custom builders
-- **Custom Actions** - Render complex UI in actions with custom render functions
+- **Sorting & Pagination** - Full sorting and pagination support (client & server-side)
+- **14+ Column Types** - Text, Badge, Date, Link, Progress, Avatar, Icon, Image, Actions, and more
 - **Confirm Dialogs** - Built-in confirmation system for destructive actions
-- **Performance** - Optimized for large datasets
-- **Customizable** - Extensive theming and styling options
+
+### Forms
+- **Schema-Driven** - Define forms with a fluent builder API
+- **11 Field Types** - TextInput, Textarea, Select, Checkbox, CheckboxGroup, Toggle, RadioGroup, DatePicker, FileUpload, Repeater, Hidden
+- **Layout Builders** - Sections (collapsible cards), Tabs, Wizard (multi-step)
+- **Field Dependencies** - Show/hide/enable/disable fields based on other field values
+- **Grid Layout** - Responsive multi-column grids with columnSpan support
+
+### Inertia.js Integration
+- **useInertiaForm** - Bridge FormSchema with Inertia's `useForm` for seamless state management
+- **useServerTable** - Server-side pagination, sorting, and filtering with `router.visit()`
+- **Precognition** - Live server-side validation on field blur
+- **Wayfinder** - Type-safe route helpers as form action URLs
+
+### Core
+- **Type-Safe** - Complete TypeScript support with generics and type inference
+- **Fluent API** - Chainable builder pattern for easy, readable configuration
+- **Tree-Shakeable** - Sub-path exports (`/forms`, `/inertia`, `/columns`) for optimal bundle size
+- **Zero Breaking Changes** - Forms and Inertia are purely additive to the existing table API
 
 ## Installation
 
@@ -22,79 +36,54 @@ A powerful, type-safe React table package built with TanStack Table and shadcn/u
 npm install @nccirtu/tablefy
 ```
 
-**⚠️ Important:** Tablefy requires additional setup steps to work correctly.
-
-### Two Ways to Use Tablefy
-
-Tablefy offers **two approaches** to fit your workflow:
-
-#### 🚀 **Quick Start (Direct Import)**
-
-Import components directly from the package - perfect for getting started quickly:
-
-```tsx
-import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";
-```
-
-✅ **Pros:** Zero setup, works immediately after installation  
-❌ **Cons:** Limited customization of internal components
-
-#### 🛠️ **Full Control (CLI Installation)**
-
-Copy components to your project for complete customization:
+**Quick setup with CLI:**
 
 ```bash
 npx tablefy init
 ```
 
-This copies all components to your `components/tablefy/` directory, allowing you to:
-
-- Customize styles and behavior
-- Modify internal components
-- Full control over the code
-
-✅ **Pros:** Complete customization freedom  
-❌ **Cons:** Requires CLI setup step
-
-**Choose the approach that fits your needs!** Most users start with direct imports and switch to CLI installation when they need customization.
-
-### What you need to install
-
-1. **Peer dependencies** (required libraries)
-2. **shadcn/ui components** (UI building blocks)
-3. **Tailwind configuration** (for styling)
-
-👉 **[Follow the complete installation guide →](./INSTALLATION.md)**
-
-### Quick Overview
+### Peer Dependencies
 
 ```bash
-# 1. Install dependencies
+# Core (required)
 npm install @tanstack/react-table lucide-react class-variance-authority clsx tailwind-merge
 
-# 2. Install shadcn components
-npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip
+# shadcn/ui components (install what you need)
+npx shadcn@latest add button table checkbox dropdown-menu input select badge progress tooltip label card tabs textarea switch radio-group calendar popover separator
 
-# 3. Configure Tailwind (see INSTALLATION.md for framework-specific instructions)
+# Optional: Inertia.js integration
+npm install @inertiajs/react
 
-# 4. For Laravel/Vite: Add alias configuration to vite.config.js
-# See INSTALLATION.md Step 6 for details
-
-# 5. Restart dev server
+# Optional: Zod validation
+npm install zod
 ```
 
-**Laravel/Vite Users:** You must configure the `@` alias in your `vite.config.js` to resolve imports correctly. See [INSTALLATION.md](./INSTALLATION.md#step-6-configure-vite-laravelvite-projects) for details.
+### Configure Tailwind
 
-## Quick Start
+**Tailwind v4 (Laravel 12):**
+
+```css
+@import "tailwindcss";
+@source '../../node_modules/@nccirtu/tablefy/dist';
+```
+
+**Tailwind v3:**
+
+```js
+module.exports = {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@nccirtu/tablefy/dist/**/*.{js,mjs}",
+  ],
+};
+```
+
+See the [full installation guide](./docs/INSTALLATION.md) for framework-specific instructions.
+
+## Quick Start: Data Table
 
 ```tsx
-import {
-  DataTable,
-  TableSchema,
-  TextColumn,
-  BadgeColumn,
-  DateColumn,
-} from "tablefy";
+import { DataTable, TableSchema, TextColumn, BadgeColumn, DateColumn } from "@nccirtu/tablefy";
 
 type User = {
   id: string;
@@ -107,14 +96,11 @@ type User = {
 const columns = TableSchema.make<User>()
   .columns(
     TextColumn.make("name").label("Name").sortable(),
-
     TextColumn.make("email").label("Email").limit(30),
-
     BadgeColumn.make("status").label("Status").variants({
       active: "success",
       inactive: "secondary",
     }),
-
     DateColumn.make("createdAt").label("Created").relative(),
   )
   .build();
@@ -133,161 +119,197 @@ function UsersTable({ users }: { users: User[] }) {
 }
 ```
 
-## Column Types
-
-Tablefy provides 12+ specialized column types, each with their own builder methods:
-
-| Column Type         | Description          | Key Methods                                                               |
-| ------------------- | -------------------- | ------------------------------------------------------------------------- |
-| `TextColumn`        | Simple text display  | `sortable()`, `prefix()`, `suffix()`, `limit()`, `uppercase()`            |
-| `NumberColumn`      | Numbers & currency   | `money()`, `percent()`, `decimals()`, `locale()`                          |
-| `DateColumn`        | Dates & times        | `short()`, `long()`, `relative()`, `datetime()`, `withIcon()`             |
-| `BadgeColumn`       | Status badges        | `variants()`, `boolean()`, `status()`                                     |
-| `LinkColumn`        | Clickable links      | `href()`, `external()`, `underline()`, `openInNewTab()`                   |
-| `ProgressColumn`    | Progress bars        | `max()`, `colorByThreshold()`, `showPercentage()`, `format()`             |
-| `AvatarGroupColumn` | Avatar groups        | `maxVisible()`, `size()`, `overlap()`, `fields()`, `showNames()`          |
-| `IconColumn`        | Status icons         | `boolean()`, `priority()`, `onlineStatus()`, `verification()`, `states()` |
-| `ImageColumn`       | Single images        | `size()`, `rounded()`, `circular()`, `fallback()`                         |
-| `CheckboxColumn`    | Selection checkboxes | —                                                                         |
-| `ActionsColumn`     | Dropdown menus       | `view()`, `edit()`, `delete()`, `action()`, `link()`                      |
-
-## Example: Project Management Table
+## Quick Start: Form
 
 ```tsx
-import {
-  TableSchema,
-  CheckboxColumn,
-  TextColumn,
-  LinkColumn,
-  ProgressColumn,
-  AvatarGroupColumn,
-  IconColumn,
-  DateColumn,
-  ActionsColumn,
-} from "tablefy";
+import { FormSchema, TextInput, Select, Textarea, FormRenderer } from "@nccirtu/tablefy/forms";
+import { useState } from "react";
 
-type Project = {
-  id: string;
+type CreateUser = {
   name: string;
-  url: string;
-  progress: number;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "active" | "inactive";
-  isPublic: boolean;
-  team: Array<{ name: string; avatar?: string }>;
-  deadline: Date;
+  email: string;
+  role: string;
+  bio: string;
 };
 
-export const projectColumns = TableSchema.make<Project>()
-  .columns(
-    CheckboxColumn.make(),
+const schema = FormSchema.make<CreateUser>()
+  .title("Create User")
+  .description("Add a new team member")
+  .columns(2)
+  .bordered()
+  .fields(
+    TextInput.make<CreateUser>("name").label("Name").required(),
+    TextInput.make<CreateUser>("email").label("Email").email().required(),
+    Select.make<CreateUser>("role")
+      .label("Role")
+      .options([
+        { value: "admin", label: "Admin" },
+        { value: "editor", label: "Editor" },
+        { value: "viewer", label: "Viewer" },
+      ])
+      .required(),
+    Textarea.make<CreateUser>("bio").label("Biography").rows(4).columnSpan(2),
+  )
+  .actions((a) => a.submit({ label: "Create User" }).cancel({ label: "Cancel" }))
+  .build();
 
-    LinkColumn.make("name")
-      .label("Project")
-      .sortable()
-      .href((row) => `/projects/${row.id}`)
-      .underline("hover"),
+function CreateUserPage() {
+  const [data, setData] = useState<CreateUser>({ name: "", email: "", role: "", bio: "" });
+  const [errors, setErrors] = useState({});
 
-    LinkColumn.make("url").label("Website").external().limit(30),
+  return (
+    <FormRenderer
+      schema={schema}
+      data={data}
+      errors={errors}
+      onChange={(field, value) => setData((prev) => ({ ...prev, [field]: value }))}
+      onSubmit={() => console.log("Submit:", data)}
+    />
+  );
+}
+```
 
-    ProgressColumn.make("progress")
-      .label("Progress")
-      .sortable()
-      .colorByThreshold(30, 15)
-      .showPercentage(),
+## Quick Start: Inertia.js + Laravel
 
-    IconColumn.make("priority")
-      .label("Priority")
-      .sortable()
-      .priority()
-      .withBackground(),
+```tsx
+import { FormSchema, TextInput, Select, FormRenderer } from "@nccirtu/tablefy/forms";
+import { useInertiaForm } from "@nccirtu/tablefy/inertia";
 
-    IconColumn.make("status").label("Status").activeInactive(),
+type CreateUser = { name: string; email: string; role: string };
 
-    IconColumn.make("isPublic")
-      .label("Visibility")
-      .boolean({
-        trueLabel: "Public",
-        falseLabel: "Private",
-      })
-      .showLabel(),
+const schema = FormSchema.make<CreateUser>()
+  .title("Create User")
+  .columns(2)
+  .fields(
+    TextInput.make<CreateUser>("name").label("Name").required(),
+    TextInput.make<CreateUser>("email").label("Email").email().required(),
+    Select.make<CreateUser>("role")
+      .label("Role")
+      .options([
+        { value: "admin", label: "Admin" },
+        { value: "editor", label: "Editor" },
+      ])
+      .columnSpan(2),
+  )
+  .actions((a) => a.submit({ label: "Create" }).cancel({ label: "Cancel", href: "/users" }))
+  .build();
 
-    AvatarGroupColumn.make("team")
-      .label("Team")
-      .maxVisible(3)
-      .size("sm")
-      .fields({ name: "name", src: "avatar" }),
+export default function CreateUserPage() {
+  const { data, errors, onChange, onSubmit, processing } = useInertiaForm<CreateUser>({
+    schema,
+    url: "/users",
+    method: "post",
+  });
 
-    DateColumn.make("deadline").label("Deadline").sortable().relative(),
+  return (
+    <FormRenderer
+      schema={schema}
+      data={data}
+      errors={errors}
+      onChange={onChange}
+      onSubmit={onSubmit}
+      processing={processing}
+    />
+  );
+}
+```
 
-    ActionsColumn.make<Project>()
-      .view((row) => (window.location.href = `/projects/${row.id}`))
-      .edit((row) => console.log("Edit", row.id))
-      .action({
-        label: "Delete",
-        variant: "destructive",
-        onClick: async (row) => {
-          const ok = await confirm({
-            title: "Delete Project?",
-            description: `Delete "${row.name}"?`,
-            variant: "destructive",
-          });
-          if (ok) console.log("Delete", row.id);
-        },
-      }),
+## Column Types
+
+| Column Type | Description | Key Methods |
+|---|---|---|
+| `TextColumn` | Simple text display | `sortable()`, `prefix()`, `suffix()`, `limit()`, `uppercase()` |
+| `NumberColumn` | Numbers & currency | `money()`, `percent()`, `decimals()`, `locale()` |
+| `DateColumn` | Dates & times | `short()`, `long()`, `relative()`, `datetime()`, `withIcon()` |
+| `BadgeColumn` | Status badges | `variants()`, `boolean()`, `status()` |
+| `LinkColumn` | Clickable links | `href()`, `external()`, `underline()`, `openInNewTab()` |
+| `ProgressColumn` | Progress bars | `max()`, `colorByThreshold()`, `showPercentage()`, `format()` |
+| `AvatarGroupColumn` | Avatar groups | `maxVisible()`, `size()`, `overlap()`, `fields()`, `showNames()` |
+| `IconColumn` | Status icons | `boolean()`, `priority()`, `onlineStatus()`, `verification()`, `states()` |
+| `ImageColumn` | Single images | `size()`, `rounded()`, `circular()`, `fallback()` |
+| `CheckboxColumn` | Selection checkboxes | -- |
+| `ActionsColumn` | Dropdown menus | `view()`, `edit()`, `delete()`, `action()`, `link()` |
+| `EnumColumn` | Enum display | `options()` |
+
+## Form Field Types
+
+| Field Type | Description | Key Methods |
+|---|---|---|
+| `TextInput` | Single-line text | `email()`, `password()`, `number()`, `url()`, `tel()`, `prefix()`, `suffix()`, `minLength()`, `maxLength()` |
+| `Textarea` | Multi-line text | `rows()`, `minLength()`, `maxLength()`, `autoResize()` |
+| `Select` | Dropdown select | `options()`, `multiple()`, `searchable()`, `clearable()`, `loadOptions()` |
+| `Checkbox` | Boolean checkbox | (inherits base methods) |
+| `CheckboxGroup` | Multiple checkboxes | `options()`, `columns()` |
+| `Toggle` | On/off switch | `onLabel()`, `offLabel()` |
+| `RadioGroup` | Radio buttons | `options()`, `horizontal()`, `vertical()` |
+| `DatePicker` | Date calendar | `minDate()`, `maxDate()`, `format()`, `includeTime()`, `locale()` |
+| `FileUpload` | File drag & drop | `accept()`, `maxSize()`, `multiple()`, `maxFiles()`, `image()`, `pdf()` |
+| `Repeater` | Dynamic list | `fields()`, `minItems()`, `maxItems()`, `addLabel()`, `orderable()` |
+| `Hidden` | Hidden input | (inherits base methods) |
+
+## Layout Options
+
+### Sections (Collapsible Cards)
+
+```tsx
+FormSchema.make<T>()
+  .fields(/* ... */)
+  .sections(
+    SectionBuilder.make("Personal").fields(["name", "email"]).columns(2),
+    SectionBuilder.make("Address").fields(["street", "city"]).collapsible(),
   )
   .build();
 ```
 
-## Documentation
-
-- [Installation Guide](./INSTALLATION.md) - Detailed installation instructions
-- [Usage Guide](./docs/USAGE.md) - Complete API reference and examples
-- [Column Types](./docs/USAGE.md#column-types) - All column types and their methods
-- [Actions Column](./docs/ACTIONS_COLUMN.md) - Custom render functions and confirm dialogs
-- [Editable Columns](./docs/EDITABLE_COLUMNS.md) - InputColumn and SelectColumn guide
-
-## Advanced Features
-
-### Empty States
+### Tabs
 
 ```tsx
-import { EmptyStateBuilder } from "tablefy";
-
-const emptyState = EmptyStateBuilder.make()
-  .title("No projects found")
-  .description("Get started by creating your first project")
-  .action("Create Project", () => createProject())
+FormSchema.make<T>()
+  .fields(/* ... */)
+  .tabs(
+    TabBuilder.make("Profile").fields(["name", "email"]).icon(<User />),
+    TabBuilder.make("Settings").fields(["language", "timezone"]),
+  )
   .build();
 ```
 
-### Search & Filters
+### Wizard (Multi-Step)
 
 ```tsx
-<DataTable
-  columns={columns}
-  data={data}
-  config={{
-    search: {
-      enabled: true,
-      placeholder: "Search projects...",
-      columns: ["name", "url"],
-    },
-    filters: [
-      {
-        id: "status",
-        label: "Status",
-        type: "select",
-        column: "status",
-        options: [
-          { label: "Active", value: "active" },
-          { label: "Inactive", value: "inactive" },
-        ],
-      },
-    ],
-  }}
-/>
+FormSchema.make<T>()
+  .fields(/* ... */)
+  .wizard(
+    WizardStep.make("Account").fields(["email", "password"])
+      .canProceed((d) => !!d.email && !!d.password),
+    WizardStep.make("Profile").fields(["name", "bio"]),
+  )
+  .build();
 ```
+
+## Import Paths
+
+```tsx
+// Everything
+import { DataTable, TableSchema, TextColumn, FormSchema, TextInput } from "@nccirtu/tablefy";
+
+// Columns only (tree-shakeable)
+import { TextColumn, BadgeColumn } from "@nccirtu/tablefy/columns";
+
+// Forms only (tree-shakeable, no TanStack Table)
+import { FormSchema, TextInput, Select, FormRenderer } from "@nccirtu/tablefy/forms";
+
+// Inertia integration (requires @inertiajs/react)
+import { useInertiaForm, useServerTable } from "@nccirtu/tablefy/inertia";
+```
+
+## Documentation
+
+- [Installation Guide](./docs/INSTALLATION.md) - Detailed setup instructions
+- [Data Tables Guide](./docs/USAGE.md) - Complete table API reference and examples
+- [Forms Guide](./docs/FORMS.md) - All form field types, layouts, and examples
+- [Inertia Integration](./docs/INERTIA.md) - Server-side tables, useInertiaForm, Precognition
+- [Actions Column](./docs/ACTIONS_COLUMN.md) - Custom render functions and confirm dialogs
+- [Editable Columns](./docs/EDITABLE_COLUMNS.md) - InputColumn and SelectColumn guide
 
 ## Contributing
 
@@ -304,3 +326,5 @@ Built with:
 - [TanStack Table](https://tanstack.com/table) - Headless table library
 - [shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Inertia.js](https://inertiajs.com/) - The modern monolith
+- [Laravel](https://laravel.com/) - The PHP framework

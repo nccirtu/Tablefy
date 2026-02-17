@@ -1,11 +1,11 @@
 {
   "name": "@nccirtu/tablefy",
-  "version": "0.8.4",
-  "description": "A powerful, type-safe React table package built with TanStack Table and shadcn/ui components",
+  "version": "0.9.0",
+  "description": "A Filament-like schema-driven toolkit for React tables and forms, built with TanStack Table and shadcn/ui. Designed for Laravel + Inertia.js v2 + Wayfinder.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
-  "types": "./dist/index.d.ts",
   "bin": {
     "tablefy": "./dist/cli/index.js"
   },
@@ -21,13 +21,19 @@
     "react",
     "table",
     "data-table",
+    "forms",
+    "schema-driven",
     "shadcn-ui",
     "tanstack-table",
     "typescript",
     "react-table",
     "data-grid",
     "ui-components",
-    "tailwind"
+    "tailwind",
+    "inertia",
+    "laravel",
+    "wayfinder",
+    "filament"
   ],
   "author": "Cirtu Cristian",
   "license": "MIT",
@@ -53,7 +59,9 @@
     "lucide-react": ">=0.300.0",
     "class-variance-authority": ">=0.7.0",
     "clsx": ">=2.0.0",
-    "tailwind-merge": ">=2.0.0"
+    "tailwind-merge": ">=2.0.0",
+    "@inertiajs/react": "^2.0.0",
+    "zod": "^3.0.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-table": {
@@ -70,6 +78,12 @@
     },
     "tailwind-merge": {
       "optional": false
+    },
+    "@inertiajs/react": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -103,22 +117,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.esm.js"
+      "require": "./dist/index.js"
     },
     "./columns": {
       "types": "./dist/columns/index.d.ts",
       "import": "./dist/columns/index.esm.js",
-      "require": "./dist/columns/index.js",
-      "default": "./dist/columns/index.esm.js"
+      "require": "./dist/columns/index.js"
     },
-    "./package.json": "./package.json"
+    "./forms": {
+      "types": "./dist/forms/index.d.ts",
+      "import": "./dist/forms/index.esm.js",
+      "require": "./dist/forms/index.js"
+    },
+    "./inertia": {
+      "types": "./dist/inertia/index.d.ts",
+      "import": "./dist/inertia/index.esm.js",
+      "require": "./dist/inertia/index.js"
+    }
   },
-  "sideEffects": false,
   "typesVersions": {
     "*": {
       "columns": [
         "dist/columns/index.d.ts"
+      ],
+      "forms": [
+        "dist/forms/index.d.ts"
+      ],
+      "inertia": [
+        "dist/inertia/index.d.ts"
       ]
     }
   }

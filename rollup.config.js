@@ -19,6 +19,7 @@ const external = [
   "clsx",
   "class-variance-authority",
   "tailwind-merge",
+  "zod",
 ];
 
 // Check if import should be external
@@ -28,6 +29,25 @@ function isExternal(id) {
   if (id.startsWith("@/")) return true;
   return false;
 }
+
+// Extended external check for inertia bundle
+function isExternalInertia(id) {
+  if (isExternal(id)) return true;
+  if (id.startsWith("@inertiajs/")) return true;
+  return false;
+}
+
+const suppressWarnings = {
+  onwarn(warning, warn) {
+    if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+    if (
+      warning.code === "UNRESOLVED_IMPORT" &&
+      warning.exporter?.startsWith("@/")
+    )
+      return;
+    warn(warning);
+  },
+};
 
 const plugins = [
   resolve({
@@ -63,17 +83,7 @@ export default defineConfig([
     ],
     plugins,
     external: isExternal,
-    onwarn(warning, warn) {
-      // Ignore "use client" warnings
-      if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
-      // Ignore unresolved @/components/ui (they're external - from user's project)
-      if (
-        warning.code === "UNRESOLVED_IMPORT" &&
-        warning.exporter?.startsWith("@/components/ui")
-      )
-        return;
-      warn(warning);
-    },
+    ...suppressWarnings,
   },
   // Columns bundle
   {
@@ -95,16 +105,50 @@ export default defineConfig([
     ],
     plugins,
     external: isExternal,
-    onwarn(warning, warn) {
-      // Ignore "use client" warnings
-      if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
-      // Ignore unresolved @/components/ui (they're external - from user's project)
-      if (
-        warning.code === "UNRESOLVED_IMPORT" &&
-        warning.exporter?.startsWith("@/components/ui")
-      )
-        return;
-      warn(warning);
-    },
+    ...suppressWarnings,
+  },
+  // Forms bundle
+  {
+    input: "src/forms/index.ts",
+    output: [
+      {
+        file: "dist/forms/index.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        interop: "auto",
+      },
+      {
+        file: "dist/forms/index.esm.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+      },
+    ],
+    plugins,
+    external: isExternal,
+    ...suppressWarnings,
+  },
+  // Inertia integration bundle
+  {
+    input: "src/inertia/index.ts",
+    output: [
+      {
+        file: "dist/inertia/index.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        interop: "auto",
+      },
+      {
+        file: "dist/inertia/index.esm.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+      },
+    ],
+    plugins,
+    external: isExternalInertia,
+    ...suppressWarnings,
   },
 ]);

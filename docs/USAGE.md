@@ -559,5 +559,34 @@ const columns = TableSchema.make<TeamMember>()
   .build();
 ```
 
-For more examples and advanced use cases, check the [GitHub repository](https://github.com/yourusername/tablefy).
+For more examples and advanced use cases, check the [GitHub repository](https://github.com/nccirtu/Tablefy).
+
+## Forms
+
+Tablefy also includes a complete schema-driven form system. See the dedicated guides:
+
+- [Forms Guide](./FORMS.md) - All 11 field types, layouts (sections, tabs, wizard), field dependencies, and full examples
+- [Inertia Integration](./INERTIA.md) - `useInertiaForm`, `useServerTable`, Precognition, and Laravel controller examples
+
+**Quick example:**
+
+```tsx
+import { FormSchema, TextInput, Select, FormRenderer } from "@nccirtu/tablefy/forms";
+
+const schema = FormSchema.make<CreateUser>()
+  .title("Create User")
+  .columns(2)
+  .fields(
+    TextInput.make<CreateUser>("name").label("Name").required(),
+    TextInput.make<CreateUser>("email").label("Email").email().required(),
+    Select.make<CreateUser>("role")
+      .label("Role")
+      .options([
+        { value: "admin", label: "Admin" },
+        { value: "editor", label: "Editor" },
+      ]),
+  )
+  .actions((a) => a.submit({ label: "Create" }))
+  .build();
+```
 

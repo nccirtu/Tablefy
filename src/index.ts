@@ -71,3 +71,39 @@ export type {
   PaginationConfig,
   SearchConfig,
 } from "./types";
+
+// Forms - re-export for convenience
+export {
+  FormSchema,
+  ActionsBuilder,
+  SectionBuilder,
+  TabBuilder,
+  WizardStep,
+  TextInput,
+  Textarea,
+  Select,
+  Checkbox,
+  Toggle,
+  RadioGroup,
+  DatePicker,
+  Hidden,
+  FileUpload,
+  CheckboxGroup,
+  Repeater,
+  FormRenderer,
+} from "./forms";
+
+export type {
+  FormSchemaConfig,
+  FormBuildResult,
+  FormRendererProps,
+  BuiltField,
+  FieldType,
+  FieldRenderProps,
+  BaseFieldConfig,
+  SelectOption as FormSelectOption,
+  FormActionConfig,
+  SectionConfig,
+  TabConfig,
+  WizardStepConfig,
+} from "./forms";
