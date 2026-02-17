@@ -1,7 +1,7 @@
 {
   "name": "@nccirtu/tablefy",
-  "version": "0.9.1",
-  "description": "A Filament-like schema-driven toolkit for React tables and forms, built with TanStack Table and shadcn/ui. Designed for Laravel + Inertia.js v2 + Wayfinder.",
+  "version": "0.9.2",
+  "description": "A schema-driven toolkit for React tables and forms, built with TanStack Table and shadcn/ui. Designed for Laravel + Inertia.js v2 + Wayfinder.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

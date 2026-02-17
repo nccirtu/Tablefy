@@ -1,8 +1,6 @@
 "use client";
 import React, { ReactNode, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
 import { WizardStepConfig } from "../types/layout";
 import { BuiltField } from "../types/form";
 import { FieldRenderer } from "./field-renderer";
@@ -41,6 +39,7 @@ export function WizardRenderer<TData extends Record<string, any>>({
   const currentStepConfig = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
+  const progressPercent = Math.round(((currentStep + 1) / steps.length) * 100);
 
   const canProceed = currentStepConfig?.canProceed
     ? currentStepConfig.canProceed(data)
@@ -68,65 +67,35 @@ export function WizardRenderer<TData extends Record<string, any>>({
 
   return (
     <div className="space-y-6">
-      {/* Step indicators */}
-      <nav aria-label="Progress">
-        <ol className="flex items-center">
-          {steps.map((step, index) => (
-            <li
-              key={step.id}
-              className={cn(
-                "flex items-center",
-                index < steps.length - 1 && "flex-1",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium",
-                    index < currentStep &&
-                      "border-primary bg-primary text-primary-foreground",
-                    index === currentStep &&
-                      "border-primary text-primary",
-                    index > currentStep &&
-                      "border-muted-foreground/25 text-muted-foreground",
-                  )}
-                >
-                  {index < currentStep ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                <div className="hidden sm:block">
-                  <p
-                    className={cn(
-                      "text-sm font-medium",
-                      index <= currentStep
-                        ? "text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {step.label}
-                  </p>
-                  {step.description && (
-                    <p className="text-xs text-muted-foreground">
-                      {step.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-              {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "mx-4 hidden h-0.5 flex-1 sm:block",
-                    index < currentStep ? "bg-primary" : "bg-muted",
-                  )}
-                />
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
+      {/* Progress header */}
+      <div className="rounded-lg bg-muted/50 p-6">
+        <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Step: {currentStep + 1} of {steps.length}
+        </p>
+        <div className="mt-1 flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-foreground">
+              {currentStepConfig?.label}
+            </h3>
+            {currentStepConfig?.description && (
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {currentStepConfig.description}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-40 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300 ease-in-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="text-sm font-medium text-muted-foreground">
+              {progressPercent}%
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Step content */}
       <div>
