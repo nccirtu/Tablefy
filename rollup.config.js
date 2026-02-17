@@ -49,18 +49,20 @@ const suppressWarnings = {
   },
 };
 
-const plugins = [
-  resolve({
-    extensions: [".ts", ".tsx", ".js", ".jsx"],
-  }),
-  commonjs(),
-  typescript({
-    tsconfig: "./tsconfig.build.json",
-    declaration: true,
-    declarationDir: "dist",
-    noEmitOnError: false,
-  }),
-];
+function createPlugins() {
+  return [
+    resolve({
+      extensions: [".ts", ".tsx", ".js", ".jsx"],
+    }),
+    commonjs(),
+    typescript({
+      tsconfig: "./tsconfig.build.json",
+      declaration: true,
+      declarationDir: "dist",
+      noEmitOnError: false,
+    }),
+  ];
+}
 
 export default defineConfig([
   // Main library bundle
@@ -81,7 +83,7 @@ export default defineConfig([
         exports: "named",
       },
     ],
-    plugins,
+    plugins: createPlugins(),
     external: isExternal,
     ...suppressWarnings,
   },
@@ -103,7 +105,7 @@ export default defineConfig([
         exports: "named",
       },
     ],
-    plugins,
+    plugins: createPlugins(),
     external: isExternal,
     ...suppressWarnings,
   },
@@ -125,7 +127,7 @@ export default defineConfig([
         exports: "named",
       },
     ],
-    plugins,
+    plugins: createPlugins(),
     external: isExternal,
     ...suppressWarnings,
   },
@@ -147,7 +149,7 @@ export default defineConfig([
         exports: "named",
       },
     ],
-    plugins,
+    plugins: createPlugins(),
     external: isExternalInertia,
     ...suppressWarnings,
   },

@@ -1,6 +1,6 @@
 {
   "name": "@nccirtu/tablefy",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "A Filament-like schema-driven toolkit for React tables and forms, built with TanStack Table and shadcn/ui. Designed for Laravel + Inertia.js v2 + Wayfinder.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -10,8 +10,9 @@
     "tablefy": "./dist/cli/index.js"
   },
   "scripts": {
-    "build": "npm run build:lib && npm run build:cli",
+    "build": "npm run build:lib && npm run build:fix-dts && npm run build:cli",
     "build:lib": "rollup -c",
+    "build:fix-dts": "node scripts/fix-dts.js",
     "build:cli": "tsup cli/index.ts --outDir dist/cli --format esm --target node18",
     "dev": "rollup -c -w",
     "test": "jest",
