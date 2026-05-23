@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Search, X, Columns } from "lucide-react";
+import { ChevronDown, Search, X, Columns, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderAction, SearchConfig } from "../types";
 
@@ -204,7 +204,8 @@ export function DataTableHeader<TData>({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
+          {/* Desktop ≥md: alle Actions inline */}
+          <div className="hidden md:flex items-center gap-2">
             {showBulkActions && (
               <span className="text-sm text-muted-foreground">
                 {selectedCount} ausgewählt
@@ -250,6 +251,113 @@ export function DataTableHeader<TData>({
 
             {normalActions.length > 0 &&
               normalActions.map((action, index) => renderAction(action, index))}
+          </div>
+
+          {/* Mobile <md: Spalten + 3-Punkte-Actions als getrennte Buttons.
+              Beide bleiben Icon-only damit der Header schmal bleibt. */}
+          <div className="flex md:hidden items-center gap-2">
+            {showBulkActions && (
+              <span className="text-sm text-muted-foreground">
+                {selectedCount}
+              </span>
+            )}
+
+            {/* Spalten-Toggle (eigener Dropdown, gleicher Inhalt wie Desktop) */}
+            {enableColumnVisibility && table && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label={columnVisibilityLabel}>
+                    <Columns className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuLabel>{columnVisibilityLabel}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      const meta = column.columnDef.meta as any;
+                      const label = meta?.visibilityLabel || column.id;
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value: boolean) =>
+                            column.toggleVisibility(!!value)
+                          }
+                          onSelect={(e: Event) => e.preventDefault()}
+                        >
+                          {label}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* 3-Punkte-Dropdown fuer Bulk-Actions + Normal-Actions */}
+            {(normalActions.length > 0 || showBulkActions) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Tabellen-Aktionen">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[240px]">
+                  {/* Bulk-Actions kontext-sensitiv oben */}
+                  {showBulkActions && (
+                    <>
+                      <DropdownMenuLabel>{selectedCount} ausgewählt</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {bulkActions.map((action, index) => (
+                        <DropdownMenuItem
+                          key={`bulk-${action.id || index}`}
+                          onClick={() => {
+                            if (action.bulkOnClick) action.bulkOnClick(getSelectedRows());
+                            else action.onClick?.();
+                          }}
+                          disabled={action.disabled || action.loading}
+                          className={cn(
+                            action.variant === "destructive" &&
+                              "text-destructive focus:text-destructive",
+                          )}
+                        >
+                          {action.icon && <span className="mr-2">{action.icon}</span>}
+                          {action.label}
+                        </DropdownMenuItem>
+                      ))}
+                      {normalActions.length > 0 && <DropdownMenuSeparator />}
+                    </>
+                  )}
+
+                  {/* Normal-Actions */}
+                  {normalActions.map((action, index) =>
+                    action.href ? (
+                      <DropdownMenuItem key={action.id || index} asChild>
+                        <a href={action.href}>
+                          {action.icon && <span className="mr-2">{action.icon}</span>}
+                          {action.label}
+                        </a>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        key={action.id || index}
+                        onClick={action.onClick}
+                        disabled={action.disabled || action.loading}
+                        className={cn(
+                          action.variant === "destructive" &&
+                            "text-destructive focus:text-destructive",
+                        )}
+                      >
+                        {action.icon && <span className="mr-2">{action.icon}</span>}
+                        {action.label}
+                      </DropdownMenuItem>
+                    ),
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       )}
