@@ -1,4 +1,5 @@
 import React, { ReactNode, useContext } from "react";
+import { Info } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BuiltField, FieldRenderProps } from "../types/form";
@@ -33,26 +34,57 @@ export function FieldRenderer<TData extends Record<string, any>>({
   // Checkbox and Toggle handle their own labels inline
   const skipLabel = field.type === "checkbox" || field.type === "toggle";
 
+  const required =
+    typeof field.config.required === "function"
+      ? field.config.required(data)
+      : field.config.required === true;
+
+  const { hint, hintIcon, hintColor, tooltip } = field.config;
+  const showHeader = !skipLabel && (field.config.label || hint);
+
   return (
     <div
       className={cn(
         "space-y-2",
-        field.config.columnSpan && field.config.columnSpan > 1
-          ? `col-span-${field.config.columnSpan}`
-          : undefined,
+        field.config.columnSpanFull
+          ? "col-span-full"
+          : field.config.columnSpan && field.config.columnSpan > 1
+            ? `col-span-${field.config.columnSpan}`
+            : undefined,
         field.config.className,
       )}
     >
-      {field.config.label && !skipLabel && (
-        <Label
-          htmlFor={field.name}
-          className={cn(error && "text-destructive")}
-        >
-          {field.config.label}
-          {field.config.required && (
-            <span className="text-destructive ml-1">*</span>
+      {showHeader && (
+        <div className="flex items-center justify-between gap-2">
+          {field.config.label ? (
+            <Label
+              htmlFor={field.name}
+              className={cn("flex items-center gap-1", error && "text-destructive")}
+            >
+              {field.config.label}
+              {required && <span className="text-destructive">*</span>}
+              {tooltip && (
+                <span
+                  title={tooltip}
+                  className="inline-flex cursor-help text-muted-foreground"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </span>
+              )}
+            </Label>
+          ) : (
+            <span />
           )}
-        </Label>
+          {hint && (
+            <span
+              className="flex items-center gap-1 text-xs text-muted-foreground"
+              style={hintColor ? { color: hintColor } : undefined}
+            >
+              {hintIcon}
+              {hint}
+            </span>
+          )}
+        </div>
       )}
       {field.render({
         value,

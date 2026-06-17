@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useRef, useState } from "react";
 import {
   Select as ShadcnSelect,
   SelectContent,
@@ -24,11 +24,12 @@ import { SelectConfig, SelectOption } from "../types/field";
 import { FieldType, FieldRenderProps } from "../types/form";
 
 /**
- * Searchable combobox (shadcn Command + Popover). The popover content is
- * rendered WITHOUT a portal so it lives inside a parent Dialog's focus scope —
- * otherwise (portaled to body) the dialog's focus trap + pointer-events lock
- * break typing/selection. Values are compared as strings since backend option
- * values are strings while a record's FK is a number.
+ * Searchable combobox (shadcn Command + Popover). The dropdown is portaled into
+ * the surrounding Dialog element (if any) — so it is neither clipped by a
+ * scrollable dialog body nor blocked by the modal pointer-lock, while staying
+ * inside the dialog's focus scope (typing/selection work). Outside a dialog it
+ * portals to <body>. Values compare as strings (backend option values are
+ * strings while a record's FK is a number).
  */
 function SelectCombobox({
   value,
@@ -50,13 +51,26 @@ function SelectCombobox({
   className?: string;
 }): ReactNode {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [container, setContainer] = useState<HTMLElement | null>(null);
   const current = value === null || value === undefined ? "" : String(value);
   const selected = options.find((o) => String(o.value) === current);
 
+  const handleOpenChange = (next: boolean) => {
+    if (next) {
+      setContainer(
+        (triggerRef.current?.closest('[role="dialog"]') as HTMLElement | null) ??
+          null,
+      );
+    }
+    setOpen(next);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           type="button"
           variant="outline"
           role="combobox"
@@ -73,13 +87,14 @@ function SelectCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      {/* No <PopoverPortal> → content stays inside the Dialog DOM/focus scope. */}
-      <PopoverPrimitive.Content
-        align="start"
-        sideOffset={4}
-        className="z-50 w-[var(--radix-popover-trigger-width)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none"
-      >
-        <Command>
+      <PopoverPrimitive.Portal container={container ?? undefined}>
+        <PopoverPrimitive.Content
+          align="start"
+          sideOffset={4}
+          collisionPadding={8}
+          className="z-50 w-[var(--radix-popover-trigger-width)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none"
+        >
+          <Command>
           <CommandInput placeholder={placeholder || "Suchen..."} />
           <CommandList>
             <CommandEmpty>Keine Treffer.</CommandEmpty>
@@ -109,7 +124,8 @@ function SelectCombobox({
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverPrimitive.Content>
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
     </Popover>
   );
 }

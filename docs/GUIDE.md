@@ -265,7 +265,30 @@ const schema = FormSchema.make<CreateUser>()
 ### 4.2 Feldtypen
 Basis-Methoden (alle): `label`, `placeholder`, `helperText`, `required`, `disabled`,
 `readOnly`, `hidden`, `default(v)`, `columnSpan(n)`, `className`, `rules`, `zodSchema`, `reactive`.
-`disabled`/`hidden` akzeptieren auch `(data)=>boolean` (Field Dependencies).
+`required`/`disabled`/`readOnly`/`hidden` akzeptieren auch `(data)=>boolean` (Field Dependencies).
+
+**Weitere allgemeine Parameter** (alle Felder):
+
+| Gruppe | Methode | Wirkung |
+|---|---|---|
+| Reaktiv | `afterStateUpdated((value, set, data) => …)` | Seiteneffekt bei Änderung; `set(feld, wert)` setzt andere Felder. Aktiviert `reactive`. |
+| Reaktiv | `live({ debounce })` · `debounce(ms)` | Re-Render bei Änderung; `afterStateUpdated` debounced. |
+| Kontext | `visibleOn` · `hiddenOn` · `disabledOn` (`'create' \| 'edit'`) | Feld je nach Operation. Greift, wenn `<FormRenderer operation=…>` gesetzt ist (Dialoge automatisch). |
+| Validierung | `validate((value, data) => string \| null)` | Eigener Validator mit Klartext-Fehler. |
+| UX | `hint(text)` · `hintIcon(node)` · `hintColor(c)` | Hinweis **rechts neben dem Label** (vs. `helperText` darunter). |
+| UX | `tooltip(text)` | Info-Icon mit Tooltip am Label. |
+| UX | `autofocus()` · `prefixIcon(node)` · `suffixIcon(node)` | Fokus / Icon im Feld (TextInput). |
+| Layout | `columnSpanFull()` | Feld über alle Spalten. |
+| Submit | `dehydrated(false)` | Feld wird **nicht** an den Server gesendet (reines UI-Feld). |
+| Submit | `formatStateUsing((v, data) => …)` | Wert beim Laden formatieren (Anzeige). |
+| Submit | `mutateBeforeSave((v, data) => …)` | Wert kurz vor dem Submit umwandeln (z.B. `trim`). |
+
+```tsx
+TextInput.make<User>("name").autofocus().hint("Pflicht").mutateBeforeSave((v) => v.trim()),
+Select.make<User>("status").afterStateUpdated((v, set) => { if (v === "archived") set("active", false); }),
+DatePicker.make<User>("verified_at").hiddenOn("create"),   // erst beim Bearbeiten
+FileUpload.make("scratch").dehydrated(false),              // nur UI, nicht gesendet
+```
 
 | Feld | Spezifisch |
 |---|---|
@@ -281,10 +304,25 @@ Basis-Methoden (alle): `label`, `placeholder`, `helperText`, `required`, `disabl
 | `Repeater` | `fields`, `minItems`, `maxItems`, `addLabel`, `orderable` |
 | `Hidden` | (Basis) |
 
-### 4.3 Layouts
-- **Sections** (klappbare Cards): `SectionBuilder.make("Titel").fields([...]).columns(2).collapsible()`
-- **Tabs**: `TabBuilder.make("Profil").fields([...]).icon(<User/>)`
-- **Wizard** (mehrstufig): `WizardStep.make("Konto").fields([...]).canProceed((d)=>...)`
+### 4.3 Layouts (Cards / Tabs / Wizard)
+
+Felder werden in `.fields(...)` **definiert** und per **Namen** in Sections/Tabs/Steps gruppiert.
+`.sections()` / `.tabs()` / `.wizard()` sind **variadisch** (komma-separiert, **kein** Array — wie `.fields()`):
+
+```tsx
+FormSchema.make<User>()
+  .fields( TextInput.make("name")…, TextInput.make("email")…, Toggle.make("active")… )
+  .sections(
+    SectionBuilder.make("Stammdaten").columns(2).fields(["name", "email"]),
+    SectionBuilder.make("Einstellungen").collapsible().fields(["active"]),
+  )
+  .build();
+```
+
+- **Sections** (Cards): `SectionBuilder.make("Titel").description(…).columns(2).collapsible().fields([...])`
+- **Tabs**: `.tabs(TabBuilder.make("Profil").icon(<User/>).fields([...]), …)`
+- **Wizard** (mehrstufig): `.wizard(WizardStep.make("Konto").fields([...]), …)`
+- Felder, die in **keiner** Section/Tab/Step stehen, werden **nicht** gerendert.
 
 ### 4.4 Rendern
 ```tsx
