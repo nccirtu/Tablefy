@@ -14,6 +14,7 @@ class MakeTablefyResourceCommand extends Command
         {--generate : Read the table and pre-fill the type, columns, fields and rules}
         {--view : Also scaffold a view page (show route + View page with lazy relation tabs)}
         {--modal : Create/edit as dialogs instead of pages (no Create/Edit pages or GET routes)}
+        {--kanban : Also scaffold a Kanban view (Card schema, list toggle, kanban() + move route, position migration)}
         {--force : Overwrite all files, including the editable Tables/Schemas}';
 
     protected $description = 'Scaffold a Tablefy resource (TS pages/schemas/tables + controller + routes).';
@@ -36,7 +37,13 @@ class MakeTablefyResourceCommand extends Command
 
         $modal = (bool) $this->option('modal');
         $view = (bool) $this->option('view');
+        $kanban = (bool) $this->option('kanban');
         $camel = $r['{{ singularCamel }}'];
+        $r['{{ table }}'] = $this->resolveTable($singular, $plural);
+
+        // Kanban placeholders (controller method + use, card columns). Derived
+        // from the first enum column when --generate read the schema.
+        $r = array_merge($r, $this->buildKanban($kanban, $singular));
 
         // Row action to the view page — only when the resource has one (--view),
         // otherwise the show route doesn't exist and the link would 404.
@@ -60,7 +67,7 @@ class MakeTablefyResourceCommand extends Command
         $files = [
             "resources/js/types/tablefy/{$r['{{ singularKebab }}']}.ts" => ['type.ts', false],
             "resources/js/pages/tablefy/{$plural}/{$singular}Resource.tsx" => ['resource.tsx', false],
-            "resources/js/pages/tablefy/{$plural}/Pages/List{$plural}.tsx" => ['list-page.tsx', false],
+            "resources/js/pages/tablefy/{$plural}/Pages/List{$plural}.tsx" => [$kanban ? 'list-page-kanban.tsx' : 'list-page.tsx', false],
             "resources/js/pages/tablefy/{$plural}/Tables/{$plural}Table.tsx" => ['table.tsx', true],
             "resources/js/pages/tablefy/{$plural}/Schemas/{$singular}Form.tsx" => ['form.tsx', true],
             // editable: the controller is your customization surface (rules,
@@ -78,18 +85,35 @@ class MakeTablefyResourceCommand extends Command
             $files["resources/js/pages/tablefy/{$plural}/Pages/View{$singular}.tsx"] = ['view-page.tsx', false];
         }
 
+        if ($kanban) {
+            // Editable: the Card schema is your customization surface.
+            $files["resources/js/pages/tablefy/{$plural}/Schemas/{$singular}Card.tsx"] = ['card.tsx', true];
+        }
+
         foreach ($files as $target => [$stub, $editable]) {
             $this->writeStub($stub, base_path($target), $r, $editable);
         }
 
-        $this->appendRoute($r['{{ routeSlug }}'], $singular, $view, $modal);
+        if ($kanban) {
+            $this->writeKanbanMigration($r['{{ table }}']);
+        }
+
+        $this->appendRoute($r['{{ routeSlug }}'], $singular, $view, $modal, $kanban);
 
         $this->newLine();
         $this->info("Tablefy resource [{$singular}] scaffolded.");
         $this->line("Next: make sure routes/web.php contains  <fg=cyan>require __DIR__.'/tablefy.php';</>");
 
+        if ($kanban) {
+            $this->line("Kanban: add <fg=cyan>'position'</> to the model's \$fillable, then run <fg=cyan>php artisan migrate</>.");
+            $this->line("        adjust columns/colors in <fg=cyan>Schemas/{$singular}Card.tsx</> and groupBy in the controller.");
+        }
+
         return self::SUCCESS;
     }
+
+    /** Columns read from the DB by --generate (for enum/kanban detection). */
+    protected array $detectedColumns = [];
 
     /** @return array<string,string> */
     protected function buildBodies(string $singular, string $plural): array
@@ -113,6 +137,8 @@ class MakeTablefyResourceCommand extends Command
                 $this->warn("Table [{$table}] not found — scaffolding with placeholders. Run --generate after migrating.");
             }
         }
+
+        $this->detectedColumns = $columns;
 
         if ($columns) {
             $relations = $this->resolveRelations($columns);
@@ -140,6 +166,101 @@ class MakeTablefyResourceCommand extends Command
             '{{ with }}' => '',
             '{{ formOptions }}' => '',
         ];
+    }
+
+    /**
+     * Kanban placeholders. The group field + columns are derived from the first
+     * enum column found by --generate; without one, sensible TODO defaults.
+     *
+     * @return array<string,string>
+     */
+    protected function buildKanban(bool $kanban, string $singular): array
+    {
+        $empty = [
+            '{{ kanbanUse }}' => '',
+            '{{ kanbanMethod }}' => '',
+            '{{ kanbanGroupBy }}' => 'status',
+            '{{ kanbanColumns }}' => "        // TODO: { id: 'open', label: 'Open', color: 'amber' },",
+            '{{ kanbanTitleField }}' => 'name',
+        ];
+
+        if (! $kanban) {
+            return $empty;
+        }
+
+        // First enum column → group field + its values → columns + allowed().
+        $groupBy = 'status';
+        $values = [];
+        foreach ($this->detectedColumns as $col) {
+            if (preg_match("/enum\\((.*)\\)/i", (string) $col['type'], $m)) {
+                $groupBy = $col['name'];
+                preg_match_all("/'([^']*)'/", $m[1], $vals);
+                $values = $vals[1];
+                break;
+            }
+        }
+
+        // A title field: prefer "name"/"title", else the first string-ish column.
+        $title = 'name';
+        $names = array_column($this->detectedColumns, 'name');
+        foreach (['name', 'title', 'label'] as $cand) {
+            if (in_array($cand, $names, true)) {
+                $title = $cand;
+                break;
+            }
+        }
+
+        $palette = ['amber', 'blue', 'green', 'violet', 'rose', 'orange', 'cyan', 'slate'];
+        if ($values !== []) {
+            $columnsTs = [];
+            foreach ($values as $i => $v) {
+                $color = $palette[$i % count($palette)];
+                $columnsTs[] = "        { id: '{$v}', label: '" . Str::headline($v) . "', color: '{$color}' },";
+            }
+            $columnsTs = implode("\n", $columnsTs);
+            $allowedLine = "\n            ->allowed(['" . implode("', '", $values) . "'])";
+        } else {
+            $columnsTs = "        // TODO: { id: 'open', label: 'Open', color: 'amber' },";
+            $allowedLine = '';
+        }
+
+        $method = "\n    // Kanban-Ansicht: gruppiert nach `{$groupBy}`, mit Reorder (position)."
+            . "\n    protected function kanban(): ?Kanban"
+            . "\n    {"
+            . "\n        return Kanban::make()"
+            . "\n            ->groupBy('{$groupBy}')"
+            . "\n            ->sortable('position')"
+            . "\n            ->perColumn(15){$allowedLine};"
+            . "\n    }\n";
+
+        return [
+            '{{ kanbanUse }}' => "\nuse Nccirtu\\Tablefy\\Kanban\\Kanban;",
+            '{{ kanbanMethod }}' => $method,
+            '{{ kanbanGroupBy }}' => $groupBy,
+            '{{ kanbanColumns }}' => $columnsTs,
+            '{{ kanbanTitleField }}' => $title,
+        ];
+    }
+
+    /** Create a guarded `position` migration unless one already exists. */
+    protected function writeKanbanMigration(string $table): void
+    {
+        $dir = base_path('database/migrations');
+        File::ensureDirectoryExists($dir);
+
+        foreach ((array) File::glob("{$dir}/*_add_position_to_{$table}_table.php") as $existing) {
+            $this->line('  <fg=yellow>skip</>   ' . $this->rel($existing) . '  (migration exists)');
+
+            return;
+        }
+
+        $name = date('Y_m_d_His') . "_add_position_to_{$table}_table.php";
+        $target = "{$dir}/{$name}";
+        File::put($target, strtr($this->stub('kanban-position-migration.php'), [
+            '{{ table }}' => $table,
+            '{{ singular }}' => Str::studly(Str::singular($this->argument('name'))),
+        ]));
+        $this->line('  <fg=green>create</> ' . $this->rel($target));
     }
 
     /**
@@ -262,13 +383,14 @@ class MakeTablefyResourceCommand extends Command
         return File::get(__DIR__ . "/../../stubs/{$name}.stub");
     }
 
-    protected function appendRoute(string $slug, string $singular, bool $view = false, bool $modal = false): void
+    protected function appendRoute(string $slug, string $singular, bool $view = false, bool $modal = false, bool $kanban = false): void
     {
         $path = base_path('routes/tablefy.php');
         $controller = "\\App\\Http\\Controllers\\Tablefy\\{$singular}Controller::class";
         $args = "'{$slug}', {$controller}"
             . ($view ? ', view: true' : '')
-            . ($modal ? ', modal: true' : '');
+            . ($modal ? ', modal: true' : '')
+            . ($kanban ? ', kanban: true' : '');
         $line = "Route::tablefyResource({$args});";
 
         if (! File::exists($path)) {
