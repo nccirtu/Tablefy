@@ -93,11 +93,13 @@ export class TextInput<
       type,
       placeholder,
       maxLength,
-      readOnly,
       autocomplete,
       className,
       prefix,
       suffix,
+      prefixIcon,
+      suffixIcon,
+      autofocus,
     } = this.config;
 
     const input = (
@@ -113,11 +115,35 @@ export class TextInput<
         placeholder={placeholder}
         maxLength={maxLength}
         disabled={disabled}
-        readOnly={readOnly}
+        autoFocus={autofocus}
         autoComplete={autocomplete}
-        className={cn(error && "border-destructive", className)}
+        className={cn(
+          error && "border-destructive",
+          prefixIcon && "pl-9",
+          suffixIcon && "pr-9",
+          className,
+        )}
       />
     );
+
+    // Icons sit inside the field (absolute); text prefix/suffix sit beside it.
+    if (prefixIcon || suffixIcon) {
+      return (
+        <div className="relative">
+          {prefixIcon && (
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              {prefixIcon}
+            </span>
+          )}
+          {input}
+          {suffixIcon && (
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              {suffixIcon}
+            </span>
+          )}
+        </div>
+      );
+    }
 
     if (prefix || suffix) {
       return (

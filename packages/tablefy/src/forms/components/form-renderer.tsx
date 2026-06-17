@@ -1,8 +1,9 @@
 "use client";
-import React, { ReactNode, useMemo, useCallback } from "react";
+import React, { ReactNode, useMemo, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FormBuildResult, BuiltField } from "../types/form";
+import { FormOperation, FieldStateSetter } from "../types/field";
 import { FieldRenderer } from "./field-renderer";
 import { GridLayout } from "./grid-layout";
 import { FormActions } from "./form-actions";
@@ -23,6 +24,8 @@ export interface FormRendererProps<TData extends Record<string, any>> {
   onBlur?: (field: string) => void;
   /** Runtime page props for relationship selects (`Select.optionsFrom(...)`). */
   external?: Record<string, unknown>;
+  /** Active operation — drives `visibleOn`/`hiddenOn`/`disabledOn`. */
+  operation?: FormOperation;
 }
 
 export function FormRenderer<TData extends Record<string, any>>({
@@ -36,8 +39,40 @@ export function FormRenderer<TData extends Record<string, any>>({
   disabled = false,
   onBlur,
   external,
+  operation,
 }: FormRendererProps<TData>): ReactNode {
   const { fields, config } = schema;
+
+  const fieldByName = useMemo(() => {
+    const map: Record<string, BuiltField<TData>> = {};
+    for (const f of fields) map[f.name] = f;
+    return map;
+  }, [fields]);
+
+  // Wrap onChange so reactive side effects (`afterStateUpdated`) fire — once,
+  // regardless of layout mode (flat / sections / tabs / wizard).
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+  const handleChange = useCallback(
+    (field: keyof TData, value: any) => {
+      onChange(field, value);
+      const built = fieldByName[field as string];
+      const after = built?.config.afterStateUpdated;
+      if (!after) return;
+      const nextData = { ...data, [field]: value } as TData;
+      const set: FieldStateSetter = (f, v) => onChange(f as keyof TData, v);
+      const run = () => after(value, set, nextData);
+      const ms = built?.config.debounce;
+      if (ms) {
+        clearTimeout(debounceTimers.current[field as string]);
+        debounceTimers.current[field as string] = setTimeout(run, ms);
+      } else {
+        run();
+      }
+    },
+    [onChange, data, fieldByName],
+  );
 
   const resolvedTitle = useMemo(() => {
     if (typeof config.title === "function") return config.title(data);
@@ -52,10 +87,17 @@ export function FormRenderer<TData extends Record<string, any>>({
 
   const isFieldVisible = useCallback(
     (field: BuiltField<TData>): boolean => {
-      if (typeof field.config.hidden === "function")
-        return !field.config.hidden(data);
-      if (typeof field.config.hidden === "boolean")
-        return !field.config.hidden;
+      const h = field.config.hidden;
+      if (typeof h === "function" ? h(data) : h === true) return false;
+
+      if (operation) {
+        if (
+          field.config.visibleOn &&
+          !field.config.visibleOn.includes(operation)
+        )
+          return false;
+        if (field.config.hiddenOn?.includes(operation)) return false;
+      }
 
       for (const dep of field.config.dependsOn || []) {
         const depValue = data[dep.field as keyof TData];
@@ -66,33 +108,33 @@ export function FormRenderer<TData extends Record<string, any>>({
       }
       return true;
     },
-    [data],
+    [data, operation],
   );
 
   const isFieldDisabled = useCallback(
     (field: BuiltField<TData>): boolean => {
       if (disabled) return true;
-      if (typeof config.disabled === "function" && config.disabled(data))
-        return true;
-      if (typeof config.disabled === "boolean" && config.disabled) return true;
-      if (typeof field.config.disabled === "function")
-        return field.config.disabled(data);
-      if (typeof field.config.disabled === "boolean")
-        return field.config.disabled;
+      const fd = config.disabled;
+      if (typeof fd === "function" ? fd(data) : fd === true) return true;
+
+      const d = field.config.disabled;
+      if (typeof d === "function" ? d(data) : d === true) return true;
+
+      const ro = field.config.readOnly;
+      if (typeof ro === "function" ? ro(data) : ro === true) return true;
+
+      if (operation && field.config.disabledOn?.includes(operation)) return true;
 
       for (const dep of field.config.dependsOn || []) {
         const depValue = data[dep.field as keyof TData];
         if (dep.effect === "disable" && dep.condition(depValue, data))
           return true;
-        if (
-          dep.effect === "enable" &&
-          !dep.condition(depValue, data)
-        )
+        if (dep.effect === "enable" && !dep.condition(depValue, data))
           return true;
       }
       return false;
     },
-    [disabled, config.disabled, data],
+    [disabled, config.disabled, data, operation],
   );
 
   const renderFieldsFlat = () => (
@@ -107,7 +149,7 @@ export function FormRenderer<TData extends Record<string, any>>({
             error={errors[field.name as keyof TData]}
             disabled={isFieldDisabled(field)}
             data={data}
-            onChange={(v) => onChange(field.name as keyof TData, v)}
+            onChange={(v) => handleChange(field.name as keyof TData, v)}
             onBlur={onBlur ? () => onBlur(field.name) : undefined}
           />
         );
@@ -124,7 +166,7 @@ export function FormRenderer<TData extends Record<string, any>>({
           fields={fields}
           data={data}
           errors={errors}
-          onChange={onChange}
+          onChange={handleChange}
           onBlur={onBlur}
           isFieldVisible={isFieldVisible}
           isFieldDisabled={isFieldDisabled}
@@ -143,7 +185,7 @@ export function FormRenderer<TData extends Record<string, any>>({
           fields={fields}
           data={data}
           errors={errors}
-          onChange={onChange}
+          onChange={handleChange}
           onBlur={onBlur}
           isFieldVisible={isFieldVisible}
           isFieldDisabled={isFieldDisabled}
@@ -163,7 +205,7 @@ export function FormRenderer<TData extends Record<string, any>>({
               fields={fields}
               data={data}
               errors={errors}
-              onChange={onChange}
+              onChange={handleChange}
               onBlur={onBlur}
               isFieldVisible={isFieldVisible}
               isFieldDisabled={isFieldDisabled}

@@ -1,26 +1,59 @@
 import { ReactNode } from "react";
 
+/** Which form operation is active (used by visibleOn/hiddenOn/disabledOn). */
+export type FormOperation = "create" | "edit";
+
+/** Update other fields from afterStateUpdated. */
+export type FieldStateSetter = (field: string, value: any) => void;
+
 // Base configuration shared by all form fields
 export interface BaseFieldConfig<TData extends Record<string, any>> {
   name: string;
   label?: string;
   placeholder?: string;
   helperText?: string;
-  required?: boolean;
+  required?: boolean | ((data: TData) => boolean);
   disabled?: boolean | ((data: TData) => boolean);
-  readOnly?: boolean;
+  readOnly?: boolean | ((data: TData) => boolean);
   hidden?: boolean | ((data: TData) => boolean);
   defaultValue?: any;
   columnSpan?: number;
+  columnSpanFull?: boolean;
   className?: string;
+
+  // Context (create vs edit)
+  visibleOn?: FormOperation[];
+  hiddenOn?: FormOperation[];
+  disabledOn?: FormOperation[];
 
   // Validation
   rules?: ValidationRule[];
   zodSchema?: any;
+  validate?: (value: any, data: TData) => string | null | undefined;
 
   // Reactivity
   dependsOn?: DependencyConfig<TData>[];
   reactive?: boolean;
+  debounce?: number;
+  afterStateUpdated?: (
+    value: any,
+    set: FieldStateSetter,
+    data: TData,
+  ) => void;
+
+  // Guidance / UX
+  hint?: string;
+  hintIcon?: ReactNode;
+  hintColor?: string;
+  tooltip?: string;
+  autofocus?: boolean;
+  prefixIcon?: ReactNode;
+  suffixIcon?: ReactNode;
+
+  // Value / submit
+  dehydrated?: boolean; // default true; false → not sent to the server
+  formatStateUsing?: (value: any, data: TData) => any;
+  mutateBeforeSave?: (value: any, data: TData) => any;
 }
 
 export interface ValidationRule {

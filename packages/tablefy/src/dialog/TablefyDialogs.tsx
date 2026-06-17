@@ -120,11 +120,14 @@ function FormItem({ state }: { state: FormDialogState }) {
     config: { ...built.config, actions: undefined },
   };
 
+  const method = o.method ?? "post";
+  const operation = method === "post" ? "create" : "edit";
+
   const form = useInertiaForm<Record<string, unknown>>({
     schema: built,
     initialData: o.data,
     url: o.url,
-    method: o.method ?? "post",
+    method,
     preserveScroll: true,
     headers: { "X-Tablefy-Modal": "1" },
     onSuccess: () => {
@@ -142,15 +145,19 @@ function FormItem({ state }: { state: FormDialogState }) {
             {o.description && <DialogDescription>{o.description}</DialogDescription>}
           </DialogHeader>
         )}
-        <FormRenderer
-          schema={fieldsOnly}
-          data={form.data}
-          errors={form.errors}
-          onChange={form.onChange}
-          onSubmit={form.onSubmit}
-          processing={form.processing}
-          external={getPageProps()}
-        />
+        {/* Scrollbarer Feld-Bereich; Header + Footer bleiben sichtbar. */}
+        <div className="-mx-1 max-h-[65vh] overflow-y-auto px-1">
+          <FormRenderer
+            schema={fieldsOnly}
+            data={form.data}
+            errors={form.errors}
+            onChange={form.onChange}
+            onSubmit={form.onSubmit}
+            processing={form.processing}
+            external={getPageProps()}
+            operation={operation}
+          />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={close}>
             {o.cancelLabel ?? "Abbrechen"}
@@ -176,7 +183,7 @@ function CustomItem({ state }: { state: CustomDialogState }) {
             {o.description && <DialogDescription>{o.description}</DialogDescription>}
           </DialogHeader>
         )}
-        {o.content}
+        <div className="-mx-1 max-h-[70vh] overflow-y-auto px-1">{o.content}</div>
       </DialogContent>
     </Dialog>
   );

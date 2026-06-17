@@ -3,6 +3,8 @@ import {
   BaseFieldConfig,
   ValidationRule,
   DependencyConfig,
+  FormOperation,
+  FieldStateSetter,
 } from "../types/field";
 import { FieldType, FieldRenderProps, BuiltField } from "../types/form";
 
@@ -42,10 +44,12 @@ export abstract class BaseField<
     return this;
   }
 
-  required(required = true): this {
+  required(
+    required: boolean | ((data: TData) => boolean) = true,
+  ): this {
     this.config.required = required;
     if (
-      required &&
+      required === true &&
       !this.config.rules?.some((r: ValidationRule) => r.type === "required")
     ) {
       this.config.rules = [
@@ -64,7 +68,7 @@ export abstract class BaseField<
     return this;
   }
 
-  readOnly(readOnly = true): this {
+  readOnly(readOnly: boolean | ((data: TData) => boolean) = true): this {
     this.config.readOnly = readOnly;
     return this;
   }
@@ -114,6 +118,115 @@ export abstract class BaseField<
 
   reactive(reactive = true): this {
     this.config.reactive = reactive;
+    return this;
+  }
+
+  /** Re-render the form on change (optionally debounced). */
+  live(options?: { debounce?: number }): this {
+    this.config.reactive = true;
+    if (options?.debounce) this.config.debounce = options.debounce;
+    return this;
+  }
+
+  debounce(ms: number): this {
+    this.config.debounce = ms;
+    this.config.reactive = true;
+    return this;
+  }
+
+  /** Run a side effect when this field changes (e.g. derive another field). */
+  afterStateUpdated(
+    fn: (value: any, set: FieldStateSetter, data: TData) => void,
+  ): this {
+    this.config.afterStateUpdated = fn;
+    this.config.reactive = true;
+    return this;
+  }
+
+  // --- Context (create vs edit) ---
+
+  visibleOn(operations: FormOperation | FormOperation[]): this {
+    this.config.visibleOn = ([] as FormOperation[]).concat(operations);
+    return this;
+  }
+
+  hiddenOn(operations: FormOperation | FormOperation[]): this {
+    this.config.hiddenOn = ([] as FormOperation[]).concat(operations);
+    return this;
+  }
+
+  disabledOn(operations: FormOperation | FormOperation[]): this {
+    this.config.disabledOn = ([] as FormOperation[]).concat(operations);
+    return this;
+  }
+
+  // --- Guidance / UX ---
+
+  hint(text: string): this {
+    this.config.hint = text;
+    return this;
+  }
+
+  hintIcon(icon: ReactNode): this {
+    this.config.hintIcon = icon;
+    return this;
+  }
+
+  hintColor(color: string): this {
+    this.config.hintColor = color;
+    return this;
+  }
+
+  tooltip(text: string): this {
+    this.config.tooltip = text;
+    return this;
+  }
+
+  autofocus(autofocus = true): this {
+    this.config.autofocus = autofocus;
+    return this;
+  }
+
+  prefixIcon(icon: ReactNode): this {
+    this.config.prefixIcon = icon;
+    return this;
+  }
+
+  suffixIcon(icon: ReactNode): this {
+    this.config.suffixIcon = icon;
+    return this;
+  }
+
+  columnSpanFull(full = true): this {
+    this.config.columnSpanFull = full;
+    return this;
+  }
+
+  // --- Validation ---
+
+  /** Custom validator; return an error message (or null/undefined when valid). */
+  validate(fn: (value: any, data: TData) => string | null | undefined): this {
+    this.config.validate = fn;
+    return this;
+  }
+
+  // --- Value / submit ---
+
+  /** false → the field is not sent to the server (pure UI field). */
+  dehydrated(dehydrated = true): this {
+    this.config.dehydrated = dehydrated;
+    return this;
+  }
+
+  /** Transform the value for display in the field. */
+  formatStateUsing(fn: (value: any, data: TData) => any): this {
+    this.config.formatStateUsing = fn;
+    return this;
+  }
+
+  /** Transform the value just before submit. */
+  mutateBeforeSave(fn: (value: any, data: TData) => any): this {
+    this.config.mutateBeforeSave = fn;
     return this;
   }
 

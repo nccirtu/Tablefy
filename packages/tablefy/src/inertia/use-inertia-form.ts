@@ -20,17 +20,43 @@ export function useInertiaForm<TData extends Record<string, any>>(
 
   // Compute default values from schema fields
   const defaults = useMemo(() => {
-    const d: Record<string, any> = {};
+    const merged: Record<string, any> = {};
     for (const field of schema.fields) {
-      d[field.name] =
+      merged[field.name] =
         field.config.defaultValue !== undefined
           ? field.config.defaultValue
           : "";
     }
-    return { ...d, ...initialData } as TData;
+    Object.assign(merged, initialData);
+    // afterStateHydrated-style: format the loaded value for display.
+    for (const field of schema.fields) {
+      const fmt = field.config.formatStateUsing;
+      if (fmt) merged[field.name] = fmt(merged[field.name], merged as TData);
+    }
+    return merged as TData;
   }, [schema, initialData]);
 
   const form = useInertiaUseForm<TData>(defaults);
+
+  // Build the submit payload: drop `dehydrated(false)` fields and apply
+  // each field's `mutateBeforeSave`.
+  const transformPayload = useCallback(
+    (data: TData) => {
+      const out: Record<string, any> = { ...data };
+      for (const field of schema.fields) {
+        const cfg = field.config;
+        if (cfg.dehydrated === false) {
+          delete out[field.name];
+          continue;
+        }
+        if (cfg.mutateBeforeSave && field.name in out) {
+          out[field.name] = cfg.mutateBeforeSave(out[field.name], data);
+        }
+      }
+      return out as TData;
+    },
+    [schema],
+  );
 
   const handleChange = useCallback(
     (field: keyof TData, value: any) => {
@@ -41,6 +67,8 @@ export function useInertiaForm<TData extends Record<string, any>>(
 
   const handleSubmit = useCallback(() => {
     if (!url) return;
+
+    form.transform(transformPayload);
 
     const submitOptions = {
       onSuccess: () => onSuccess?.(),
@@ -65,7 +93,7 @@ export function useInertiaForm<TData extends Record<string, any>>(
         form.delete(url, submitOptions);
         break;
     }
-  }, [form, url, method, onSuccess, onError, onBefore, onFinish, preserveScroll, headers]);
+  }, [form, url, method, onSuccess, onError, onBefore, onFinish, preserveScroll, headers, transformPayload]);
 
   return {
     data: form.data,

@@ -13,6 +13,10 @@ export const router = {
 
 export function useForm(initial: any) {
   const [data, setData] = React.useState(initial);
+  const transformRef = React.useRef((d: any) => d);
+  const submit = () => {
+    __lastSubmit = transformRef.current(data);
+  };
   return {
     data,
     setData: (key: any, value?: any) =>
@@ -21,13 +25,21 @@ export function useForm(initial: any) {
         : setData((d: any) => ({ ...d, [key]: value })),
     errors: {},
     processing: false,
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    post: jest.fn(submit),
+    put: jest.fn(submit),
+    patch: jest.fn(submit),
+    delete: jest.fn(submit),
     reset: jest.fn(),
-    transform: jest.fn(),
+    transform: (cb: any) => {
+      transformRef.current = cb;
+    },
   };
+}
+
+// Captures the payload of the most recent submit (after `transform`).
+let __lastSubmit: any = null;
+export function __getLastSubmit() {
+  return __lastSubmit;
 }
 
 // Controllable page props for usePage() in tests.
