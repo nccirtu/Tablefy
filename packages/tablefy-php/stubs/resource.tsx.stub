@@ -1,0 +1,23 @@
+// @generated (Grundgerüst) – danach frei editierbar.
+//
+// Zentrale Meta-Daten + Routen der Resource an einer Stelle.
+
+export const {{ singular }}Resource = {
+  name: "{{ singular }}",
+  label: "{{ singular }}",
+  pluralLabel: "{{ plural }}",
+
+  /** "page" = eigene Create/Edit-Seiten, "modal" = Dialoge. */
+  formMode: "{{ formMode }}" as "page" | "modal",
+
+  routes: {
+    index: "/{{ routeSlug }}",
+    create: "/{{ routeSlug }}/create",
+    store: "/{{ routeSlug }}",
+    show: (id: number | string) => `/{{ routeSlug }}/${id}`,
+    edit: (id: number | string) => `/{{ routeSlug }}/${id}/edit`,
+    update: (id: number | string) => `/{{ routeSlug }}/${id}`,
+    destroy: (id: number | string) => `/{{ routeSlug }}/${id}`,
+    bulkDestroy: "/{{ routeSlug }}/bulk-destroy",
+  },
+} as const;

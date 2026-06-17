@@ -1,0 +1,22 @@
+// Relations-Tabellenschema: {{ relation }} von {{ resourceSingular }} (View-Page Lazy-Tab).
+// Vollwertiges TableSchema wie eine Resource-Tabelle – frei editierbar.
+
+import {
+  TableSchema,
+  TextColumn,
+  NumberColumn,
+  DateColumn,
+  BadgeColumn,
+} from "@nccirtu/tablefy";
+
+export type {{ typeName }} = {
+{{ typeBody }}
+};
+
+export const {{ tableConst }} = TableSchema.make<{{ typeName }}>()
+  .searchable()
+  .sortable()
+  .columns(
+{{ tableColumns }}
+  )
+  .build();

@@ -1,0 +1,57 @@
+// @generated (vorbefüllt aus dem DB-Schema) – ab hier FREI editierbar.
+//
+// Spalten, Farben, Reihenfolge, Pagination: alles anpassbar. Der {{ singular }}-Typ
+// schützt nur die Feldnamen (Autocomplete), nicht das Aussehen.
+
+import {
+  TableSchema,
+  TextColumn,
+  NumberColumn,
+  DateColumn,
+  BadgeColumn,
+  EnumColumn,
+  ActionsColumn,
+} from "@nccirtu/tablefy";
+import { router } from "@inertiajs/react";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+{{ formImport }}
+
+export const {{ pluralCamel }}Table = TableSchema.make<{{ singular }}>()
+  .searchable()
+  .sortable()
+  .paginated({ pageSize: 15 })
+
+  // Filter (erscheinen im Filter-Popover rechts). Eigene Filter via Builder
+  // (importiere z.B. SelectFilter/TextFilter aus "@nccirtu/tablefy"); die Spalte
+  // muss in $tablefyFilterable des Models stehen:
+  // .filters(
+  //   SelectFilter.make("status").label("Status").options([{ value: "active", label: "Aktiv" }]),
+  //   TextFilter.make("name").label("Name"),
+  // )
+
+  // Header-Actions (3-Punkte-Dropdown rechts in der Toolbar). Beispiel:
+  // .headerActions([{ label: "Export", onClick: () => router.post("/{{ routeSlug }}/export") }])
+
+  // Bulk-Actions (erscheinen als „Aktionen"-Dropdown, sobald Zeilen ausgewählt sind).
+  // Weitere hier ergänzen — jede bekommt: { label, icon?, variant?, confirm?, onClick(rows) }:
+  .bulkActions([
+    // { label: "Aktivieren", icon: "check",
+    //   onClick: (rows) => router.post("/{{ routeSlug }}/activate", { ids: rows.map((r) => r.id) }) },
+    {
+      label: "Löschen",
+      icon: "trash",
+      variant: "destructive",
+      confirm: true,
+      onClick: (rows) =>
+        router.post({{ singular }}Resource.routes.bulkDestroy, {
+          ids: rows.map((r) => r.id),
+        }),
+    },
+  ])
+  .columns(
+{{ tableColumns }}
+    ActionsColumn.make<{{ singular }}>()
+{{ viewAction }}{{ editAction }}      .delete((r) => router.delete({{ singular }}Resource.routes.destroy(r.id))),
+  )
+  .build();

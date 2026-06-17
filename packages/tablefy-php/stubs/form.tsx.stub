@@ -1,0 +1,23 @@
+// @generated (vorbefüllt aus dem DB-Schema) – ab hier FREI editierbar.
+//
+// Für Create UND Edit. Validierungs-Wahrheit liegt im Backend ({{ singular }}Controller::rules()).
+
+import {
+  FormSchema,
+  TextInput,
+  Textarea,
+  Select,
+  Toggle,
+  DatePicker,
+} from "@nccirtu/tablefy/forms";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+
+export const {{ singularCamel }}Form = FormSchema.make<{{ singular }}>()
+  .columns(2)
+  .fields(
+{{ formFields }}
+  )
+  .actions((a) =>
+    a.submit({ label: "Speichern" }).cancel({ label: "Abbrechen", href: "/{{ routeSlug }}" }),
+  )
+  .build();

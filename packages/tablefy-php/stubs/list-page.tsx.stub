@@ -1,0 +1,46 @@
+// @generated – Server-Modus, deklarativ. Selten zu ändern.
+
+import { Head } from "@inertiajs/react";
+import { PageSchema, Section, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
+import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
+import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+{{ formImport }}
+
+export default function List{{ plural }}({
+  {{ pluralCamel }},
+  stats,
+  hasStats,
+}: {
+  {{ pluralCamel }}?: PaginatedResponse<{{ singular }}>;   // deferred → erst Skeleton, dann Daten
+  stats?: StatGroupData[];                                 // deferred → Stat-Skeletons, dann Zahlen
+  hasStats?: boolean;                                      // true sobald der Controller $listStats hat
+}) {
+  const page = PageSchema.make()
+    .title({{ singular }}Resource.pluralLabel)
+    .headerActions((a) => a.button({{ newAction }}))
+    .schema([
+      // Stats erscheinen nur, wenn der Controller $listStats hat (sonst übersprungen):
+      hasStats && <TablefyStats data={stats} />,
+
+      Section.make("{{ plural }}")
+        .description("Suchen, filtern, sortieren")
+        .schema([
+          <ServerDataTable
+            schema={ {{ pluralCamel }}Table }
+            paginator={ {{ pluralCamel }} }
+            url={ {{ singular }}Resource.routes.index }
+            only={['{{ pluralCamel }}']}
+          />,
+        ]),
+    ])
+    .build();
+
+  return (
+    <>
+      <Head title="{{ plural }}" />
+      <TablefyPage schema={page} />
+    </>
+  );
+}

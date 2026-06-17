@@ -1,0 +1,94 @@
+// Relation-Manager: {{ relation }} von {{ resourceSingular }} — Create/Edit/Delete als Modals.
+// CRUD läuft über die Beziehung (der FK wird serverseitig gesetzt). Frei editierbar.
+
+import { router } from "@inertiajs/react";
+import {
+  ActionsColumn,
+  BadgeColumn,
+  Button,
+  DataTable,
+  DateColumn,
+  EnumColumn,
+  NumberColumn,
+  Section,
+  TableSchema,
+  TablefySchema,
+  TextColumn,
+  dialog,
+} from "@nccirtu/tablefy";
+import {
+  FormSchema,
+  TextInput,
+  Textarea,
+  Select,
+  Toggle,
+  DatePicker,
+} from "@nccirtu/tablefy/forms";
+import type { {{ relatedType }} } from "@/types/tablefy/{{ relatedKebab }}";
+
+const {{ formConst }} = FormSchema.make<{{ relatedType }}>()
+  .columns(2)
+  .fields(
+{{ formFields }}
+  )
+  .build();
+
+export function {{ componentName }}({
+  parentId,
+  {{ relation }},
+}: {
+  parentId: number | string;
+  {{ relation }}: {{ relatedType }}[];
+}) {
+  const base = `/{{ resourceSlug }}/${parentId}/relations/{{ relation }}`;
+  const reload = () => router.reload({ only: ["{{ relation }}"] });
+
+  const table = TableSchema.make<{{ relatedType }}>()
+    .searchable()
+    .sortable()
+    .columns(
+{{ tableColumns }}
+      ActionsColumn.make<{{ relatedType }}>()
+        .action({
+          label: "Bearbeiten",
+          icon: "pencil",
+          form: {
+            schema: {{ formConst }},
+            method: "put",
+            url: (r) => `${base}/${r.id}`,
+            data: (r) => r,
+            onSuccess: reload,
+          },
+        })
+        .delete((r) =>
+          router.delete(`${base}/${r.id}`, { preserveScroll: true, onSuccess: reload }),
+        ),
+    )
+    .build();
+
+  return (
+    <TablefySchema
+      schema={[
+        Section.make("{{ relationStudly }}").schema([
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={() =>
+                dialog.form({
+                  title: "Neu",
+                  schema: {{ formConst }},
+                  url: base,
+                  method: "post",
+                  onSuccess: reload,
+                })
+              }
+            >
+              Neu
+            </Button>
+          </div>,
+          <DataTable schema={table} data={ {{ relation }} } />,
+        ]),
+      ]}
+    />
+  );
+}

@@ -1,0 +1,75 @@
+// @generated – View-Page. Frei editierbar (Details + Lazy-Relation-Tabs).
+
+import { Head } from "@inertiajs/react";
+import { Grid, PageSchema, Section, TablefySchema, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
+import { TablefyPage, TablefyTabs } from "@nccirtu/tablefy/inertia";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+
+export default function View{{ singular }}({
+  {{ singularCamel }},
+  stats,
+  hasStats,
+}: {
+  {{ singularCamel }}: {{ singular }};
+  stats?: StatGroupData[];   // deferred, falls $viewStats gesetzt ist
+  hasStats?: boolean;
+}) {
+  const page = PageSchema.make()
+    .title(`{{ singular }} #${ {{ singularCamel }}.id }`)
+    .breadcrumbs([
+      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index },
+      { label: `#${ {{ singularCamel }}.id }` },
+    ])
+    .headerActions((a) =>
+      a.button({
+        label: "Bearbeiten",
+        href: {{ singular }}Resource.routes.edit({{ singularCamel }}.id),
+        variant: "secondary",
+      }),
+    )
+    .schema([
+      hasStats && <TablefyStats data={stats} />,
+
+      <TablefyTabs
+        tabs={[
+          {
+            value: "details",
+            label: "Details",
+            // Tab-Inhalt ist selbst schema-fähig (Section / Grid / deine Komponenten):
+            content: (
+              <TablefySchema
+                schema={[
+                  Section.make("Stammdaten").schema([
+                    Grid.make(2).schema([
+{{ detailFields }}
+                    ]),
+                  ]),
+                ]}
+              />
+            ),
+          },
+
+          // @tablefy-relation-tabs — `php artisan make:tablefy-relation {{ singular }} <relation> --generate --register` fügt hier Relation-Tabs ein (Marker bitte stehen lassen).
+        ]}
+      />,
+    ])
+    .build();
+
+  return (
+    <>
+      <Head title={`{{ singular }} #${ {{ singularCamel }}.id }`} />
+      <TablefyPage schema={page} />
+    </>
+  );
+}
+
+/** Kleines Label/Wert-Paar für die Detail-Grids. */
+function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
+  return (
+    <div>
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="font-medium">{value ?? "—"}</div>
+    </div>
+  );
+}

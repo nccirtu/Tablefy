@@ -1,0 +1,45 @@
+// @generated – Formular → store. Selten zu ändern.
+
+import { Head } from "@inertiajs/react";
+import { PageSchema } from "@nccirtu/tablefy";
+import { FormRenderer } from "@nccirtu/tablefy/forms";
+import { TablefyPage, useInertiaForm } from "@nccirtu/tablefy/inertia";
+import { {{ singularCamel }}Form } from "../Schemas/{{ singular }}Form";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+
+export default function Create{{ singular }}(props: Record<string, unknown> = {}) {
+  // `props` carries relationship/enum option sets (e.g. companyOptions) for
+  // Select.optionsFrom(...) — passed to the form as `external`.
+  const form = useInertiaForm<{{ singular }}>({
+    schema: {{ singularCamel }}Form,
+    url: {{ singular }}Resource.routes.store,
+    method: "post",
+  });
+
+  const page = PageSchema.make()
+    .title("{{ singular }} erstellen")
+    .breadcrumbs([
+      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index },
+      { label: "Erstellen" },
+    ])
+    .schema([
+      <FormRenderer
+        schema={ {{ singularCamel }}Form }
+        data={form.data}
+        errors={form.errors}
+        onChange={form.onChange}
+        onSubmit={form.onSubmit}
+        processing={form.processing}
+        external={props}
+      />,
+    ])
+    .build();
+
+  return (
+    <>
+      <Head title="{{ singular }} erstellen" />
+      <TablefyPage schema={page} />
+    </>
+  );
+}

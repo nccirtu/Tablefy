@@ -1,0 +1,31 @@
+{
+  "name": "nccirtu/tablefy-php",
+  "description": "Laravel companion for Tablefy: the make:tablefy-resource generator, a generic resource controller, and a server-side table query helper for Inertia.",
+  "keywords": ["laravel", "inertia", "tablefy", "datatable", "crud", "generator"],
+  "license": "MIT",
+  "authors": [
+    { "name": "Cirtu Cristian" }
+  ],
+  "require": {
+    "php": "^8.3",
+    "illuminate/support": "^13.0",
+    "illuminate/database": "^13.0",
+    "illuminate/console": "^13.0",
+    "illuminate/http": "^13.0",
+    "inertiajs/inertia-laravel": "^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Nccirtu\\Tablefy\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Nccirtu\\Tablefy\\TablefyServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

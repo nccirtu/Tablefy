@@ -1,0 +1,12 @@
+// Editable presentation for the {{ name }} cards. The numbers come from the
+// backend (StatGroup); tweak the column count or override how a card renders.
+//
+//   export const {{ name }} = Stats.make()
+//     .columns(4)
+//     .renderStat("total", (s) => <MyCustomCard stat={s} />);
+//
+// Pass it to the table page:  <TablefyStats data={stats} schema={ {{ name }} } />
+
+import { Stats } from "@nccirtu/tablefy";
+
+export const {{ name }} = Stats.make().columns(4);
