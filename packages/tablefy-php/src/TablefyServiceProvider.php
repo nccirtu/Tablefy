@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Commands\MakeTablefyKanbanCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyRelationCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyResourceCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyStatCommand;
@@ -26,6 +27,7 @@ class TablefyServiceProvider extends ServiceProvider
                 MakeTablefyResourceCommand::class,
                 MakeTablefyStatCommand::class,
                 MakeTablefyRelationCommand::class,
+                MakeTablefyKanbanCommand::class,
             ]);
 
             $this->publishes([
@@ -47,11 +49,17 @@ class TablefyServiceProvider extends ServiceProvider
     protected function registerResourceRouteMacro(): void
     {
         if (! Route::hasMacro('tablefyResource')) {
-            Route::macro('tablefyResource', function (string $slug, string $controller, bool $view = false, bool $modal = false) {
+            Route::macro('tablefyResource', function (string $slug, string $controller, bool $view = false, bool $modal = false, bool $kanban = false) {
                 // Bulk action endpoint (POST avoids clashing with the destroy
                 // wildcard). Used by table bulk actions, e.g. bulk delete.
                 Route::post("{$slug}/bulk-destroy", [$controller, 'bulkDestroy'])
                     ->name("{$slug}.bulkDestroy");
+
+                // Kanban: persist a card move (status/position change).
+                if ($kanban) {
+                    Route::post("{$slug}/kanban/move", [$controller, 'kanbanMove'])
+                        ->name("{$slug}.kanban.move");
+                }
 
                 // Relation-manager CRUD (Filament-style); runs through the parent
                 // relationship so the FK is set server-side.

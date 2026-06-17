@@ -5,8 +5,10 @@ namespace Nccirtu\Tablefy\Http\Controllers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Kanban\Kanban;
 
 /**
  * Generic CRUD base for Tablefy resources. A concrete resource controller only
@@ -91,6 +93,16 @@ abstract class TablefyController extends Controller
     abstract protected function rules(?Model $record = null): array;
 
     /**
+     * Kanban configuration for the list page, or null to disable the Kanban
+     * view. Override per resource. When set, register the route with
+     * `Route::tablefyResource(..., kanban: true)`.
+     */
+    protected function kanban(): ?Kanban
+    {
+        return null;
+    }
+
+    /**
      * Options for relationship/enum selects, shared as page props so form
      * `Select.optionsFrom("companyOptions")` can resolve them (in pages AND
      * modals). Filled by the generator for FK columns; override to customize.
@@ -159,7 +171,102 @@ abstract class TablefyController extends Controller
             );
         }
 
+        // Kanban: the config is sent inline (cheap metadata); the grouped,
+        // per-column data is optional and resolved only when the Kanban view
+        // requests it (partial reload `only: ['kanbanColumns']`).
+        if ($kanban = $this->kanban()) {
+            $props['kanban'] = $kanban->toArray($this->routeName);
+            $props['kanbanColumns'] = Inertia::optional(
+                fn () => $this->resolveKanbanColumns($kanban, $request),
+            );
+        }
+
         return Inertia::render($this->page("List{$this->plural}"), $props);
+    }
+
+    /**
+     * Build `{ columnId: { items, total } }` for the Kanban board. Each column
+     * is limited to `perColumn`; "load more" raises a single column's limit via
+     * the `kanban_limits[<id>]` query param (the board re-resolves this prop).
+     *
+     * @return array<string, array{items: mixed, total: int}>
+     */
+    protected function resolveKanbanColumns(Kanban $kanban, Request $request): array
+    {
+        $group = $kanban->getGroupBy();
+        $sort = $kanban->getSortColumn();
+        $limits = (array) $request->input('kanban_limits', []);
+
+        $ids = $kanban->columnIds()
+            ?? $this->model::query()->distinct()->pluck($group)->filter()->map('strval')->all();
+
+        $out = [];
+        foreach ($ids as $id) {
+            $base = $this->model::query()->with($this->with)->where($group, $id);
+            if ($sort) {
+                $base->orderBy($sort);
+            }
+            $limit = (int) ($limits[$id] ?? $kanban->getPerColumn());
+            $out[(string) $id] = [
+                'items' => (clone $base)->limit($limit)->get(),
+                'total' => (clone $base)->count(),
+            ];
+        }
+
+        return $out;
+    }
+
+    /** Move a card to another column and renumber the target column's order. */
+    public function kanbanMove(Request $request)
+    {
+        $kanban = $this->kanban();
+        abort_unless($kanban, 404);
+
+        $data = $request->validate([
+            'id' => ['required'],
+            'column' => ['required', 'string'],
+            'position' => ['nullable', 'integer'],
+            'ids' => ['nullable', 'array'],
+            'ids.*' => ['required'],
+        ]);
+
+        $allowed = $kanban->allowedColumns();
+        abort_if($allowed !== null && ! in_array($data['column'], $allowed, true), 422, 'Invalid column.');
+
+        $group = $kanban->getGroupBy();
+        $sort = $kanban->getSortColumn();
+        $key = (new $this->model)->getKeyName();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $group, $sort, $key) {
+            $record = $this->model::findOrFail($data['id']);
+            $this->authorizeMove($record);
+            $record->{$group} = $data['column'];
+            if ($sort && $data['position'] !== null) {
+                $record->{$sort} = $data['position'];
+            }
+            $record->save();
+
+            // Stable order: renumber every card in the target column 0..n by the
+            // order the client sent (siblings keep a consistent `position`).
+            if ($sort && ! empty($data['ids'])) {
+                foreach (array_values($data['ids']) as $i => $rid) {
+                    $this->model::where($key, $rid)->update([$sort => $i]);
+                }
+            }
+        });
+
+        return back()->with('success', "{$this->singular} moved.");
+    }
+
+    /**
+     * Authorize a Kanban move. Enforces the model's `update` policy when one is
+     * registered (non-breaking for apps without policies). Override to customize.
+     */
+    protected function authorizeMove(Model $record): void
+    {
+        if (Gate::getPolicyFor($record) !== null) {
+            Gate::authorize('update', $record);
+        }
     }
 
     /**

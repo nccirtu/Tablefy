@@ -1,0 +1,69 @@
+// @generated – Server-Modus mit List ⇄ Kanban-Umschalter. Selten zu ändern.
+
+import { useState } from "react";
+import { Head } from "@inertiajs/react";
+import { PageSchema, Section, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
+import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
+import { ServerKanban } from "@nccirtu/tablefy/kanban";
+import { Button } from "@/components/ui/button";
+import { LayoutList, Columns3 } from "lucide-react";
+import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
+import { {{ singularCamel }}Card } from "../Schemas/{{ singular }}Card";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+{{ formImport }}
+
+export default function List{{ plural }}({
+  {{ pluralCamel }},
+  stats,
+  hasStats,
+}: {
+  {{ pluralCamel }}?: PaginatedResponse<{{ singular }}>;   // deferred → erst Skeleton, dann Daten
+  stats?: StatGroupData[];                                 // deferred → Stat-Skeletons, dann Zahlen
+  hasStats?: boolean;                                      // true sobald der Controller $listStats hat
+}) {
+  const [view, setView] = useState<"list" | "kanban">("list");
+
+  const viewToggle = (
+    <div className="mb-3 flex gap-1">
+      <Button variant={view === "list" ? "default" : "outline"} size="sm" onClick={() => setView("list")}>
+        <LayoutList className="mr-1.5 h-4 w-4" /> Liste
+      </Button>
+      <Button variant={view === "kanban" ? "default" : "outline"} size="sm" onClick={() => setView("kanban")}>
+        <Columns3 className="mr-1.5 h-4 w-4" /> Kanban
+      </Button>
+    </div>
+  );
+
+  const page = PageSchema.make()
+    .title({{ singular }}Resource.pluralLabel)
+    .headerActions((a) => a.button({{ newAction }}))
+    .schema([
+      // Stats erscheinen nur, wenn der Controller $listStats hat (sonst übersprungen):
+      hasStats && <TablefyStats data={stats} />,
+
+      Section.make("{{ plural }}")
+        .description("Suchen, filtern, sortieren — oder als Kanban")
+        .schema([
+          viewToggle,
+          view === "list" ? (
+            <ServerDataTable
+              schema={ {{ pluralCamel }}Table }
+              paginator={ {{ pluralCamel }} }
+              url={ {{ singular }}Resource.routes.index }
+              only={['{{ pluralCamel }}']}
+            />
+          ) : (
+            <ServerKanban schema={ {{ singularCamel }}Card } />
+          ),
+        ]),
+    ])
+    .build();
+
+  return (
+    <>
+      <Head title="{{ plural }}" />
+      <TablefyPage schema={page} />
+    </>
+  );
+}

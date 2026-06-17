@@ -771,6 +771,67 @@ Details: `packages/tablefy-php/README.md`.
 
 ---
 
+### Kanban-Ansicht (`--kanban`)
+
+Eine Liste kann zusätzlich als **Kanban-Board** angezeigt werden (List ⇄ Kanban-Umschalter). Drag verschiebt eine Karte in eine andere Spalte (ändert das `groupBy`-Feld), sortiert innerhalb der Spalte (`position`) und verschiebt Spalten (nur UI). Pagination: pro Spalte mit „Mehr laden".
+
+**Import-Pfad:** `@nccirtu/tablefy/kanban` (dnd-kit ist gebundelt — kein Host-Setup).
+
+**Spalten-Modell (Hybrid):** Statische Enum-Spalten leben im Card-Schema (`.columns([...])`); dynamische kommen vom Backend (`Kanban::make()->columnsFrom(...)`) und das Card-Schema lässt `.columns()` weg.
+
+**Backend (Controller):**
+
+```php
+use Nccirtu\Tablefy\Kanban\Kanban;
+
+protected function kanban(): ?Kanban
+{
+    return Kanban::make()
+        ->groupBy('status')          // Feld, das die Spalte bestimmt
+        ->sortable('position')        // Reorder persistieren (braucht position-Spalte)
+        ->perColumn(15)               // Karten pro Spalte (Rest via „Mehr laden")
+        ->allowed(['open','done']);   // erlaubte Move-Ziele (Validierung)
+    // dynamisch statt statisch: ->columnsFrom(Stage::orderBy('order')->get(), label: 'name', color: 'color')
+}
+```
+
+Route: `Route::tablefyResource('tasks', TaskController::class, kanban: true);` → registriert `POST {slug}/kanban/move`.
+
+**Card-Schema (`Schemas/XxxCard.tsx`):**
+
+```tsx
+import { KanbanSchema } from "@nccirtu/tablefy/kanban";
+
+export const taskCard = KanbanSchema.make<Task>()
+  .groupBy("status")
+  .columns([
+    { id: "open", label: "Offen",  color: "amber" },
+    { id: "done", label: "Fertig", color: "green" },
+  ])
+  .sortable()
+  .columnsMovable()
+  .card((c) => c.title("name").description("address").avatar("image_url").badge("plan")
+                .meta([{ field: "company.name", label: "Firma" }]))
+  .build();
+```
+
+**Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Toggle automatisch ein.
+
+Generieren / nachrüsten:
+
+```bash
+php artisan make:tablefy-resource Task --generate --kanban
+#   → kanban() im Controller, kanban: true-Route, Schemas/TaskCard.tsx,
+#     List-Toggle, position-Migration (groupBy/Spalten aus dem ersten Enum*)
+
+php artisan make:tablefy-kanban Task --generate
+#   → rüstet eine BESTEHENDE Resource nach: Card-Schema + Migration +
+#     ausgedruckte Controller-/Route-/Page-Snippets zum Einfügen
+```
+\* Enum-Erkennung funktioniert auf MySQL (`enum(...)`); auf SQLite werden Enums als Text gemeldet → `groupBy('status')` + TODO-Spalten, von Hand anpassen. `'position'` ans `$fillable` des Models ergänzen und migrieren.
+
+---
+
 ## 7. CLI
 
 ```bash

@@ -25,3 +25,8 @@ export type { TablefyTab, TablefyTabsProps } from "./tablefy-tabs";
 );
 
 console.log("Fixed dist/inertia/index.d.ts");
+
+// Fix dist/kanban/index.d.ts — re-export the correctly-rooted nested decl.
+writeFileSync("dist/kanban/index.d.ts", `export * from "./kanban/index";\n`);
+
+console.log("Fixed dist/kanban/index.d.ts");
