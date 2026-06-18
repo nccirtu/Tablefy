@@ -66,6 +66,20 @@ abstract class TablefyController extends Controller
     protected array $viewStats = [];
 
     /**
+     * Charts shown on the list page. Filled by `make:tablefy-chart`.
+     *
+     * @var array<class-string<\Nccirtu\Tablefy\Charts\ChartWidget>>
+     */
+    protected array $listCharts = [];
+
+    /**
+     * Charts shown on the view page.
+     *
+     * @var array<class-string<\Nccirtu\Tablefy\Charts\ChartWidget>>
+     */
+    protected array $viewCharts = [];
+
+    /**
      * Relations rendered as lazy tabs on the view page (method names, e.g.
      * ['posts', 'orders']). Each loads only when its tab is first opened.
      *
@@ -152,6 +166,7 @@ abstract class TablefyController extends Controller
         // this prop by name (`only`), so it resolves in a single request.
         $props = [
             'hasStats' => $this->listStats !== [],
+            'hasCharts' => $this->listCharts !== [],
             ...$this->formOptions($request),
             Str::camel($this->plural) => Inertia::defer(
                 fn () => $this->model::query()
@@ -168,6 +183,13 @@ abstract class TablefyController extends Controller
             $props['stats'] = Inertia::defer(
                 fn () => $this->resolveStats($this->listStats, $request),
                 'stats',
+            );
+        }
+
+        if ($this->listCharts !== []) {
+            $props['charts'] = Inertia::defer(
+                fn () => $this->resolveCharts($this->listCharts, $request),
+                'charts',
             );
         }
 
@@ -237,10 +259,29 @@ abstract class TablefyController extends Controller
         $sort = $kanban->getSortColumn();
         $key = (new $this->model)->getKeyName();
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $group, $sort, $key) {
-            $record = $this->model::findOrFail($data['id']);
-            $this->authorizeMove($record);
-            $record->{$group} = $data['column'];
+        $record = $this->model::findOrFail($data['id']);
+        $this->authorizeMove($record);
+
+        $from = $record->{$group} === null ? null : (string) $record->{$group};
+        $to = $data['column'];
+
+        // Guards: terminal columns are locked, and transitions must be allowed.
+        if ($from !== null && $from !== $to) {
+            abort_if(
+                $kanban->locksTerminal() && in_array($from, $kanban->terminalColumns(), true),
+                422,
+                'This stage is final.',
+            );
+            $allowedNext = $kanban->transitionsFor($from);
+            abort_if(
+                $allowedNext !== null && ! in_array($to, $allowedNext, true),
+                422,
+                'Transition not allowed.',
+            );
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($record, $data, $group, $sort, $key, $to) {
+            $record->{$group} = $to;
             if ($sort && $data['position'] !== null) {
                 $record->{$sort} = $data['position'];
             }
@@ -255,7 +296,48 @@ abstract class TablefyController extends Controller
             }
         });
 
+        // After commit: run stage actions, fire the event, call the hook.
+        if ($from !== $to) {
+            $transition = new \Nccirtu\Tablefy\Kanban\KanbanTransition($record, $from, $to, $request);
+            $this->runKanbanHandlers($kanban, $transition);
+            event(new \Nccirtu\Tablefy\Kanban\Events\KanbanCardMoved($record, $from, $to));
+            $this->afterKanbanMove($record, $from, $to);
+        }
+
         return back()->with('success', "{$this->singular} moved.");
+    }
+
+    /** Run onTransition + onLeave(from) + onEnter(to) handlers for a move. */
+    protected function runKanbanHandlers(Kanban $kanban, \Nccirtu\Tablefy\Kanban\KanbanTransition $t): void
+    {
+        $handlers = array_merge(
+            $kanban->transitionHandlers(),
+            $kanban->leaveHandlers($t->from),
+            $kanban->enterHandlers($t->to),
+        );
+
+        foreach ($handlers as $handler) {
+            // Closure → run inline.
+            if (! is_string($handler)) {
+                $handler($t->record, $t);
+
+                continue;
+            }
+            // Class-string: queue it when the action implements ShouldQueue.
+            $action = app($handler);
+            if ($action instanceof \Illuminate\Contracts\Queue\ShouldQueue) {
+                \Nccirtu\Tablefy\Kanban\KanbanActionJob::dispatch($handler, $t->record, $t->from, $t->to);
+
+                continue;
+            }
+            $action->handle($t->record, $t);
+        }
+    }
+
+    /** Overridable hook after a card moved (and the transition handlers ran). */
+    protected function afterKanbanMove(Model $record, ?string $from, string $to): void
+    {
+        // no-op
     }
 
     /**
@@ -280,6 +362,20 @@ abstract class TablefyController extends Controller
         return array_map(
             fn (string $group) => app($group)->resolve($request),
             array_values($groups),
+        );
+    }
+
+    /**
+     * Resolve chart-widget classes to the `ChartWidgetData[]` the frontend renders.
+     *
+     * @param  array<class-string<\Nccirtu\Tablefy\Charts\ChartWidget>>  $charts
+     * @return array<int, array<string, mixed>>
+     */
+    protected function resolveCharts(array $charts, Request $request): array
+    {
+        return array_map(
+            fn (string $chart) => app($chart)->resolve($request),
+            array_values($charts),
         );
     }
 
@@ -329,12 +425,20 @@ abstract class TablefyController extends Controller
         $props = [
             Str::camel($this->singular) => $record,
             'hasStats' => $this->viewStats !== [],
+            'hasCharts' => $this->viewCharts !== [],
         ];
 
         if ($this->viewStats !== []) {
             $props['stats'] = Inertia::defer(
                 fn () => $this->resolveStats($this->viewStats, $request),
                 'stats',
+            );
+        }
+
+        if ($this->viewCharts !== []) {
+            $props['charts'] = Inertia::defer(
+                fn () => $this->resolveCharts($this->viewCharts, $request),
+                'charts',
             );
         }
 

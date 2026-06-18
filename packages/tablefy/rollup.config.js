@@ -157,6 +157,28 @@ export default defineConfig([
     external: isExternal,
     ...suppressWarnings,
   },
+  // Charts bundle (bundles recharts like the other vendored primitives)
+  {
+    input: "src/charts/index.ts",
+    output: [
+      {
+        file: "dist/charts/index.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        interop: "auto",
+      },
+      {
+        file: "dist/charts/index.esm.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+      },
+    ],
+    plugins: createPlugins(),
+    external: isExternal,
+    ...suppressWarnings,
+  },
   // Kanban bundle (bundles @dnd-kit like the other vendored primitives)
   {
     input: "src/kanban/index.ts",

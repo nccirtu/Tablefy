@@ -4,9 +4,11 @@ import { ReactNode } from "react";
 export interface KanbanColumn {
   id: string;
   label: string;
-  /** Tailwind color name (e.g. "amber") or any CSS color for the accent dot. */
+  /** Tailwind color name (e.g. "amber") or any CSS color for the accent/header. */
   color?: string;
   icon?: ReactNode;
+  /** `flow` = sequential step (chevron header); `terminal` = final state (flat). Default flow. */
+  kind?: "flow" | "terminal";
 }
 
 /** Backend-provided column descriptor (Hybrid: used when the schema omits columns). */
@@ -49,6 +51,10 @@ export interface KanbanSchemaConfig<T extends Record<string, any>> {
   sortable?: boolean;
   /** Allow dragging whole columns (UI order only). */
   columnsMovable?: boolean;
+  /** Column header style: `plain` (default) or `pipeline` (chevron flow + flat terminal). */
+  headerStyle?: "plain" | "pipeline";
+  /** Cards may enter a `terminal` column but not leave it. Default true. */
+  lockTerminal?: boolean;
   /** Unique id extractor for a record (defaults to `record.id`). */
   getItemValue?: (record: T) => string | number;
   /** Text shown in a column that has no cards. */

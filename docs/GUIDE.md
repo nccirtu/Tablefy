@@ -627,6 +627,47 @@ const CustomerStats = Stats.make()
 Code: PHP `packages/tablefy-php/src/Stats/` + Command `MakeTablefyStatCommand`; TS
 `packages/tablefy/src/builders/stats.ts` + `src/tablefy/stats.tsx`.
 
+### Charts (shadcn/recharts)
+
+Wie Stats, nur mit Diagrammen — Backend liefert die Daten (deferred Prop `charts`), das Frontend rendert config-driven über `<TablefyCharts>` (recharts ist gebundelt, kein Host-Setup). **Import-Pfad:** `@nccirtu/tablefy/charts`.
+
+Chart-Arten: `area` (interaktiv), `bar`, `bar-multiple`, `line`, `radar`, `radial`, `pie`.
+
+**Backend — `ChartWidget`:**
+
+```php
+use Nccirtu\Tablefy\Charts\ChartWidget;
+
+class BuildingsByStatus extends ChartWidget
+{
+    protected string $type = 'bar';
+    protected ?string $heading = 'Gebäude nach Status';
+    protected string $xKey = 'status';          // Kategorie-Achse (bzw. nameKey bei pie/radial)
+    // protected array $series = ['count'];      // bei pie/radial: Wert-Key explizit setzen
+    // protected array $options = ['interactive' => true, 'stacked' => true];
+
+    public function data(Request $r): array {
+        return [['status' => 'Aktiv', 'count' => 2], /* … */];
+    }
+    public function config(): array {
+        return ['count' => ['label' => 'Gebäude', 'color' => 'var(--chart-1)']];
+    }
+}
+```
+
+Controller registriert wie Stats: `protected array $listCharts = [BuildingsByStatus::class];` (bzw. `$viewCharts`). `series` wird bei cartesischen Charts aus den **farbigen** `config`-Einträgen abgeleitet; bei `pie`/`radial` explizit setzen (die farbigen Keys sind dort die Slice-Kategorien). Voraussetzung: das Theme definiert `--chart-1 … --chart-5`.
+
+**Frontend:** Die generierte List-/View-Page rendert automatisch `hasCharts && <TablefyCharts data={charts} />` (deferred → Skeleton). Optionale Client-Überschreibung mit `--component` (`ChartSchema.make().type(…)`) → `<TablefyChart chart={chart} schema={…} />`.
+
+Generieren:
+
+```bash
+php artisan make:tablefy-chart RevenueChart --resource=Building   # fragt nach der Chart-Art
+php artisan make:tablefy-chart RevenueChart --resource=Building --type=area --component
+```
+
+Code: PHP `packages/tablefy-php/src/Charts/ChartWidget.php` + `MakeTablefyChartCommand`; TS `packages/tablefy/src/charts/` (`@nccirtu/tablefy/charts`).
+
 ### View-Page (`--view`) & Lazy-Relation-Tabs
 
 ```bash
@@ -815,7 +856,17 @@ export const taskCard = KanbanSchema.make<Task>()
   .build();
 ```
 
-**Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Toggle automatisch ein.
+**Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Umschalter automatisch über `<TablefyViews>` (shadcn ButtonGroup) ein. Der Kanban-Tab erscheint nur, wenn das Backend Kanban aktiviert hat — `useKanbanEnabled()` liest die `kanban`-Prop:
+
+```tsx
+<TablefyViews views={[
+  { value: "list",   label: "Liste",  icon: <LayoutList/>, content: <ServerDataTable … /> },
+  { value: "kanban", label: "Kanban", icon: <Columns3/>, enabled: useKanbanEnabled(),
+    content: <ServerKanban schema={taskCard} /> },
+]} />
+```
+
+`<TablefyViews>` (aus `@nccirtu/tablefy`) ist generisch: bei nur einem aktiven View entfällt der Umschalter. `views[].enabled` blendet einen View samt Button aus.
 
 Generieren / nachrüsten:
 
@@ -829,6 +880,56 @@ php artisan make:tablefy-kanban Task --generate
 #     ausgedruckte Controller-/Route-/Page-Snippets zum Einfügen
 ```
 \* Enum-Erkennung funktioniert auf MySQL (`enum(...)`); auf SQLite werden Enums als Text gemeldet → `groupBy('status')` + TODO-Spalten, von Hand anpassen. `'position'` ans `$fillable` des Models ergänzen und migrieren.
+
+#### Pipeline-Design (Pfeil-Stufen vs. gerade Endzustände)
+
+Jede Spalte hat eine `kind`: `flow` (Chevron/Pfeil, Default) oder `terminal` (gerade, endgültig). `headerStyle('pipeline')` schaltet die Chevron-Header an:
+
+```tsx
+KanbanSchema.make<Order>().groupBy('status').headerStyle('pipeline')
+  .columns([
+    { id: 'new',       label: 'Neu',       color: 'blue',  kind: 'flow' },
+    { id: 'invoice',   label: 'Rechnung',  color: 'teal',  kind: 'flow' },
+    { id: 'won',       label: 'Gewonnen',  color: 'green', kind: 'terminal' },
+    { id: 'cancelled', label: 'Storniert', color: 'red',   kind: 'terminal' },
+  ])
+```
+
+`terminal`-Spalten sind „dicht": Karten reinziehbar, aber nicht mehr raus (`lockTerminal`, default an; im Frontend sofort, serverseitig via `allowTransitions`). Dynamisch identisch über `Kanban::columns([... 'kind' => 'terminal'])` bzw. `columnsFrom(..., kind: 'kind')`.
+
+#### Stage-Funktionen beim Statuswechsel
+
+Beim Verschieben (nach DB-Commit) laufen registrierte Handler; zusätzlich feuert das Event `KanbanCardMoved`, und der Controller-Hook `afterKanbanMove($record,$from,$to)` ist überschreibbar.
+
+```php
+protected function kanban(): ?Kanban {
+    return Kanban::make()->groupBy('status')->sortable('position')
+        ->onEnter('won', MarkOrderWon::class)                      // Action-Klasse
+        ->onEnter('cancelled', fn ($o, $t) => $o->release())       // oder Closure
+        ->onLeave('new', NotifyStarted::class)
+        ->onTransition(RecordHistory::class)                       // bei jedem Move
+        ->allowTransitions(['new' => ['invoice','cancelled'], 'invoice' => ['won','cancelled']]);
+}
+```
+
+Action-Klasse (per Command erzeugt) implementiert `KanbanAction`; mit zusätzlich `ShouldQueue` läuft sie automatisch in der Queue, sonst synchron nach dem Commit:
+
+```php
+class MarkOrderWon implements KanbanAction /* , ShouldQueue */ {
+    public function handle(Model $record, KanbanTransition $t): void {
+        // $t->from, $t->to, $t->request
+        SendWonMail::dispatch($record);
+    }
+}
+```
+
+```bash
+php artisan make:tablefy-kanban-action MarkOrderWon --resource=Order            # synchron
+php artisan make:tablefy-kanban-action SendInvoice --resource=Order --queued    # ShouldQueue
+#   → app/Tablefy/Orders/KanbanActions/…  — dann im kanban() via ->onEnter(...) registrieren
+```
+
+Ungültige Übergänge (nicht in `allowTransitions`) und das Verlassen von `terminal`-Spalten werden mit 422 abgewiesen → das Board snappt automatisch zurück (`onError`-Resync). Code: `packages/tablefy-php/src/Kanban/` (`Kanban`, `KanbanTransition`, `KanbanActionJob`, `Contracts/KanbanAction`, `Events/KanbanCardMoved`).
 
 ---
 

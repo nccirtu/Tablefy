@@ -3,6 +3,7 @@
 import { Head } from "@inertiajs/react";
 import { PageSchema, Section, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
 import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
+import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
 import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
@@ -12,10 +13,14 @@ export default function List{{ plural }}({
   {{ pluralCamel }},
   stats,
   hasStats,
+  charts,
+  hasCharts,
 }: {
   {{ pluralCamel }}?: PaginatedResponse<{{ singular }}>;   // deferred → erst Skeleton, dann Daten
   stats?: StatGroupData[];                                 // deferred → Stat-Skeletons, dann Zahlen
   hasStats?: boolean;                                      // true sobald der Controller $listStats hat
+  charts?: ChartWidgetData[];                              // deferred → Chart-Skeletons, dann Daten
+  hasCharts?: boolean;                                     // true sobald der Controller $listCharts hat
 }) {
   const page = PageSchema.make()
     .title({{ singular }}Resource.pluralLabel)
@@ -23,6 +28,8 @@ export default function List{{ plural }}({
     .schema([
       // Stats erscheinen nur, wenn der Controller $listStats hat (sonst übersprungen):
       hasStats && <TablefyStats data={stats} />,
+      // Charts erscheinen nur, wenn der Controller $listCharts hat:
+      hasCharts && <TablefyCharts data={charts} />,
 
       Section.make("{{ plural }}")
         .description("Suchen, filtern, sortieren")

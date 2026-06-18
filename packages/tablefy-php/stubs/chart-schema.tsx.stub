@@ -1,0 +1,7 @@
+// Editable client-side overrides for the {{ name }} chart. The data comes from
+// the backend (ChartWidget); tweak the type, keys, colors or options here and
+// pass it to the chart:  <TablefyChart chart={chart} schema={ {{ name }} } />
+
+import { ChartSchema } from "@nccirtu/tablefy/charts";
+
+export const {{ name }} = ChartSchema.make().type("{{ type }}");

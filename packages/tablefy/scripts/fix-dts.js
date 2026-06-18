@@ -30,3 +30,8 @@ console.log("Fixed dist/inertia/index.d.ts");
 writeFileSync("dist/kanban/index.d.ts", `export * from "./kanban/index";\n`);
 
 console.log("Fixed dist/kanban/index.d.ts");
+
+// Fix dist/charts/index.d.ts — re-export the correctly-rooted nested decl.
+writeFileSync("dist/charts/index.d.ts", `export * from "./charts/index";\n`);
+
+console.log("Fixed dist/charts/index.d.ts");

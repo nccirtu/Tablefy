@@ -24,6 +24,22 @@ class Kanban
     /** Allowed move targets (column ids). Null = derive from columns / no restriction. */
     protected ?array $allowed = null;
 
+    /** 'plain' | 'pipeline' (chevron flow + flat terminal headers). */
+    protected string $headerStyle = 'plain';
+
+    /** Cards may enter `terminal` columns but not leave them. */
+    protected bool $lockTerminal = true;
+
+    /** Per-from allowed transitions: ['new' => ['documents','cancelled'], …]. Null = unrestricted. */
+    protected ?array $transitions = null;
+
+    /** Stage handlers (class-string<KanbanAction> | callable). */
+    protected array $onEnter = [];
+
+    protected array $onLeave = [];
+
+    protected array $onTransition = [];
+
     public static function make(): static
     {
         return new static();
@@ -74,6 +90,7 @@ class Kanban
                     'id' => (string) $key,
                     'label' => $value['label'] ?? (string) $key,
                     'color' => $value['color'] ?? null,
+                    'kind' => $value['kind'] ?? 'flow',
                 ];
             }
         }
@@ -87,7 +104,7 @@ class Kanban
      *
      * @param  iterable<mixed>  $rows
      */
-    public function columnsFrom(iterable $rows, string $label = 'name', string $color = 'color', string $id = 'id'): static
+    public function columnsFrom(iterable $rows, string $label = 'name', string $color = 'color', string $id = 'id', string $kind = 'kind'): static
     {
         $normalized = [];
         foreach ($rows as $row) {
@@ -96,6 +113,7 @@ class Kanban
                 'id' => (string) $get($id),
                 'label' => (string) ($get($label) ?? $get($id)),
                 'color' => $get($color),
+                'kind' => $get($kind) ?? 'flow',
             ];
         }
         $this->columns = $normalized;
@@ -107,6 +125,59 @@ class Kanban
     public function allowed(array $ids): static
     {
         $this->allowed = array_map('strval', $ids);
+
+        return $this;
+    }
+
+    /** Chevron pipeline headers (flow) + flat terminal headers. */
+    public function pipeline(bool $enabled = true): static
+    {
+        $this->headerStyle = $enabled ? 'pipeline' : 'plain';
+
+        return $this;
+    }
+
+    public function lockTerminal(bool $lock = true): static
+    {
+        $this->lockTerminal = $lock;
+
+        return $this;
+    }
+
+    /**
+     * Allowed transitions per source column: ['new' => ['documents','cancelled'], …].
+     * A move to a column not listed for its source is rejected (422).
+     */
+    public function allowTransitions(array $map): static
+    {
+        $this->transitions = array_map(
+            fn ($targets) => array_map('strval', (array) $targets),
+            $map,
+        );
+
+        return $this;
+    }
+
+    /** Run when a card ENTERS $column. $handler = class-string<KanbanAction>|callable. */
+    public function onEnter(string $column, string|callable $handler): static
+    {
+        $this->onEnter[$column][] = $handler;
+
+        return $this;
+    }
+
+    /** Run when a card LEAVES $column. */
+    public function onLeave(string $column, string|callable $handler): static
+    {
+        $this->onLeave[$column][] = $handler;
+
+        return $this;
+    }
+
+    /** Run on EVERY move. */
+    public function onTransition(string|callable $handler): static
+    {
+        $this->onTransition[] = $handler;
 
         return $this;
     }
@@ -140,6 +211,48 @@ class Kanban
         return $this->allowed ?? $this->columnIds();
     }
 
+    public function locksTerminal(): bool
+    {
+        return $this->lockTerminal;
+    }
+
+    /** Column ids whose kind is `terminal`. */
+    public function terminalColumns(): array
+    {
+        return array_values(array_map(
+            fn ($c) => $c['id'],
+            array_filter($this->columns, fn ($c) => ($c['kind'] ?? 'flow') === 'terminal'),
+        ));
+    }
+
+    /** Allowed target columns for $from, or null when unrestricted. */
+    public function transitionsFor(string $from): ?array
+    {
+        if ($this->transitions === null) {
+            return null;
+        }
+
+        return $this->transitions[$from] ?? [];
+    }
+
+    /** @return array<int, string|callable> */
+    public function enterHandlers(string $column): array
+    {
+        return $this->onEnter[$column] ?? [];
+    }
+
+    /** @return array<int, string|callable> */
+    public function leaveHandlers(?string $column): array
+    {
+        return $column === null ? [] : ($this->onLeave[$column] ?? []);
+    }
+
+    /** @return array<int, string|callable> */
+    public function transitionHandlers(): array
+    {
+        return $this->onTransition;
+    }
+
     /** The `kanban` page prop the frontend reads. */
     public function toArray(string $routeName): array
     {
@@ -149,6 +262,8 @@ class Kanban
             'sortable' => $this->sortColumn !== null,
             'columnsMovable' => $this->columnsMovable,
             'perColumn' => $this->perColumn,
+            'headerStyle' => $this->headerStyle,
+            'lockTerminal' => $this->lockTerminal,
             'columns' => $this->columns, // [] → frontend card schema owns columns
             'moveUrl' => route("{$routeName}.kanban.move", absolute: false),
         ];

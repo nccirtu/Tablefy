@@ -5,6 +5,10 @@ export { DataTableSchema } from "./tablefy/data-table-schema";
 export { TablefyStats, StatCard } from "./tablefy/stats";
 export type { TablefyStatsProps } from "./tablefy/stats";
 
+// Declarative view switcher (List ⇄ Kanban etc., shadcn ButtonGroup)
+export { TablefyViews } from "./tablefy/views";
+export type { TablefyViewItem, TablefyViewsProps } from "./tablefy/views";
+
 // Schema renderer (Grid/Section/JSX layout, no page chrome — usable anywhere)
 export { TablefySchema, SchemaRenderer } from "./tablefy/schema-content";
 export type { TablefySchemaProps } from "./tablefy/schema-content";
