@@ -852,9 +852,15 @@ export const taskCard = KanbanSchema.make<Task>()
   .sortable()
   .columnsMovable()
   .card((c) => c.title("name").description("address").avatar("image_url").badge("plan")
-                .meta([{ field: "company.name", label: "Firma" }]))
+                .meta([{ field: "company.name", label: "Firma" }])
+                // Drei-Punkte-Menü auf der Karte — gleiche Builder-API wie ActionsColumn:
+                .actions((a) => a
+                  .action({ label: "Bearbeiten", form: { schema: taskForm, method: "put", url: (r) => `/tasks/${r.id}` } })
+                  .delete((r) => router.delete(`/tasks/${r.id}`))))
   .build();
 ```
+
+Die Karte rendert mit den vendored shadcn-`Card`-Primitives (Chrome/Typografie zentral aus `components/ui/card.tsx` + Theme). `.actions((a) => …)` nimmt **denselben** Builder wie die Tabelle (`view`/`edit`/`delete`/`action`/`editForm`/`dialog`/`link`) und zeigt ein Drei-Punkte-Dropdown über die geteilte Dialog-Engine — das Öffnen löst keinen Drag aus (Drag startet erst ab ~8px Bewegung).
 
 **Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Umschalter automatisch über `<TablefyViews>` (shadcn ButtonGroup) ein. Der Kanban-Tab erscheint nur, wenn das Backend Kanban aktiviert hat — `useKanbanEnabled()` liest die `kanban`-Prop:
 
