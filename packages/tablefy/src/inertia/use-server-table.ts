@@ -1,10 +1,35 @@
-import { router } from "@inertiajs/react";
-import { useState, useCallback, useRef } from "react";
+import { router, usePage } from "@inertiajs/react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   ServerTableConfig,
   ServerTableState,
   ServerTableReturn,
 } from "./types";
+
+/** Derive table state from the current URL so it stays in sync with a global
+ *  (page-level) search and survives sort/page/filter round-trips. */
+function stateFromUrl(
+  defaultSort: ServerTableState["sort"],
+  defaultPageSize: number,
+): ServerTableState {
+  if (typeof window === "undefined") {
+    return { search: "", sort: defaultSort, page: 1, perPage: defaultPageSize, filters: {} };
+  }
+  const p = new URLSearchParams(window.location.search);
+  const filters: Record<string, any> = {};
+  for (const [k, v] of p.entries()) {
+    const m = k.match(/^filter\[(.+)\]$/);
+    if (m) filters[m[1]] = v;
+  }
+  const sortId = p.get("sort");
+  return {
+    search: p.get("search") ?? "",
+    sort: sortId ? { id: sortId, desc: p.get("direction") === "desc" } : defaultSort,
+    page: Number(p.get("page")) || 1,
+    perPage: Number(p.get("per_page")) || defaultPageSize,
+    filters,
+  };
+}
 
 export function useServerTable(config: ServerTableConfig): ServerTableReturn {
   const {
@@ -17,13 +42,16 @@ export function useServerTable(config: ServerTableConfig): ServerTableReturn {
     only,
   } = config;
 
-  const [state, setState] = useState<ServerTableState>({
-    search: "",
-    sort: defaultSort,
-    page: 1,
-    perPage: defaultPageSize,
-    filters: {},
-  });
+  const [state, setState] = useState<ServerTableState>(() =>
+    stateFromUrl(defaultSort, defaultPageSize),
+  );
+
+  // Re-sync when the URL changes (e.g. the global search box updated ?search=).
+  const pageUrl = usePage().url;
+  useEffect(() => {
+    setState(stateFromUrl(defaultSort, defaultPageSize));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageUrl]);
 
   const [processing, setProcessing] = useState(false);
 

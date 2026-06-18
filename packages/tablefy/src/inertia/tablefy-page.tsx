@@ -8,6 +8,7 @@ import { resolveLucideIcon } from "../lib/icons";
 import type { PageAction, PageBuildResult } from "../schema/page-schema";
 import { RenderHook } from "../components/render-hook";
 import { SchemaRenderer } from "../tablefy/schema-content";
+import { TablefySearch } from "./tablefy-search";
 import { dialog } from "../dialog/dialog";
 import { setPageProps } from "../dialog/store";
 
@@ -77,8 +78,14 @@ export interface TablefyPageProps {
  * recursive content body. Lives inside your app layout; uses bundled components.
  */
 export function TablefyPage({ schema, className }: TablefyPageProps) {
-  const { title, description, breadcrumbs, actions, content } = schema.config;
-  const hasHeader = !!(title || description || (actions && actions.length > 0));
+  const { title, description, breadcrumbs, actions, search, content } =
+    schema.config;
+  const hasHeader = !!(
+    title ||
+    description ||
+    search ||
+    (actions && actions.length > 0)
+  );
 
   // Sync page props into the dialog store so modal forms (rendered by the host
   // outside the Inertia tree) can resolve relationship-select options.
@@ -107,13 +114,30 @@ export function TablefyPage({ schema, className }: TablefyPageProps) {
       )}
 
       {hasHeader && (
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <RenderHook name="page.header.start" />
-            {title && (
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="space-y-1">
+              <RenderHook name="page.header.start" />
+              {title && (
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {title}
+                </h1>
+              )}
+              {description && (
+                <p className="text-muted-foreground">{description}</p>
+              )}
+            </div>
+            {/* Global search next to the title (drives the URL ?search=). */}
+            {search && (
+              <TablefySearch
+                placeholder={search.placeholder}
+                url={search.url}
+                paramName={search.paramName}
+                only={search.only}
+                debounce={search.debounce}
+                className="w-64"
+              />
             )}
-            {description && <p className="text-muted-foreground">{description}</p>}
           </div>
           <div className="flex items-center gap-2">
             <RenderHook name="page.actions.start" />

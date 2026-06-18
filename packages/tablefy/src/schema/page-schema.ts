@@ -45,11 +45,25 @@ export interface PageBreadcrumb {
   href?: string;
 }
 
+/** A global search box in the page header (drives the URL `?search=`). */
+export interface PageSearchConfig {
+  placeholder?: string;
+  /** Target URL (defaults to the current path). */
+  url?: string;
+  /** Query param name (default "search"). */
+  paramName?: string;
+  /** Partial-reload only these props (e.g. ["orders", "kanbanColumns"]). */
+  only?: string[];
+  /** Debounce in ms (default 300). */
+  debounce?: number;
+}
+
 export interface PageConfig {
   title?: string;
   description?: string;
   breadcrumbs?: PageBreadcrumb[];
   actions?: PageAction[];
+  search?: PageSearchConfig;
   content: SchemaItem[];
 }
 
@@ -86,6 +100,12 @@ export class PageSchema {
 
   headerActions(fn: (builder: PageActionsBuilder) => PageActionsBuilder): this {
     this.config.actions = fn(new PageActionsBuilder()).build();
+    return this;
+  }
+
+  /** Global search box next to the title; updates `?search=` (table + kanban read it). */
+  search(config: PageSearchConfig = {}): this {
+    this.config.search = config;
     return this;
   }
 
