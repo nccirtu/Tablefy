@@ -16,11 +16,13 @@ export { ServerDataTable } from "./server-data-table";
 export { useTablefyNav, useTablefyNavGroups } from "./navigation";
 export { TablefyPage } from "./tablefy-page";
 export { TablefyTabs } from "./tablefy-tabs";
+export { TablefySearch } from "./tablefy-search";
 export { createPrecognitionBlur } from "./precognition";
 export type { UseInertiaFormOptions, UseInertiaFormReturn, ServerTableConfig, ServerTableState, ServerTableReturn, PaginatedResponse } from "./types";
 export type { TablefyNavItem, TablefyNavPayloadItem } from "./navigation";
 export type { TablefyPageProps } from "./tablefy-page";
 export type { TablefyTab, TablefyTabsProps } from "./tablefy-tabs";
+export type { TablefySearchProps } from "./tablefy-search";
 `
 );
 

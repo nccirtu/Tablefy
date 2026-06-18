@@ -219,12 +219,37 @@ abstract class TablefyController extends Controller
         $sort = $kanban->getSortColumn();
         $limits = (array) $request->input('kanban_limits', []);
 
+        // Share the page-level search + filters (same params as the table) so the
+        // global search box filters the board too. The groupBy column is skipped
+        // as a filter (it defines the columns).
+        $search = trim((string) $request->query('search', ''));
+        $searchable = property_exists($this->model, 'tablefySearchable') ? $this->model::$tablefySearchable : [];
+        $filterable = property_exists($this->model, 'tablefyFilterable') ? $this->model::$tablefyFilterable : [];
+        $filters = (array) $request->input('filter', []);
+
+        $applyScope = function ($query) use ($search, $searchable, $filters, $filterable, $group) {
+            if ($search !== '' && $searchable) {
+                $query->where(function ($q) use ($searchable, $search) {
+                    foreach ($searchable as $column) {
+                        $q->orWhere($column, 'like', "%{$search}%");
+                    }
+                });
+            }
+            foreach ($filters as $column => $value) {
+                if ($column !== $group && in_array($column, $filterable, true) && $value !== '' && $value !== null) {
+                    $query->where($column, $value);
+                }
+            }
+
+            return $query;
+        };
+
         $ids = $kanban->columnIds()
             ?? $this->model::query()->distinct()->pluck($group)->filter()->map('strval')->all();
 
         $out = [];
         foreach ($ids as $id) {
-            $base = $this->model::query()->with($this->with)->where($group, $id);
+            $base = $applyScope($this->model::query()->with($this->with)->where($group, $id));
             if ($sort) {
                 $base->orderBy($sort);
             }
