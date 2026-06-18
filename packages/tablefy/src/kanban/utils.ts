@@ -63,6 +63,29 @@ export function resolveSlot<T>(
     : getByPath(record, slot as string);
 }
 
+/** Solid Tailwind background for a named color (pipeline headers). */
+export function colorBg(color?: string): string {
+  if (!color) return "bg-slate-500";
+  const map: Record<string, string> = {
+    slate: "bg-slate-500",
+    gray: "bg-gray-500",
+    red: "bg-red-500",
+    amber: "bg-amber-500",
+    yellow: "bg-yellow-500",
+    green: "bg-green-600",
+    emerald: "bg-emerald-600",
+    blue: "bg-blue-500",
+    indigo: "bg-indigo-500",
+    violet: "bg-violet-500",
+    purple: "bg-purple-500",
+    pink: "bg-pink-500",
+    orange: "bg-orange-500",
+    teal: "bg-teal-500",
+    cyan: "bg-cyan-500",
+  };
+  return map[color] ?? "bg-slate-500";
+}
+
 /** Tailwind accent classes for a named color (dot + soft badge). */
 export function colorDot(color?: string): string {
   if (!color) return "bg-muted-foreground/40";

@@ -1,11 +1,10 @@
 // @generated – Server-Modus mit List ⇄ Kanban-Umschalter. Selten zu ändern.
 
-import { useState } from "react";
 import { Head } from "@inertiajs/react";
-import { PageSchema, Section, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
+import { PageSchema, Section, TablefyStats, TablefyViews, type StatGroupData } from "@nccirtu/tablefy";
 import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
-import { ServerKanban } from "@nccirtu/tablefy/kanban";
-import { Button } from "@/components/ui/button";
+import { ServerKanban, useKanbanEnabled } from "@nccirtu/tablefy/kanban";
+import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
 import { LayoutList, Columns3 } from "lucide-react";
 import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
 import { {{ singularCamel }}Card } from "../Schemas/{{ singular }}Card";
@@ -17,23 +16,17 @@ export default function List{{ plural }}({
   {{ pluralCamel }},
   stats,
   hasStats,
+  charts,
+  hasCharts,
 }: {
   {{ pluralCamel }}?: PaginatedResponse<{{ singular }}>;   // deferred → erst Skeleton, dann Daten
   stats?: StatGroupData[];                                 // deferred → Stat-Skeletons, dann Zahlen
   hasStats?: boolean;                                      // true sobald der Controller $listStats hat
+  charts?: ChartWidgetData[];                              // deferred → Chart-Skeletons, dann Daten
+  hasCharts?: boolean;                                     // true sobald der Controller $listCharts hat
 }) {
-  const [view, setView] = useState<"list" | "kanban">("list");
-
-  const viewToggle = (
-    <div className="mb-3 flex gap-1">
-      <Button variant={view === "list" ? "default" : "outline"} size="sm" onClick={() => setView("list")}>
-        <LayoutList className="mr-1.5 h-4 w-4" /> Liste
-      </Button>
-      <Button variant={view === "kanban" ? "default" : "outline"} size="sm" onClick={() => setView("kanban")}>
-        <Columns3 className="mr-1.5 h-4 w-4" /> Kanban
-      </Button>
-    </div>
-  );
+  // Der Kanban-Tab erscheint nur, wenn der Controller kanban() liefert.
+  const kanbanEnabled = useKanbanEnabled();
 
   const page = PageSchema.make()
     .title({{ singular }}Resource.pluralLabel)
@@ -41,21 +34,36 @@ export default function List{{ plural }}({
     .schema([
       // Stats erscheinen nur, wenn der Controller $listStats hat (sonst übersprungen):
       hasStats && <TablefyStats data={stats} />,
+      // Charts erscheinen nur, wenn der Controller $listCharts hat:
+      hasCharts && <TablefyCharts data={charts} />,
 
       Section.make("{{ plural }}")
         .description("Suchen, filtern, sortieren — oder als Kanban")
         .schema([
-          viewToggle,
-          view === "list" ? (
-            <ServerDataTable
-              schema={ {{ pluralCamel }}Table }
-              paginator={ {{ pluralCamel }} }
-              url={ {{ singular }}Resource.routes.index }
-              only={['{{ pluralCamel }}']}
-            />
-          ) : (
-            <ServerKanban schema={ {{ singularCamel }}Card } />
-          ),
+          <TablefyViews
+            views={[
+              {
+                value: "list",
+                label: "Liste",
+                icon: <LayoutList className="h-4 w-4" />,
+                content: (
+                  <ServerDataTable
+                    schema={ {{ pluralCamel }}Table }
+                    paginator={ {{ pluralCamel }} }
+                    url={ {{ singular }}Resource.routes.index }
+                    only={['{{ pluralCamel }}']}
+                  />
+                ),
+              },
+              {
+                value: "kanban",
+                label: "Kanban",
+                icon: <Columns3 className="h-4 w-4" />,
+                enabled: kanbanEnabled,
+                content: <ServerKanban schema={ {{ singularCamel }}Card } />,
+              },
+            ]}
+          />,
         ]),
     ])
     .build();

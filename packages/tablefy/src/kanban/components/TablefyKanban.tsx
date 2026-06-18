@@ -30,6 +30,7 @@ import {
 import {
   getByPath,
   colorDot,
+  colorBg,
   withOrphanColumns,
   groupRecords,
   locateItem,
@@ -72,7 +73,10 @@ function getScrollParent(node: HTMLElement | null): HTMLElement | null {
   let el = node?.parentElement ?? null;
   while (el) {
     const oy = getComputedStyle(el).overflowY;
-    if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight) {
+    if (
+      (oy === "auto" || oy === "scroll") &&
+      el.scrollHeight > el.clientHeight
+    ) {
       return el;
     }
     el = el.parentElement;
@@ -84,9 +88,7 @@ function normalizeColumns(
   input: KanbanColumnInput[] | undefined,
 ): KanbanColumnDef[] {
   if (!input) return [];
-  return input.map((c) =>
-    typeof c === "string" ? { id: c, label: c } : c,
-  );
+  return input.map((c) => (typeof c === "string" ? { id: c, label: c } : c));
 }
 
 export function TablefyKanban<T extends Record<string, any>>({
@@ -212,6 +214,16 @@ export function TablefyKanban<T extends Record<string, any>>({
       draggingRef.current = false;
       const v = valueRef.current;
 
+      // Terminal-lock: a card that started in a `terminal` column can't leave it.
+      if (start && config.lockTerminal !== false) {
+        const startCol = resolvedColumns.find((c) => c.id === start.col);
+        const now = locate(v, start.id);
+        if (startCol?.kind === "terminal" && now && now.col !== start.col) {
+          setValue(grouped); // snap back
+          return;
+        }
+      }
+
       // Column reorder (UI key order diverged from the column definition order).
       const order = Object.keys(v);
       if (
@@ -252,27 +264,62 @@ export function TablefyKanban<T extends Record<string, any>>({
       className={className}
     >
       <KanbanBoard ref={boardRef} className="flex gap-4 overflow-x-auto pb-2">
-        {resolvedColumns.map((col) => {
+        {resolvedColumns.map((col, colIndex) => {
           const items = value[col.id] ?? [];
           const total = counts?.[col.id] ?? items.length;
           const hasMore = total > items.length;
+          const pipeline = config.headerStyle === "pipeline";
+          const isTerminal = col.kind === "terminal";
+          const handle = config.columnsMovable && (
+            <KanbanColumnHandle className="ml-auto cursor-grab opacity-60 hover:opacity-100">
+              <GripVertical className="h-4 w-4" />
+            </KanbanColumnHandle>
+          );
           return (
             <KanbanColumn
               key={col.id}
               value={col.id}
               style={{ height: columnHeight }}
-              className="flex w-72 shrink-0 flex-col rounded-lg bg-muted/40 p-2"
+              className="flex w-72 shrink-0 flex-col rounded-lg"
             >
-              <div className="mb-2 flex items-center gap-2 px-1">
-                <span className={cn("h-2.5 w-2.5 rounded-full", colorDot(col.color))} />
-                <span className="text-sm font-medium">{col.label}</span>
-                <span className="text-xs text-muted-foreground">{total}</span>
-                {config.columnsMovable && (
-                  <KanbanColumnHandle className="ml-auto cursor-grab text-muted-foreground/60 hover:text-muted-foreground">
-                    <GripVertical className="h-4 w-4" />
-                  </KanbanColumnHandle>
-                )}
-              </div>
+              {pipeline ? (
+                // Chevron für flow-Stufen, gerade für terminal (CRM-Pipeline).
+                <div
+                  className={cn(
+                    "mb-2 flex items-center gap-2 py-2 text-sm font-medium text-white",
+                    colorBg(col.color),
+                    isTerminal ? "rounded-md px-3" : "pr-3",
+                    !isTerminal &&
+                      (colIndex === 0 ? "rounded-l-md pl-3" : "pl-6"),
+                  )}
+                  style={
+                    !isTerminal
+                      ? {
+                          clipPath:
+                            colIndex === 0
+                              ? "polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%)"
+                              : "polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%)",
+                        }
+                      : undefined
+                  }
+                >
+                  <span className="truncate">{col.label}</span>
+                  <span className="opacity-80">{total}</span>
+                  {handle}
+                </div>
+              ) : (
+                <div className="mb-2 flex items-center gap-2 px-1">
+                  <span
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full",
+                      colorDot(col.color),
+                    )}
+                  />
+                  <span className="text-sm font-medium">{col.label}</span>
+                  <span className="text-xs text-muted-foreground">{total}</span>
+                  {handle}
+                </div>
+              )}
               {/* Card list fills the column and scrolls internally. */}
               <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
                 {items.length === 0 ? (
@@ -320,11 +367,16 @@ export function TablefyKanban<T extends Record<string, any>>({
           if (variant === "column") {
             const col = resolvedColumns.find((c) => c.id === dragId);
             if (!col) return null;
-            const total = counts?.[col.id] ?? (value[col.id]?.length ?? 0);
+            const total = counts?.[col.id] ?? value[col.id]?.length ?? 0;
             return (
               <div className="w-72 rounded-lg bg-muted/60 p-2 shadow-lg ring-1 ring-primary/30">
                 <div className="flex items-center gap-2 px-1">
-                  <span className={cn("h-2.5 w-2.5 rounded-full", colorDot(col.color))} />
+                  <span
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full",
+                      colorDot(col.color),
+                    )}
+                  />
                   <span className="text-sm font-medium">{col.label}</span>
                   <span className="text-xs text-muted-foreground">{total}</span>
                 </div>

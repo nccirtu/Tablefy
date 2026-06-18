@@ -3,6 +3,7 @@
 import { Head } from "@inertiajs/react";
 import { Grid, PageSchema, Section, TablefySchema, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
 import { TablefyPage, TablefyTabs } from "@nccirtu/tablefy/inertia";
+import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
@@ -10,10 +11,14 @@ export default function View{{ singular }}({
   {{ singularCamel }},
   stats,
   hasStats,
+  charts,
+  hasCharts,
 }: {
   {{ singularCamel }}: {{ singular }};
   stats?: StatGroupData[];   // deferred, falls $viewStats gesetzt ist
   hasStats?: boolean;
+  charts?: ChartWidgetData[];   // deferred, falls $viewCharts gesetzt ist
+  hasCharts?: boolean;
 }) {
   const page = PageSchema.make()
     .title(`{{ singular }} #${ {{ singularCamel }}.id }`)
@@ -30,6 +35,7 @@ export default function View{{ singular }}({
     )
     .schema([
       hasStats && <TablefyStats data={stats} />,
+      hasCharts && <TablefyCharts data={charts} />,
 
       <TablefyTabs
         tabs={[

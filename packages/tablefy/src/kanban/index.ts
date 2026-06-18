@@ -4,6 +4,7 @@ export { TablefyKanban } from "./components/TablefyKanban";
 export { ServerKanban } from "./components/ServerKanban";
 export { KanbanCard } from "./components/KanbanCard";
 export { KanbanSkeleton } from "./components/KanbanSkeleton";
+export { useKanbanEnabled } from "./use-kanban-enabled";
 export type {
   KanbanColumn,
   KanbanColumnInput,

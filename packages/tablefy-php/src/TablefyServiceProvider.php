@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Commands\MakeTablefyChartCommand;
+use Nccirtu\Tablefy\Commands\MakeTablefyKanbanActionCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyKanbanCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyRelationCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyResourceCommand;
@@ -28,6 +30,8 @@ class TablefyServiceProvider extends ServiceProvider
                 MakeTablefyStatCommand::class,
                 MakeTablefyRelationCommand::class,
                 MakeTablefyKanbanCommand::class,
+                MakeTablefyChartCommand::class,
+                MakeTablefyKanbanActionCommand::class,
             ]);
 
             $this->publishes([

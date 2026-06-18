@@ -49,6 +49,18 @@ export class KanbanSchema<T extends Record<string, any>> {
     return this;
   }
 
+  /** `pipeline` → chevron headers for `flow` columns, flat for `terminal`. */
+  headerStyle(style: "plain" | "pipeline"): this {
+    this.config.headerStyle = style;
+    return this;
+  }
+
+  /** Cards may enter `terminal` columns but not leave them (default true). */
+  lockTerminal(lock = true): this {
+    this.config.lockTerminal = lock;
+    return this;
+  }
+
   getItemValue(fn: (record: T) => string | number): this {
     this.config.getItemValue = fn;
     return this;
