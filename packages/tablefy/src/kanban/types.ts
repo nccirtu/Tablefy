@@ -38,6 +38,8 @@ export interface KanbanCardConfig<T extends Record<string, any>> {
   avatar?: Accessor<T> | ((record: T) => string | undefined);
   badge?: KanbanCardBadge<T>;
   meta?: KanbanCardMeta<T>[];
+  /** Row actions shown as a three-dots dropdown (same API as the table). */
+  actions?: import("../columns/row-actions").ActionItem<T>[];
 }
 
 export interface KanbanSchemaConfig<T extends Record<string, any>> {

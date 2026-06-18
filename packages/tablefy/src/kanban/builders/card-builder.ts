@@ -4,6 +4,7 @@ import {
   KanbanCardConfig,
   KanbanCardMeta,
 } from "../types";
+import { ActionsColumn } from "../../columns/actions-column";
 
 type Accessor<T> = (keyof T & string) | string;
 type ValueFn<T> = (record: T) => ReactNode;
@@ -40,6 +41,15 @@ export class CardBuilder<T extends Record<string, any>> {
 
   meta(items: KanbanCardMeta<T>[]): this {
     this.cfg.meta = items;
+    return this;
+  }
+
+  /**
+   * Row actions as a three-dots dropdown — same builder as the table's
+   * ActionsColumn: `.actions((a) => a.view(...).edit(...).delete(...))`.
+   */
+  actions(build: (a: ActionsColumn<T>) => ActionsColumn<T>): this {
+    this.cfg.actions = build(ActionsColumn.make<T>()).getActions();
     return this;
   }
 

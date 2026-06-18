@@ -10,91 +10,16 @@ import { cn } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { ReactNode } from "react";
-import { dialog } from "../dialog/dialog";
 import type { ConfirmOptions, FormSchemaInput } from "../dialog/types";
+import {
+  ActionDialogConfig,
+  ActionFormConfig,
+  ActionItem,
+  runAction,
+} from "./row-actions";
 
-/** Open a schema form in a modal from a row action (url/data may use the row). */
-export interface ActionFormConfig<TData> {
-  title?: string;
-  description?: string;
-  schema: FormSchemaInput;
-  method?: "post" | "put" | "patch";
-  url: string | ((row: TData) => string);
-  data?: Record<string, unknown> | ((row: TData) => Record<string, unknown>);
-  submitLabel?: string;
-  onSuccess?: () => void;
-}
-
-/** Open arbitrary content in a modal from a row action. */
-export interface ActionDialogConfig<TData> {
-  title?: string;
-  description?: string;
-  content: (row: TData) => ReactNode;
-}
-
-export interface ActionItem<TData> {
-  label?: string; // optional when render is used
-  icon?: ReactNode;
-  onClick?: (row: TData) => void;
-  href?: (row: TData) => string;
-  render?: (row: TData) => ReactNode; // custom renderer for complex UI
-  variant?: "default" | "destructive";
-  separator?: boolean;
-  hidden?: (row: TData) => boolean;
-  disabled?: (row: TData) => boolean;
-  /** Confirm before running onClick/href (true = default copy, or custom). */
-  confirm?: boolean | ConfirmOptions;
-  /** Open a form dialog instead of onClick/href. */
-  form?: ActionFormConfig<TData>;
-  /** Open a custom-content dialog instead of onClick/href. */
-  dialog?: ActionDialogConfig<TData>;
-}
-
-/** Resolve a row action: form/custom dialog, optional confirm, then onClick/href. */
-function runAction<TData>(action: ActionItem<TData>, row: TData): void {
-  if (action.form) {
-    const f = action.form;
-    dialog.form({
-      title: f.title,
-      description: f.description,
-      schema: f.schema,
-      method: f.method,
-      url: typeof f.url === "function" ? f.url(row) : f.url,
-      data: typeof f.data === "function" ? f.data(row) : f.data,
-      submitLabel: f.submitLabel,
-      onSuccess: f.onSuccess,
-    });
-    return;
-  }
-
-  if (action.dialog) {
-    dialog.open({
-      title: action.dialog.title,
-      description: action.dialog.description,
-      content: action.dialog.content(row),
-    });
-    return;
-  }
-
-  const exec = () => {
-    if (action.href) window.location.href = action.href(row);
-    else action.onClick?.(row);
-  };
-
-  if (action.confirm) {
-    const opts = action.confirm === true ? {} : action.confirm;
-    void dialog
-      .confirm({
-        variant: action.variant === "destructive" ? "destructive" : "default",
-        ...opts,
-      })
-      .then((ok) => {
-        if (ok) exec();
-      });
-  } else {
-    exec();
-  }
-}
+// Re-exported for back-compat (the canonical definitions live in row-actions).
+export type { ActionItem, ActionFormConfig, ActionDialogConfig };
 
 interface ActionsColumnConfig<TData> {
   actions: ActionItem<TData>[];
@@ -199,6 +124,15 @@ export class ActionsColumn<TData> {
       this.config.actions[this.config.actions.length - 1].separator = true;
     }
     return this;
+  }
+
+  /** The collected actions (for reuse outside the table, e.g. a Kanban card). */
+  getActions(): ActionItem<TData>[] {
+    return this.config.actions;
+  }
+
+  getTriggerIcon(): ReactNode {
+    return this.config.triggerIcon;
   }
 
   build(): ColumnDef<TData, unknown> {

@@ -280,7 +280,7 @@ export function TablefyKanban<T extends Record<string, any>>({
               key={col.id}
               value={col.id}
               style={{ height: columnHeight }}
-              className="flex w-72 shrink-0 flex-col rounded-lg"
+              className="flex w-72 shrink-0 flex-col rounded-none border-0 bg-transparent p-0 dark:bg-transparent"
             >
               {pipeline ? (
                 // Chevron für flow-Stufen, gerade für terminal (CRM-Pipeline).
@@ -321,9 +321,9 @@ export function TablefyKanban<T extends Record<string, any>>({
                 </div>
               )}
               {/* Card list fills the column and scrolls internally. */}
-              <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+              <div className="flex flex-1 flex-col gap-2 overflow-y-auto border-l-2 border-dotted border-muted-foreground/50 pl-2">
                 {items.length === 0 ? (
-                  <div className="flex flex-1 items-center justify-center rounded-md border border-dashed text-center text-xs text-muted-foreground">
+                  <div className="flex flex-1 items-center justify-center text-center text-xs text-muted-foreground">
                     {config.emptyText ?? "Keine Einträge"}
                   </div>
                 ) : (

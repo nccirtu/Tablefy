@@ -220,8 +220,12 @@ function Kanban<T>(props: KanbanProps<T>) {
   const lastOverIdRef = React.useRef<UniqueIdentifier | null>(null);
   const hasMovedRef = React.useRef(false);
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    // Require a small drag distance so clicks (e.g. on a card's action menu)
+    // never start a drag.
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter,
     }),
