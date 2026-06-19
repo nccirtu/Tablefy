@@ -3,7 +3,8 @@ import {
   KanbanColumn,
   KanbanSchemaConfig,
 } from "../types";
-import { CardBuilder } from "./card-builder";
+import { CardSchema } from "../../card/card-schema";
+import type { CardBuildResult } from "../../card/types";
 
 type Accessor<T> = (keyof T & string) | string;
 
@@ -17,7 +18,6 @@ export class KanbanSchema<T extends Record<string, any>> {
     groupBy: "" as Accessor<T>,
     sortable: false,
     columnsMovable: false,
-    card: {},
   };
 
   static make<T extends Record<string, any>>(): KanbanSchema<T> {
@@ -72,8 +72,10 @@ export class KanbanSchema<T extends Record<string, any>> {
     return this;
   }
 
-  card(build: (card: CardBuilder<T>) => CardBuilder<T>): this {
-    this.config.card = build(new CardBuilder<T>()).build();
+  /** Card content — a shared CardSchema (builder or its built result). */
+  card(schema: CardSchema<T> | CardBuildResult<T>): this {
+    this.config.card =
+      schema instanceof CardSchema ? schema.build() : schema;
     return this;
   }
 

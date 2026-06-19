@@ -19,7 +19,6 @@ type ColumnData = Record<string, { items: any[]; total: number }>;
 
 export interface ServerKanbanProps<T extends Record<string, any>> {
   schema: KanbanBuildResult<T>;
-  renderActions?: (record: T) => ReactNode;
   /** Column height (CSS value); columns fill it and scroll internally. */
   height?: string;
   className?: string;
@@ -35,7 +34,6 @@ export interface ServerKanbanProps<T extends Record<string, any>> {
  */
 export function ServerKanban<T extends Record<string, any>>({
   schema,
-  renderActions,
   height,
   className,
   configProp = "kanban",
@@ -92,7 +90,9 @@ export function ServerKanban<T extends Record<string, any>>({
       {
         preserveScroll: true,
         preserveState: true,
-        only: [dataProp],
+        // Also refresh the package's shared prop (nav badges + notifications)
+        // so e.g. an onTransition notification shows in the bell right away.
+        only: [dataProp, "tablefy"],
         // Server rejected/failed the move → resync the board from the server.
         onError: () => router.reload({ only: [dataProp] }),
       },
@@ -119,7 +119,6 @@ export function ServerKanban<T extends Record<string, any>>({
       records={records as T[]}
       columns={config.columns?.length ? config.columns : undefined}
       counts={counts}
-      renderActions={renderActions}
       onMove={onMove}
       onLoadMore={onLoadMore}
       loadingColumn={loadingColumn}

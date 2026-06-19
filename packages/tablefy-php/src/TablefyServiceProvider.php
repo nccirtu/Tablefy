@@ -4,9 +4,11 @@ namespace Nccirtu\Tablefy;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Http\Controllers\TablefyNotificationsController;
 use Nccirtu\Tablefy\Commands\MakeTablefyChartCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyKanbanActionCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyKanbanCommand;
@@ -41,7 +43,23 @@ class TablefyServiceProvider extends ServiceProvider
 
         $this->registerTablefyMacro();
         $this->registerResourceRouteMacro();
+        $this->registerNotificationsRouteMacro();
         $this->shareNavigation();
+    }
+
+    /** `Route::tablefyNotifications()` — bell endpoints (mark read / read-all / delete). */
+    protected function registerNotificationsRouteMacro(): void
+    {
+        if (! Route::hasMacro('tablefyNotifications')) {
+            Route::macro('tablefyNotifications', function () {
+                Route::post('tablefy/notifications/read-all', [TablefyNotificationsController::class, 'markAllRead'])
+                    ->name('tablefy.notifications.readAll');
+                Route::post('tablefy/notifications/{id}/read', [TablefyNotificationsController::class, 'markRead'])
+                    ->name('tablefy.notifications.read');
+                Route::delete('tablefy/notifications/{id}', [TablefyNotificationsController::class, 'destroy'])
+                    ->name('tablefy.notifications.destroy');
+            });
+        }
     }
 
     /**
@@ -95,12 +113,42 @@ class TablefyServiceProvider extends ServiceProvider
         }
     }
 
-    /** Share the resource navigation with every Inertia response as `tablefy.navigation`. */
+    /** Share navigation + the user's notifications with every Inertia response (`tablefy.*`). */
     protected function shareNavigation(): void
     {
         Inertia::share('tablefy', fn () => [
             'navigation' => app(NavigationManager::class)->toArray(),
+            'notifications' => $this->resolveNotifications(),
         ]);
+    }
+
+    /**
+     * Recent + unread-count notifications for the auth user (header bell).
+     *
+     * @return array{items: array<int, array<string, mixed>>, unread: int}
+     */
+    protected function resolveNotifications(): array
+    {
+        $user = Auth::user();
+
+        if (! $user || ! method_exists($user, 'notifications')) {
+            return ['items' => [], 'unread' => 0];
+        }
+
+        $items = $user->notifications()->latest()->limit(15)->get()->map(fn ($n) => [
+            'id' => $n->id,
+            'read' => $n->read_at !== null,
+            'time' => optional($n->created_at)->diffForHumans(),
+            'title' => $n->data['title'] ?? '',
+            'body' => $n->data['body'] ?? null,
+            'type' => $n->data['type'] ?? 'info',
+            'icon' => $n->data['icon'] ?? null,
+        ])->all();
+
+        return [
+            'items' => $items,
+            'unread' => $user->unreadNotifications()->count(),
+        ];
     }
 
     /**

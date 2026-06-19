@@ -1,10 +1,10 @@
 // @generated – Server-Modus, deklarativ. Selten zu ändern.
 
 import { Head } from "@inertiajs/react";
-import { PageSchema, Section, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
+import { PageSchema, Section, TablefyStats{{ viewsImport }}, type StatGroupData } from "@nccirtu/tablefy";
 import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
 import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
-import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
+{{ listExtraImports }}import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 {{ formImport }}
@@ -22,7 +22,7 @@ export default function List{{ plural }}({
   charts?: ChartWidgetData[];                              // deferred → Chart-Skeletons, dann Daten
   hasCharts?: boolean;                                     // true sobald der Controller $listCharts hat
 }) {
-  const page = PageSchema.make()
+{{ listHooks }}  const page = PageSchema.make()
     .title({{ singular }}Resource.pluralLabel)
     .headerActions((a) => a.button({{ newAction }}))
     .schema([
@@ -32,14 +32,9 @@ export default function List{{ plural }}({
       hasCharts && <TablefyCharts data={charts} />,
 
       Section.make("{{ plural }}")
-        .description("Suchen, filtern, sortieren")
+        .description("{{ listSectionDesc }}")
         .schema([
-          <ServerDataTable
-            schema={ {{ pluralCamel }}Table }
-            paginator={ {{ pluralCamel }} }
-            url={ {{ singular }}Resource.routes.index }
-            only={['{{ pluralCamel }}']}
-          />,
+{{ listContent }}
         ]),
     ])
     .build();

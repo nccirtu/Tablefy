@@ -86,6 +86,16 @@ export abstract class BaseColumn<
   // Abstract method - jede Column-Art implementiert das selbst
   abstract build(): ColumnDef<TData, unknown>;
 
+  /** Accessor (for reuse outside the table, e.g. card cells). */
+  getAccessor(): string {
+    return this.config.accessor as string;
+  }
+
+  /** Column label (for card key-value display). */
+  getLabel(): string | undefined {
+    return this.config.label;
+  }
+
   // Hilfsfunktion für Alignment-Klassen
   protected getAlignmentClass(): string {
     const baseClasses = "text-sm text-muted-foreground";

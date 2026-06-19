@@ -35,7 +35,9 @@ import {
   groupRecords,
   locateItem,
 } from "../utils";
-import { KanbanCard, KanbanCardBody } from "./KanbanCard";
+import { KanbanCard } from "./KanbanCard";
+import { Card } from "@/components/ui/card";
+import { CardBody } from "../../card/card-body";
 
 export interface KanbanMoveEvent<T> {
   item: T;
@@ -54,8 +56,6 @@ export interface TablefyKanbanProps<T extends Record<string, any>> {
   columns?: KanbanColumnInput[];
   /** Per-column total counts (for the "load more" footer). */
   counts?: Record<string, number>;
-  /** Render row actions inside each card. */
-  renderActions?: (record: T) => ReactNode;
   /** Fired after a card is dropped in a (possibly new) column / position. */
   onMove?: (event: KanbanMoveEvent<T>) => void;
   /** Fired when the column order changes (UI only). */
@@ -96,7 +96,6 @@ export function TablefyKanban<T extends Record<string, any>>({
   records,
   columns: backendColumns,
   counts,
-  renderActions,
   onMove,
   onColumnsReorder,
   onLoadMore,
@@ -329,6 +328,7 @@ export function TablefyKanban<T extends Record<string, any>>({
                 ) : (
                   items.map((record) => {
                     const id = getItemValue(record);
+                    if (!config.card) return null;
                     return (
                       <KanbanCard
                         key={id}
@@ -336,7 +336,6 @@ export function TablefyKanban<T extends Record<string, any>>({
                         value={id}
                         card={config.card}
                         showGrip={config.sortable}
-                        footer={renderActions?.(record)}
                       />
                     );
                   })
@@ -386,10 +385,16 @@ export function TablefyKanban<T extends Record<string, any>>({
           const record = records.find(
             (r) => getItemValue(r) === String(dragId),
           );
-          if (!record) return null;
+          if (!record || !config.card) return null;
           return (
-            <div className="w-72">
-              <KanbanCardBody record={record} card={config.card} dragging />
+            <div className="w-72 rotate-2 shadow-lg">
+              <Card>
+                <CardBody
+                  schema={config.card}
+                  record={record}
+                  imageVariant="avatar"
+                />
+              </Card>
             </div>
           );
         }}

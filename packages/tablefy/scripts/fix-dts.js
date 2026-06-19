@@ -17,12 +17,18 @@ export { useTablefyNav, useTablefyNavGroups } from "./navigation";
 export { TablefyPage } from "./tablefy-page";
 export { TablefyTabs } from "./tablefy-tabs";
 export { TablefySearch } from "./tablefy-search";
+export { TablefyNotifications, setTablefyNotificationDefaults } from "./tablefy-notifications";
+export { TablefyHeaderActions } from "./tablefy-header-actions";
+export { TablefyToaster, toast } from "./tablefy-toaster";
 export { createPrecognitionBlur } from "./precognition";
 export type { UseInertiaFormOptions, UseInertiaFormReturn, ServerTableConfig, ServerTableState, ServerTableReturn, PaginatedResponse } from "./types";
 export type { TablefyNavItem, TablefyNavPayloadItem } from "./navigation";
 export type { TablefyPageProps } from "./tablefy-page";
 export type { TablefyTab, TablefyTabsProps } from "./tablefy-tabs";
 export type { TablefySearchProps } from "./tablefy-search";
+export type { TablefyNotificationsProps, PollInterval } from "./tablefy-notifications";
+export type { TablefyHeaderActionsProps } from "./tablefy-header-actions";
+export type { TablefyToasterProps } from "./tablefy-toaster";
 `
 );
 
@@ -37,3 +43,13 @@ console.log("Fixed dist/kanban/index.d.ts");
 writeFileSync("dist/charts/index.d.ts", `export * from "./charts/index";\n`);
 
 console.log("Fixed dist/charts/index.d.ts");
+
+// Fix dist/cards/index.d.ts — re-export the correctly-rooted nested decl.
+writeFileSync("dist/cards/index.d.ts", `export * from "./cards/index";\n`);
+
+console.log("Fixed dist/cards/index.d.ts");
+
+// Fix dist/card/index.d.ts — re-export the correctly-rooted nested decl.
+writeFileSync("dist/card/index.d.ts", `export * from "./card/index";\n`);
+
+console.log("Fixed dist/card/index.d.ts");

@@ -15,6 +15,7 @@ class MakeTablefyResourceCommand extends Command
         {--view : Also scaffold a view page (show route + View page with lazy relation tabs)}
         {--modal : Create/edit as dialogs instead of pages (no Create/Edit pages or GET routes)}
         {--kanban : Also scaffold a Kanban view (Card schema, list toggle, kanban() + move route, position migration)}
+        {--cards : Also scaffold a Card-Grid view (shared CardContent schema, Cards tab, controller $cardsView)}
         {--force : Overwrite all files, including the editable Tables/Schemas}';
 
     protected $description = 'Scaffold a Tablefy resource (TS pages/schemas/tables + controller + routes).';
@@ -38,12 +39,24 @@ class MakeTablefyResourceCommand extends Command
         $modal = (bool) $this->option('modal');
         $view = (bool) $this->option('view');
         $kanban = (bool) $this->option('kanban');
+        $cards = (bool) $this->option('cards');
         $camel = $r['{{ singularCamel }}'];
         $r['{{ table }}'] = $this->resolveTable($singular, $plural);
 
-        // Kanban placeholders (controller method + use, card columns). Derived
-        // from the first enum column when --generate read the schema.
-        $r = array_merge($r, $this->buildKanban($kanban, $singular));
+        // Kanban placeholders (controller method + use, card columns) + the
+        // shared CardContent's title field. Derived from the schema (--generate).
+        $r = array_merge($r, $this->buildKanban($kanban, $cards, $singular));
+
+        // List-page placeholders: optional imports, the kanban-enabled hook and
+        // the table/views content (Liste ⇄ Kanban ⇄ Karten via <TablefyViews>).
+        $r = array_merge($r, $this->buildListPage($kanban, $cards, $singular, $plural, $camel, $r['{{ pluralCamel }}']));
+
+        // Controller: enable the Card-Grid view (+ page size) when --cards.
+        $r['{{ cardsProps }}'] = $cards
+            ? "\n    // Card-Grid-Ansicht (--cards): liefert die `cards`-Prop (items + hasMore)."
+                . "\n    protected bool \$cardsView = true;"
+                . "\n    protected int \$cardsPerPage = 12;\n"
+            : '';
 
         // Row action to the view page — only when the resource has one (--view),
         // otherwise the show route doesn't exist and the link would 404.
@@ -67,7 +80,7 @@ class MakeTablefyResourceCommand extends Command
         $files = [
             "resources/js/types/tablefy/{$r['{{ singularKebab }}']}.ts" => ['type.ts', false],
             "resources/js/pages/tablefy/{$plural}/{$singular}Resource.tsx" => ['resource.tsx', false],
-            "resources/js/pages/tablefy/{$plural}/Pages/List{$plural}.tsx" => [$kanban ? 'list-page-kanban.tsx' : 'list-page.tsx', false],
+            "resources/js/pages/tablefy/{$plural}/Pages/List{$plural}.tsx" => ['list-page.tsx', false],
             "resources/js/pages/tablefy/{$plural}/Tables/{$plural}Table.tsx" => ['table.tsx', true],
             "resources/js/pages/tablefy/{$plural}/Schemas/{$singular}Form.tsx" => ['form.tsx', true],
             // editable: the controller is your customization surface (rules,
@@ -85,8 +98,14 @@ class MakeTablefyResourceCommand extends Command
             $files["resources/js/pages/tablefy/{$plural}/Pages/View{$singular}.tsx"] = ['view-page.tsx', false];
         }
 
+        // Shared card-content schema (used by Kanban cards and/or the Card grid).
+        if ($kanban || $cards) {
+            // Editable: the card content is your customization surface.
+            $files["resources/js/pages/tablefy/{$plural}/Schemas/{$singular}CardContent.tsx"] = ['card-content.tsx', true];
+        }
+
         if ($kanban) {
-            // Editable: the Card schema is your customization surface.
+            // Editable: the Kanban schema (columns/pipeline) is yours to tweak.
             $files["resources/js/pages/tablefy/{$plural}/Schemas/{$singular}Card.tsx"] = ['card.tsx', true];
         }
 
@@ -107,6 +126,11 @@ class MakeTablefyResourceCommand extends Command
         if ($kanban) {
             $this->line("Kanban: add <fg=cyan>'position'</> to the model's \$fillable, then run <fg=cyan>php artisan migrate</>.");
             $this->line("        adjust columns/colors in <fg=cyan>Schemas/{$singular}Card.tsx</> and groupBy in the controller.");
+        }
+
+        if ($cards) {
+            $this->line("Cards:  adjust image/heading/rows in <fg=cyan>Schemas/{$singular}CardContent.tsx</>.");
+            $this->line("        controller has <fg=cyan>\$cardsView = true</> (existing controller? re-run with --force).");
         }
 
         return self::SUCCESS;
@@ -174,7 +198,7 @@ class MakeTablefyResourceCommand extends Command
      *
      * @return array<string,string>
      */
-    protected function buildKanban(bool $kanban, string $singular): array
+    protected function buildKanban(bool $kanban, bool $cards, string $singular): array
     {
         $empty = [
             '{{ kanbanUse }}' => '',
@@ -184,8 +208,25 @@ class MakeTablefyResourceCommand extends Command
             '{{ kanbanTitleField }}' => 'name',
         ];
 
-        if (! $kanban) {
+        // Neither view → nothing to derive.
+        if (! $kanban && ! $cards) {
             return $empty;
+        }
+
+        // A title field (the shared CardContent heading): prefer "name"/"title",
+        // else fall back to "name". Needed for both --kanban and --cards.
+        $title = 'name';
+        $names = array_column($this->detectedColumns, 'name');
+        foreach (['name', 'title', 'label'] as $cand) {
+            if (in_array($cand, $names, true)) {
+                $title = $cand;
+                break;
+            }
+        }
+
+        // Card-Grid only → just the heading field; no kanban() / columns needed.
+        if (! $kanban) {
+            return array_merge($empty, ['{{ kanbanTitleField }}' => $title]);
         }
 
         // First enum column → group field + its values → columns + allowed().
@@ -196,16 +237,6 @@ class MakeTablefyResourceCommand extends Command
                 $groupBy = $col['name'];
                 preg_match_all("/'([^']*)'/", $m[1], $vals);
                 $values = $vals[1];
-                break;
-            }
-        }
-
-        // A title field: prefer "name"/"title", else the first string-ish column.
-        $title = 'name';
-        $names = array_column($this->detectedColumns, 'name');
-        foreach (['name', 'title', 'label'] as $cand) {
-            if (in_array($cand, $names, true)) {
-                $title = $cand;
                 break;
             }
         }
@@ -239,6 +270,104 @@ class MakeTablefyResourceCommand extends Command
             '{{ kanbanGroupBy }}' => $groupBy,
             '{{ kanbanColumns }}' => $columnsTs,
             '{{ kanbanTitleField }}' => $title,
+        ];
+    }
+
+    /**
+     * List-page placeholders. Without extra views → a plain <ServerDataTable>.
+     * With --kanban / --cards → a <TablefyViews> switcher (Liste ⇄ Kanban ⇄ Karten),
+     * the needed imports, and the kanban-enabled hook.
+     *
+     * @return array<string,string>
+     */
+    protected function buildListPage(bool $kanban, bool $cards, string $singular, string $plural, string $camel, string $pluralCamel): array
+    {
+        // Plain table — no view switcher.
+        if (! $kanban && ! $cards) {
+            $content = "          <ServerDataTable\n"
+                . "            schema={ {$pluralCamel}Table }\n"
+                . "            paginator={ {$pluralCamel} }\n"
+                . "            url={ {$singular}Resource.routes.index }\n"
+                . "            only={['{$pluralCamel}']}\n"
+                . "          />,";
+
+            return [
+                '{{ viewsImport }}' => '',
+                '{{ listExtraImports }}' => '',
+                '{{ listHooks }}' => '',
+                '{{ listSectionDesc }}' => 'Suchen, filtern, sortieren',
+                '{{ listContent }}' => $content,
+            ];
+        }
+
+        // View switcher: collect icons + view-specific imports.
+        $icons = ['LayoutList'];
+        $imports = [];
+        if ($kanban) {
+            $icons[] = 'Columns3';
+            $imports[] = 'import { ServerKanban, useKanbanEnabled } from "@nccirtu/tablefy/kanban";';
+            $imports[] = "import { {$camel}Card } from \"../Schemas/{$singular}Card\";";
+        }
+        if ($cards) {
+            $icons[] = 'LayoutGrid';
+            $imports[] = 'import { ServerCards } from "@nccirtu/tablefy/cards";';
+            $imports[] = "import { {$camel}CardContent } from \"../Schemas/{$singular}CardContent\";";
+        }
+        array_unshift($imports, 'import { ' . implode(', ', $icons) . ' } from "lucide-react";');
+        $listExtraImports = implode("\n", $imports) . "\n";
+
+        $listHooks = $kanban
+            ? "  // Der Kanban-Tab erscheint nur, wenn der Controller kanban() liefert.\n"
+                . "  const kanbanEnabled = useKanbanEnabled();\n\n"
+            : '';
+
+        $views = [];
+        $views[] = "              {\n"
+            . "                value: \"list\",\n"
+            . "                label: \"Liste\",\n"
+            . "                icon: <LayoutList className=\"h-4 w-4\" />,\n"
+            . "                content: (\n"
+            . "                  <ServerDataTable\n"
+            . "                    schema={ {$pluralCamel}Table }\n"
+            . "                    paginator={ {$pluralCamel} }\n"
+            . "                    url={ {$singular}Resource.routes.index }\n"
+            . "                    only={['{$pluralCamel}']}\n"
+            . "                  />\n"
+            . "                ),\n"
+            . "              },";
+        if ($kanban) {
+            $views[] = "              {\n"
+                . "                value: \"kanban\",\n"
+                . "                label: \"Kanban\",\n"
+                . "                icon: <Columns3 className=\"h-4 w-4\" />,\n"
+                . "                enabled: kanbanEnabled,\n"
+                . "                content: <ServerKanban schema={ {$camel}Card } />,\n"
+                . "              },";
+        }
+        if ($cards) {
+            $views[] = "              {\n"
+                . "                value: \"cards\",\n"
+                . "                label: \"Karten\",\n"
+                . "                icon: <LayoutGrid className=\"h-4 w-4\" />,\n"
+                . "                content: <ServerCards schema={ {$camel}CardContent } columns={3} perPage={12} />,\n"
+                . "              },";
+        }
+
+        $content = "          <TablefyViews\n"
+            . "            views={[\n"
+            . implode("\n", $views) . "\n"
+            . "            ]}\n"
+            . "          />,";
+
+        $desc = 'Suchen, filtern, sortieren'
+            . ($kanban && $cards ? ' — oder als Kanban / Karten' : ($kanban ? ' — oder als Kanban' : ' — oder als Karten'));
+
+        return [
+            '{{ viewsImport }}' => ', TablefyViews',
+            '{{ listExtraImports }}' => $listExtraImports,
+            '{{ listHooks }}' => $listHooks,
+            '{{ listSectionDesc }}' => $desc,
+            '{{ listContent }}' => $content,
         ];
     }
 

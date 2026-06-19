@@ -25,7 +25,14 @@ export type TablefyHookName = TablefyRenderHook | (string & {});
 
 export type TablefyHookRender = (context: TablefyHookContext) => ReactNode;
 
-const registry = new Map<string, TablefyHookRender[]>();
+// Shared on globalThis so registrations made in one bundle (e.g. the main
+// `@nccirtu/tablefy`) are visible to `<RenderHook>` rendered from another
+// (e.g. `@nccirtu/tablefy/inertia`).
+const REGISTRY_KEY = "__tablefyRenderHooks__";
+const globalRef = globalThis as unknown as Record<string, unknown>;
+const registry: Map<string, TablefyHookRender[]> =
+  (globalRef[REGISTRY_KEY] as Map<string, TablefyHookRender[]>) ??
+  (globalRef[REGISTRY_KEY] = new Map<string, TablefyHookRender[]>());
 
 /**
  * Register content to render at a named slot. Returns an unregister function.

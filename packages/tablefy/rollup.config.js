@@ -179,6 +179,50 @@ export default defineConfig([
     external: isExternal,
     ...suppressWarnings,
   },
+  // Shared card-content schema (used by kanban + cards)
+  {
+    input: "src/card/index.ts",
+    output: [
+      {
+        file: "dist/card/index.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        interop: "auto",
+      },
+      {
+        file: "dist/card/index.esm.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+      },
+    ],
+    plugins: createPlugins(),
+    external: isExternal,
+    ...suppressWarnings,
+  },
+  // Cards bundle (infinite-scroll card grid)
+  {
+    input: "src/cards/index.ts",
+    output: [
+      {
+        file: "dist/cards/index.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        interop: "auto",
+      },
+      {
+        file: "dist/cards/index.esm.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+      },
+    ],
+    plugins: createPlugins(),
+    external: isExternal,
+    ...suppressWarnings,
+  },
   // Kanban bundle (bundles @dnd-kit like the other vendored primitives)
   {
     input: "src/kanban/index.ts",

@@ -479,6 +479,44 @@ Gruppen-Überschriften mit deinen eigenen Sidebar-Bausteinen rendern willst. Das
 + `server.fs.allow` aufs Monorepo, und (b) ggf. ein Cast `useTablefyNav() as NavItem[]`. Bei
 normaler npm-Installation entfällt beides.
 
+#### Beide Nav-Varianten verdrahten (Sidebar- **und** Header-Layout)
+
+Das Laravel-React-Starter-Kit bringt **zwei** Layouts mit — umgeschaltet in `resources/js/layouts/app-layout.tsx`:
+
+```tsx
+import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';  // Sidebar-Nav (SidebarProvider)
+// oder:
+import AppLayoutTemplate from '@/layouts/app/app-header-layout';   // Header-Nav (Top-Bar)
+```
+
+`useTablefyNav()` (Nav-Daten) und `<TablefyHeaderActions/>` (Glocke) sind **layout-agnostisch** — du verdrahtest sie aber **pro Layout, das du tatsächlich nutzt** (es gibt keine eine Magic-Datei; genau wie die statischen Nav-Items). Für **neue Installationen** gilt:
+
+| | Tablefy-Nav (`useTablefyNav`) | Glocke (`<TablefyHeaderActions/>`) |
+|---|---|---|
+| **Sidebar-Layout** | `components/app-sidebar.tsx` | `components/app-sidebar-header.tsx` |
+| **Header-Layout** | `components/app-header.tsx` | `components/app-header.tsx` |
+
+Sidebar bringt `useTablefyNav` im Starter-Kit oft schon mit; im **Header**-Layout musst du es selbst ergänzen (in **beiden** Render-Stellen — Desktop-Nav *und* Mobile-Sheet):
+
+```tsx
+// components/app-header.tsx (Header-Variante) — Nav-Items + Glocke
+import { TablefyHeaderActions, useTablefyNav } from '@nccirtu/tablefy/inertia';
+import type { NavItem } from '@/types';
+
+const mainNavItems: NavItem[] = [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }];
+
+export function AppHeader() {
+  const tablefyNav = useTablefyNav() as NavItem[];
+  const navItems = [...mainNavItems, ...tablefyNav];   // statt mainNavItems überall rendern
+  // …rechts oben in der Top-Bar:
+  // <TablefyHeaderActions className="ml-auto" />
+}
+```
+
+> **Stolperfalle:** `AppShell variant="header"` stellt **keinen** `SidebarProvider`. Render dort **kein** `<AppSidebar>` (`useSidebar`) — sonst `useSidebar must be used within a SidebarProvider`. Für Header-Nav das fertige **`app-header-layout.tsx`** nehmen, **nicht** das Sidebar-Layout auf `variant="header"` umbiegen.
+
+Glocken-/Toaster-/Routen-/Tabellen-Setup: siehe Abschnitt **Notifications**.
+
 ### Render Hooks (Slots)
 
 Benannte Slots, in die du Inhalt einklinkst — **ohne** Package-Markup zu überschreiben
@@ -668,6 +706,119 @@ php artisan make:tablefy-chart RevenueChart --resource=Building --type=area --co
 
 Code: PHP `packages/tablefy-php/src/Charts/ChartWidget.php` + `MakeTablefyChartCommand`; TS `packages/tablefy/src/charts/` (`@nccirtu/tablefy/charts`).
 
+### Card-Grid-Ansicht (Inertia Infinite-Scroll / „Mehr laden")
+
+Eine dritte Listen-Variante neben Tabelle & Kanban: ein **Card-Grid** (Cover-Bild + Titel + Badges + Actions) mit **Infinite-Scroll / „Mehr laden"**. **Import:** `@nccirtu/tablefy/cards`.
+
+**Backend** (im Controller aktivieren):
+```php
+protected bool $cardsView = true;
+protected int $cardsPerPage = 12;   // = <ServerCards perPage>
+```
+Liefert pro Anfrage eine optionale Prop `cards` = `{ items, hasMore }` (über `?cards_page=` / `?cards_per_page=`). `<ServerCards>` akkumuliert die Seiten **lokal**: „Mehr laden"/Scroll hängt an, und sobald sich Suche/Filter ändern (URL ohne `cards_page`), wird **Seite 1 sauber neu geladen** (ersetzt) — Suchergebnisse vermischen sich nie mit alten Seiten.
+
+**Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
+```tsx
+import { CardSchema, CardRow } from "@nccirtu/tablefy/card";
+import { TextColumn, BadgeColumn, NumberColumn, ProgressColumn }
+  from "@nccirtu/tablefy/columns";
+
+export const buildingCardContent = CardSchema.make<Building>()
+  .image("image_url")                                 // Cover (Grid) / Avatar (Kanban)
+  .heading(TextColumn.make("name"))
+  .rows([
+    CardRow.make([ TextColumn.make("address").label("Adresse"),
+                   BadgeColumn.make("plan").label("Plan") ]),
+    CardRow.make([ NumberColumn.make("floors").label("Etagen"),
+                   ProgressColumn.make("progress").label("Fortschritt") ]),
+  ])
+  // .cells([col, col, col], 3)  ← Alternative: Raster mit 3 Spalten statt Rows
+  .actions((a) => a.action({ label: "Bearbeiten", form: { … } }).delete((r) => …))
+  .build();
+```
+Zellen = die Table-Column-Builder (Text/Badge/Number/Date/Progress/Boolean/Enum/Link/Icon/…). `.image()` rendert im Grid als Cover, im Kanban als Avatar.
+
+**Grid-Page** (dritter `<TablefyViews>`-Tab):
+```tsx
+import { ServerCards } from "@nccirtu/tablefy/cards";
+
+<ServerCards schema={buildingCardContent} columns={4} perPage={12} />        // „Mehr laden" (Default)
+<ServerCards schema={buildingCardContent} columns={4} loadMode="infinite" /> // Auto-Scroll
+```
+**Kanban** nutzt dasselbe Schema: `KanbanSchema.make().groupBy("status").columns([…]).card(buildingCardContent)`.
+
+Default ist der **„Mehr laden"-Button**; `loadMode="infinite"` lädt automatisch beim Scrollen (IntersectionObserver) und behält den Button als Fallback. Code: TS `packages/tablefy/src/card/` (geteiltes Schema) + `src/cards/` (Grid), Backend in `TablefyController::index()`/`cardsPaginator()`.
+
+**Generieren / nachrüsten (`--cards`):**
+```bash
+php artisan make:tablefy-resource Building --generate --cards
+#   → Controller $cardsView=true, Schemas/BuildingCardContent.tsx (geteiltes
+#     CardSchema), Karten-Tab via <TablefyViews> in der List-Page.
+php artisan make:tablefy-resource Building --generate --kanban --cards
+#   → beides: ein gemeinsames BuildingCardContent.tsx für Kanban- UND Grid-Cards.
+```
+`--cards` und `--kanban` teilen sich dieselbe `Schemas/XxxCardContent.tsx`; `--kanban` legt zusätzlich `XxxCard.tsx` (KanbanSchema) an, das dieses CardContent importiert. (Bei bestehendem Controller wird die editierbare Datei nicht überschrieben → `$cardsView` ggf. von Hand setzen oder `--force`.)
+
+### Notifications (Toasts + DB-Glocke, Filament-Stil)
+
+Ein `Notification`-Builder, der entweder als **Toast** (`send()`) oder in die **DB** für die Header-Glocke (`sendToDatabase()`) geht:
+
+```php
+use Nccirtu\Tablefy\Notifications\Notification;
+
+Notification::make('Gespeichert')->success()->send();              // Toast
+Notification::make('Neuer Auftrag')->body('…')->info()->sendToDatabase($user); // DB → Glocke
+```
+Methoden: `make/title/body/icon/success/info/warning/danger` + `send()` / `sendToDatabase($notifiable = auth)`.
+
+**Auto-Toasts:** Der Base-Controller feuert bei store/update/delete/bulk automatisch einen Erfolgs-Toast. Abschalten mit `protected bool $notifyOnWrite = false;` oder `notifyWritten()` überschreiben.
+
+**DB-Notifications** kommen als geteilte Prop `tablefy.notifications = { items, unread }` bei jeder Inertia-Antwort mit (kein Polling) — die Glocke aktualisiert sich nach jeder Navigation/`router.reload`.
+
+#### Setup im Host-Projekt (einmalig)
+
+```bash
+php artisan notifications:table && php artisan migrate   # 1. notifications-Tabelle
+```
+```php
+// 2. User-Model
+use Illuminate\Notifications\Notifiable;
+class User extends Authenticatable { use Notifiable; }
+
+// 3. Routes (mark read / read-all / delete)
+Route::tablefyNotifications();
+```
+```tsx
+// 4. Glocke in den Header — einmal, layout-unabhängig (rendert Glocke +
+//    "header.actions"-Slot; egal welches Layout/Nav du nutzt).
+import { TablefyHeaderActions } from '@nccirtu/tablefy/inertia';
+<TablefyHeaderActions className="ml-auto" />
+
+// 5. Toaster einmal im App-Root (mountet Sonner + Flash-Listener intern)
+import { TablefyToaster } from '@nccirtu/tablefy/inertia';
+<TablefyToaster />
+```
+6. (Optional) Für `ShouldQueue`-Notifications/Stage-Actions: `QUEUE_CONNECTION=database` + `php artisan queue:work`.
+
+`<TablefyHeaderActions>` ist die native, zentrale Header-Zone (wie der Nav-Renderer für Items): einmal pro Header platziert, zeigt sie die Glocke und einen `header.actions`-Render-Hook-Slot. Weitere Widgets registrierst du zentral, ohne den Header-Code zu ändern:
+```tsx
+import { registerTablefyRenderHook } from '@nccirtu/tablefy';
+registerTablefyRenderHook('header.actions', () => <ThemeToggle />);
+```
+Nur die Glocke ohne Wrapper: `<TablefyNotifications />`. `<TablefyToaster>` bündelt Sonner (kein eigener `sonner`-Install/Wrapper nötig), folgt dem `.dark`-Class und re-exportiert `toast` für client-seitige Toasts. Code: PHP `packages/tablefy-php/src/Notifications/` + `TablefyNotificationsController`; TS `packages/tablefy/src/inertia/tablefy-notifications.tsx` + `tablefy-toaster.tsx`.
+
+**Polling (opt-in):** Standardmäßig **aus** — die Glocke aktualisiert sich bei Navigation/Aktionen. Für regelmäßiges Nachladen (`router.reload({ only: ['tablefy'] })`):
+
+```tsx
+// Pro Instanz (Sekunden-Zahl oder String "30s" / "1m" / "500ms"):
+<TablefyHeaderActions poll="30s" />
+
+// Global als Standard (einmal im App-Root):
+import { setTablefyNotificationDefaults } from '@nccirtu/tablefy/inertia';
+setTablefyNotificationDefaults({ poll: '30s' });
+```
+Pro-Instanz-`poll` überschreibt den globalen Default; `poll={0}` schaltet eine Instanz wieder ab. (Pollt konstant, auch bei inaktivem Tab.)
+
 ### View-Page (`--view`) & Lazy-Relation-Tabs
 
 ```bash
@@ -851,16 +1002,11 @@ export const taskCard = KanbanSchema.make<Task>()
   ])
   .sortable()
   .columnsMovable()
-  .card((c) => c.title("name").description("address").avatar("image_url").badge("plan")
-                .meta([{ field: "company.name", label: "Firma" }])
-                // Drei-Punkte-Menü auf der Karte — gleiche Builder-API wie ActionsColumn:
-                .actions((a) => a
-                  .action({ label: "Bearbeiten", form: { schema: taskForm, method: "put", url: (r) => `/tasks/${r.id}` } })
-                  .delete((r) => router.delete(`/tasks/${r.id}`))))
+  .card(taskCardContent)   // ← geteiltes CardSchema (s. „Card-Grid-Ansicht")
   .build();
 ```
 
-Die Karte rendert mit den vendored shadcn-`Card`-Primitives (Chrome/Typografie zentral aus `components/ui/card.tsx` + Theme). `.actions((a) => …)` nimmt **denselben** Builder wie die Tabelle (`view`/`edit`/`delete`/`action`/`editForm`/`dialog`/`link`) und zeigt ein Drei-Punkte-Dropdown über die geteilte Dialog-Engine — das Öffnen löst keinen Drag aus (Drag startet erst ab ~8px Bewegung).
+Der Karten-**Inhalt** kommt aus dem geteilten **`CardSchema`** (`@nccirtu/tablefy/card`) — dieselben Table-Column-Typen in Rows/Columns, identisch für Kanban- und Grid-Cards (Bild = Avatar im Kanban, Cover im Grid). Die Karte rendert mit den vendored shadcn-`Card`-Primitives (Chrome/Typografie zentral). `.actions()` im CardSchema = derselbe Builder wie die Tabelle; das Öffnen des Menüs löst keinen Drag aus (Drag startet erst ab ~8px Bewegung).
 
 **Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Umschalter automatisch über `<TablefyViews>` (shadcn ButtonGroup) ein. Der Kanban-Tab erscheint nur, wenn das Backend Kanban aktiviert hat — `useKanbanEnabled()` liest die `kanban`-Prop:
 
@@ -878,8 +1024,10 @@ Generieren / nachrüsten:
 
 ```bash
 php artisan make:tablefy-resource Task --generate --kanban
-#   → kanban() im Controller, kanban: true-Route, Schemas/TaskCard.tsx,
+#   → kanban() im Controller, kanban: true-Route, Schemas/TaskCardContent.tsx
+#     (geteiltes CardSchema) + Schemas/TaskCard.tsx (KanbanSchema, importiert es),
 #     List-Toggle, position-Migration (groupBy/Spalten aus dem ersten Enum*)
+#   → mit zusätzlichem --cards: derselbe TaskCardContent speist auch das Card-Grid
 
 php artisan make:tablefy-kanban Task --generate
 #   → rüstet eine BESTEHENDE Resource nach: Card-Schema + Migration +

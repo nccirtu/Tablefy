@@ -53,7 +53,18 @@ class MakeTablefyKanbanCommand extends Command
             '{{ table }}' => $table,
         ];
 
-        // Card schema (editable surface).
+        // Shared card-content schema (the Kanban card imports it; reusable for a
+        // Card-Grid via <ServerCards>). Editable surface — never clobbered.
+        $contentTarget = base_path("resources/js/pages/tablefy/{$plural}/Schemas/{$singular}CardContent.tsx");
+        if (File::exists($contentTarget) && ! $this->option('force')) {
+            $this->line('  <fg=yellow>skip</>   ' . $this->rel($contentTarget) . '  (exists, use --force)');
+        } else {
+            File::ensureDirectoryExists(dirname($contentTarget));
+            File::put($contentTarget, strtr($this->stub('card-content.tsx'), $r));
+            $this->line('  <fg=green>create</> ' . $this->rel($contentTarget));
+        }
+
+        // Kanban schema (editable surface) — imports the shared CardContent.
         $cardTarget = base_path("resources/js/pages/tablefy/{$plural}/Schemas/{$singular}Card.tsx");
         if (File::exists($cardTarget) && ! $this->option('force')) {
             $this->line('  <fg=yellow>skip</>   ' . $this->rel($cardTarget) . '  (exists, use --force)');

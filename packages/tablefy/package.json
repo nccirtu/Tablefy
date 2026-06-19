@@ -103,6 +103,7 @@
     "prompts": "^2.4.2",
     "react-day-picker": "^10.0.1",
     "recharts": "^3.8.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.0",
     "tslib": "^2.5.0"
   },
@@ -155,6 +156,16 @@
       "import": "./dist/charts/index.esm.js",
       "require": "./dist/charts/index.js"
     },
+    "./cards": {
+      "types": "./dist/cards/index.d.ts",
+      "import": "./dist/cards/index.esm.js",
+      "require": "./dist/cards/index.js"
+    },
+    "./card": {
+      "types": "./dist/card/index.d.ts",
+      "import": "./dist/card/index.esm.js",
+      "require": "./dist/card/index.js"
+    },
     "./inertia": {
       "types": "./dist/inertia/index.d.ts",
       "import": "./dist/inertia/index.esm.js",
@@ -175,6 +186,12 @@
       ],
       "charts": [
         "dist/charts/index.d.ts"
+      ],
+      "cards": [
+        "dist/cards/index.d.ts"
+      ],
+      "card": [
+        "dist/card/index.d.ts"
       ],
       "inertia": [
         "dist/inertia/index.d.ts"

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import type { CardBuildResult } from "../card/types";
 
 /** A single Kanban column / state. */
 export interface KanbanColumn {
@@ -15,32 +16,6 @@ export interface KanbanColumn {
 export type KanbanColumnInput = KanbanColumn | string;
 
 type Accessor<T> = (keyof T & string) | string;
-type ValueFn<T> = (record: T) => ReactNode;
-
-export interface KanbanCardMeta<T extends Record<string, any>> {
-  field?: Accessor<T>;
-  value?: ValueFn<T>;
-  icon?: ReactNode;
-  label?: string;
-}
-
-export interface KanbanCardBadge<T extends Record<string, any>> {
-  field?: Accessor<T>;
-  value?: ValueFn<T>;
-  /** Map of raw value → Tailwind color name for the badge. */
-  colors?: Record<string, string>;
-}
-
-export interface KanbanCardConfig<T extends Record<string, any>> {
-  title?: Accessor<T> | ValueFn<T>;
-  description?: Accessor<T> | ValueFn<T>;
-  /** Field holding an image URL (rendered as an avatar). */
-  avatar?: Accessor<T> | ((record: T) => string | undefined);
-  badge?: KanbanCardBadge<T>;
-  meta?: KanbanCardMeta<T>[];
-  /** Row actions shown as a three-dots dropdown (same API as the table). */
-  actions?: import("../columns/row-actions").ActionItem<T>[];
-}
 
 export interface KanbanSchemaConfig<T extends Record<string, any>> {
   /** Record field that decides the column a card belongs to. */
@@ -61,7 +36,8 @@ export interface KanbanSchemaConfig<T extends Record<string, any>> {
   getItemValue?: (record: T) => string | number;
   /** Text shown in a column that has no cards. */
   emptyText?: string;
-  card: KanbanCardConfig<T>;
+  /** Shared card-content schema (CardSchema). */
+  card?: CardBuildResult<T>;
 }
 
 export interface KanbanBuildResult<T extends Record<string, any>> {

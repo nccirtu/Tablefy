@@ -79,6 +79,12 @@ abstract class TablefyController extends Controller
      */
     protected array $viewCharts = [];
 
+    /** Enable the infinite-scroll card-grid view on the list page. */
+    protected bool $cardsView = false;
+
+    /** Page size for the card-grid view (keep in sync with `<ServerCards perPage>`). */
+    protected int $cardsPerPage = 12;
+
     /**
      * Relations rendered as lazy tabs on the view page (method names, e.g.
      * ['posts', 'orders']). Each loads only when its tab is first opened.
@@ -102,6 +108,9 @@ abstract class TablefyController extends Controller
      * @var array<class-string<\Nccirtu\Tablefy\Relations\RelationManager>>
      */
     protected array $relationManagers = [];
+
+    /** Send a default success toast after create/update/delete. */
+    protected bool $notifyOnWrite = true;
 
     /** Validation rules — the single source of validation truth (backend). */
     abstract protected function rules(?Model $record = null): array;
@@ -203,7 +212,29 @@ abstract class TablefyController extends Controller
             );
         }
 
+        // Card-grid: one optional prop per page ({ items, hasMore }); the
+        // frontend (ServerCards) accumulates pages and resets on search/filter.
+        if ($this->cardsView) {
+            $props['cards'] = Inertia::optional(fn () => [
+                'items' => $this->cardsPaginator($request)->items(),
+                'hasMore' => $this->cardsPaginator($request)->hasMorePages(),
+            ]);
+        }
+
         return Inertia::render($this->page("List{$this->plural}"), $props);
+    }
+
+    /** Paginator for the card-grid view (memoized per request via `once`). */
+    protected function cardsPaginator(Request $request)
+    {
+        return once(fn () => $this->model::query()
+            ->with($this->with)
+            ->tablefy($request)
+            ->paginate(
+                $request->integer('cards_per_page', $this->cardsPerPage),
+                ['*'],
+                'cards_page',
+            ));
     }
 
     /**
@@ -423,9 +454,22 @@ abstract class TablefyController extends Controller
      */
     protected function redirectAfterWrite(Request $request, string $message)
     {
+        $this->notifyWritten($message);
+
         return $request->header('X-Tablefy-Modal')
             ? back()->with('success', $message)
             : redirect()->route("{$this->routeName}.index")->with('success', $message);
+    }
+
+    /**
+     * Default success toast after a write. Disable with `$notifyOnWrite = false`
+     * or override to customize (e.g. also `->sendToDatabase()`).
+     */
+    protected function notifyWritten(string $message): void
+    {
+        if ($this->notifyOnWrite) {
+            \Nccirtu\Tablefy\Notifications\Notification::make($message)->success()->send();
+        }
     }
 
     public function edit(Request $request, string $id)
@@ -490,6 +534,8 @@ abstract class TablefyController extends Controller
     {
         $this->model::findOrFail($id)->delete();
 
+        $this->notifyWritten("{$this->singular} deleted.");
+
         return back()->with('success', "{$this->singular} deleted.");
     }
 
@@ -501,6 +547,8 @@ abstract class TablefyController extends Controller
         if ($ids !== []) {
             $this->model::whereIn((new $this->model)->getKeyName(), $ids)->delete();
         }
+
+        $this->notifyWritten(count($ids) . " {$this->plural} deleted.");
 
         return back()->with('success', count($ids) . " {$this->plural} deleted.");
     }

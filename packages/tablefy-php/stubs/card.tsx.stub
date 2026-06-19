@@ -1,10 +1,12 @@
-// @generated Kanban-Card-Schema (Hybrid) – ab hier FREI editierbar.
+// @generated Kanban-Schema – ab hier FREI editierbar.
 //
-// Statische Spalten leben hier (.columns); dynamische würden vom Backend
-// kommen (Controller ->columnsFrom(...)) und .columns() würde entfallen.
-// `groupBy` muss zum Controller-`kanban()->groupBy(...)` passen.
+// Spalten/Pipeline + Drag; der Karten-INHALT kommt aus dem geteilten
+// `{{ singularCamel }}CardContent` (s. {{ singular }}CardContent.tsx), das auch die
+// Card-Grid-Ansicht (<ServerCards />) nutzt. `groupBy` muss zum Controller-
+// `kanban()->groupBy(...)` passen.
 
 import { KanbanSchema } from "@nccirtu/tablefy/kanban";
+import { {{ singularCamel }}CardContent } from "./{{ singular }}CardContent";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
 export const {{ singularCamel }}Card = KanbanSchema.make<{{ singular }}>()
@@ -14,12 +16,5 @@ export const {{ singularCamel }}Card = KanbanSchema.make<{{ singular }}>()
     ])
     .sortable() // Reorder innerhalb der Spalte (persistiert `position`)
     .columnsMovable() // Spalten per Drag umsortieren (nur UI)
-    .card((c) =>
-        c
-            .title("{{ kanbanTitleField }}")
-            // .description("address")
-            // .avatar("image_url")
-            // .badge("plan")
-            // .meta([{ field: "company.name", label: "Firma" }]),
-    )
+    .card({{ singularCamel }}CardContent)
     .build();

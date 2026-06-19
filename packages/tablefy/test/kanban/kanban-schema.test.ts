@@ -1,4 +1,6 @@
 import { KanbanSchema } from "../../src/kanban";
+import { CardSchema, CardRow } from "../../src/card";
+import { TextColumn, BadgeColumn } from "../../src/columns";
 
 interface Task {
   id: number;
@@ -26,33 +28,25 @@ describe("KanbanSchema", () => {
     expect(config.columnsMovable).toBe(true);
   });
 
-  it("builds the card config via the card builder", () => {
-    const { config } = KanbanSchema.make<Task>()
-      .groupBy("status")
-      .card((c) =>
-        c
-          .title("title")
-          .description((t) => t.company.name)
-          .badge("status", { colors: { todo: "amber" } })
-          .meta([{ field: "id", label: "#" }]),
-      )
+  it("accepts a shared CardSchema for the card content", () => {
+    const card = CardSchema.make<Task>()
+      .image("image_url")
+      .heading(TextColumn.make("title"))
+      .rows([CardRow.make([BadgeColumn.make("status")])])
       .build();
 
-    expect(config.card.title).toBe("title");
-    expect(typeof config.card.description).toBe("function");
-    expect(config.card.badge).toMatchObject({
-      field: "status",
-      colors: { todo: "amber" },
-    });
-    expect(config.card.meta).toEqual([{ field: "id", label: "#" }]);
+    const { config } = KanbanSchema.make<Task>()
+      .groupBy("status")
+      .card(card)
+      .build();
+
+    expect(config.card?.config.image).toBe("image_url");
+    expect(config.card?.config.heading?.getAccessor()).toBe("title");
+    expect(config.card?.config.rows[0].cells).toHaveLength(1);
   });
 
   it("omits columns for the dynamic/backend-driven case", () => {
-    const { config } = KanbanSchema.make<Task>()
-      .groupBy("status")
-      .card((c) => c.title("title"))
-      .build();
-
+    const { config } = KanbanSchema.make<Task>().groupBy("status").build();
     expect(config.columns).toBeUndefined();
   });
 });

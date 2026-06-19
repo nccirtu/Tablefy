@@ -1,0 +1,19 @@
+// @generated Geteiltes Card-Inhalts-Schema – ab hier FREI editierbar.
+//
+// Zellen = Table-Column-Typen, angeordnet in Rows. Nutzbar für die Kanban-Card
+// (<ServerKanban>) UND die Card-Grid-Ansicht (<ServerCards schema={…} />).
+
+import { CardSchema, CardRow } from "@nccirtu/tablefy/card";
+import { TextColumn } from "@nccirtu/tablefy/columns";
+// import { BadgeColumn, NumberColumn, ProgressColumn } from "@nccirtu/tablefy/columns";
+import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+
+export const {{ singularCamel }}CardContent = CardSchema.make<{{ singular }}>()
+    // .image("image_url")                       // Cover (Grid) / Avatar (Kanban)
+    .heading(TextColumn.make("{{ kanbanTitleField }}"))
+    .rows([
+        // CardRow.make([ TextColumn.make("..."), BadgeColumn.make("...") ]),
+        // CardRow.make([ NumberColumn.make("..."), ProgressColumn.make("...") ]),
+    ])
+    // .actions((a) => a.edit((r) => …).delete((r) => …))
+    .build();
