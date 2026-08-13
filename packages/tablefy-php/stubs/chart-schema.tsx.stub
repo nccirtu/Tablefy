@@ -2,6 +2,6 @@
 // the backend (ChartWidget); tweak the type, keys, colors or options here and
 // pass it to the chart:  <TablefyChart chart={chart} schema={ {{ name }} } />
 
-import { ChartSchema } from "@nccirtu/tablefy/charts";
+import { ChartSchema } from "@nccirtu/tablefy-v2/charts";
 
 export const {{ name }} = ChartSchema.make().type("{{ type }}");

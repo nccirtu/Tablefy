@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Contracts\TenantResolver;
 use Nccirtu\Tablefy\Http\Controllers\TablefyNotificationsController;
 use Nccirtu\Tablefy\Commands\MakeTablefyChartCommand;
 use Nccirtu\Tablefy\Commands\MakeTablefyKanbanActionCommand;
@@ -21,11 +23,25 @@ class TablefyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__ . '/../config/tablefy.php', 'tablefy');
+
         $this->app->singleton(NavigationManager::class);
+
+        // Tenancy is opt-in: without a bound resolver nothing is scoped.
+        $this->app->singleton(TenantResolver::class, function ($app) {
+            return $app->make($app['config']->get(
+                'tablefy.tenancy.resolver',
+                \Nccirtu\Tablefy\Tenancy\NullTenantResolver::class,
+            ));
+        });
     }
 
     public function boot(): void
     {
+        $this->publishes([
+            __DIR__ . '/../config/tablefy.php' => config_path('tablefy.php'),
+        ], 'tablefy-config');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 MakeTablefyResourceCommand::class,
@@ -47,7 +63,13 @@ class TablefyServiceProvider extends ServiceProvider
         $this->shareNavigation();
     }
 
-    /** `Route::tablefyNotifications()` — bell endpoints (mark read / read-all / delete). */
+    /**
+     * `Route::tablefyNotifications()` — bell endpoints (mark read / read-all /
+     * delete). The URIs are relative, so registering the macro inside a group
+     * (e.g. `Route::prefix('{current_team}')`) puts the endpoints behind that
+     * prefix. The frontend must not hardcode the path — it reads the resolved
+     * base URL from the shared `tablefy.notifications.baseUrl` prop.
+     */
     protected function registerNotificationsRouteMacro(): void
     {
         if (! Route::hasMacro('tablefyNotifications')) {
@@ -125,16 +147,31 @@ class TablefyServiceProvider extends ServiceProvider
     /**
      * Recent + unread-count notifications for the auth user (header bell).
      *
-     * @return array{items: array<int, array<string, mixed>>, unread: int}
+     * @return array{items: array<int, array<string, mixed>>, unread: int, baseUrl: ?string}
      */
     protected function resolveNotifications(): array
     {
         $user = Auth::user();
+        $baseUrl = $this->notificationsBaseUrl();
 
-        if (! $user || ! method_exists($user, 'notifications')) {
-            return ['items' => [], 'unread' => 0];
+        if (! $user || ! method_exists($user, 'notifications') || $baseUrl === null) {
+            return ['items' => [], 'unread' => 0, 'baseUrl' => $baseUrl];
         }
 
+        // The host app may not have run the notifications migration yet; a
+        // missing table must not take every response down.
+        return rescue(fn () => $this->readNotifications($user, $baseUrl), [
+            'items' => [],
+            'unread' => 0,
+            'baseUrl' => $baseUrl,
+        ], report: false);
+    }
+
+    /**
+     * @return array{items: array<int, array<string, mixed>>, unread: int, baseUrl: ?string}
+     */
+    protected function readNotifications(mixed $user, ?string $baseUrl): array
+    {
         $items = $user->notifications()->latest()->limit(15)->get()->map(fn ($n) => [
             'id' => $n->id,
             'read' => $n->read_at !== null,
@@ -148,7 +185,28 @@ class TablefyServiceProvider extends ServiceProvider
         return [
             'items' => $items,
             'unread' => $user->unreadNotifications()->count(),
+            'baseUrl' => $baseUrl,
         ];
+    }
+
+    /**
+     * Resolved base path of the notification endpoints, e.g.
+     * `/acme-north/tablefy/notifications` when they sit behind a tenant prefix.
+     *
+     * Null when the routes are not registered, or when the current request has
+     * no tenant context (login, settings) and the URL therefore cannot be
+     * generated — the bell hides itself in that case.
+     */
+    protected function notificationsBaseUrl(): ?string
+    {
+        return rescue(
+            fn () => Str::beforeLast(
+                route('tablefy.notifications.readAll', absolute: false),
+                '/read-all',
+            ),
+            null,
+            report: false,
+        );
     }
 
     /**

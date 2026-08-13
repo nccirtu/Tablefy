@@ -4,7 +4,7 @@
 // Validierungs-Wahrheit liegt im Backend (CustomerController::rules());
 // hier definierst du nur Darstellung + clientseitige Hints (required/email …).
 
-import { FormSchema, TextInput, Select } from "@nccirtu/tablefy/forms";
+import { FormSchema, TextInput, Select } from "@nccirtu/tablefy-v2/forms";
 import type { Customer } from "@/types/tablefy/customer";
 
 export const customerForm = FormSchema.make<Customer>()

@@ -152,7 +152,7 @@ export type {
 
 // Forms - re-export for convenience. Layout builders (Section/Tab/WizardStep/
 // FormRow) are intentionally NOT re-exported here — import them from
-// "@nccirtu/tablefy/forms" (avoids colliding with the page-layout `Section`).
+// "@nccirtu/tablefy-v2/forms" (avoids colliding with the page-layout `Section`).
 export {
   FormSchema,
   ActionsBuilder,

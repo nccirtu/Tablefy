@@ -9,7 +9,7 @@
 
 # Tablefy — Package Guide
 
-`@nccirtu/tablefy` ist ein schema-getriebenes, typsicheres React-Toolkit für
+`@nccirtu/tablefy-v2` ist ein schema-getriebenes, typsicheres React-Toolkit für
 **Data Tables** und **Formulare**, gebaut auf [TanStack Table](https://tanstack.com/table)
 und [shadcn/ui](https://ui.shadcn.com/), ausgelegt für **Laravel + Inertia.js v2 + Wayfinder**.
 Die API ist fluent/chainable (`TableSchema.make<T>()...build()`).
@@ -25,10 +25,10 @@ Das Package ist in **Sub-Path-Exports** geteilt (Tree-Shaking):
 
 | Import | Inhalt |
 |---|---|
-| `@nccirtu/tablefy` | Alles: Tabellen, Spalten, Builder, Filter, Confirm + Re-Export der Forms |
-| `@nccirtu/tablefy/columns` | Nur Spalten-Builder (ohne Tabellen-Runtime) |
-| `@nccirtu/tablefy/forms` | Nur Formulare (ohne TanStack Table) |
-| `@nccirtu/tablefy/inertia` | Inertia-Integration (benötigt `@inertiajs/react`) |
+| `@nccirtu/tablefy-v2` | Alles: Tabellen, Spalten, Builder, Filter, Confirm + Re-Export der Forms |
+| `@nccirtu/tablefy-v2/columns` | Nur Spalten-Builder (ohne Tabellen-Runtime) |
+| `@nccirtu/tablefy-v2/forms` | Nur Formulare (ohne TanStack Table) |
+| `@nccirtu/tablefy-v2/inertia` | Inertia-Integration (benötigt `@inertiajs/react`) |
 
 Quellstruktur (`src/`):
 
@@ -50,7 +50,7 @@ components/ui, lib/  (vendored UI-Primitives, ins dist gebundelt – siehe §10)
 
 ```bash
 # Das war's – alle UI-Primitives sind im Package gebundelt.
-npm install @nccirtu/tablefy
+npm install @nccirtu/tablefy-v2
 
 # Peer-Dependency (vom Host-Projekt bereitgestellt):
 npm install @tanstack/react-table
@@ -66,8 +66,8 @@ clsx, cva, tailwind-merge zieht npm automatisch als `dependencies`.
 
 ```css
 @import "tailwindcss";
-@import "@nccirtu/tablefy/styles.css";               /* Default-Design-Tokens */
-@source "../../node_modules/@nccirtu/tablefy/dist";  /* Klassen scannen */
+@import "@nccirtu/tablefy-v2/styles.css";               /* Default-Design-Tokens */
+@source "../../node_modules/@nccirtu/tablefy-v2/dist";  /* Klassen scannen */
 ```
 
 Tokens überschreibst du danach im eigenen Stylesheet (§9) – Komponenten-Code nie anfassen.
@@ -79,7 +79,7 @@ Tokens überschreibst du danach im eigenen Stylesheet (§9) – Komponenten-Code
 ### 3.1 Schema definieren
 
 ```tsx
-import { TableSchema, TextColumn, BadgeColumn, NumberColumn } from "@nccirtu/tablefy";
+import { TableSchema, TextColumn, BadgeColumn, NumberColumn } from "@nccirtu/tablefy-v2";
 
 type User = { id: number; name: string; status: "active" | "inactive"; total: number };
 
@@ -120,7 +120,7 @@ export const usersTable = TableSchema.make<User>()
 ### 3.3 Tabelle rendern
 
 ```tsx
-import { DataTable } from "@nccirtu/tablefy";
+import { DataTable } from "@nccirtu/tablefy-v2";
 
 <DataTable data={users} columns={usersTable.columns} config={usersTable.config} />
 ```
@@ -175,7 +175,7 @@ laufen via TanStack lokal. Ideal für kleine/eingebettete Listen.
 Du übergibst den `server`-Prop = Rückgabe von `useServerTable` + Paginator-`meta`:
 
 ```tsx
-import { useServerTable } from "@nccirtu/tablefy/inertia";
+import { useServerTable } from "@nccirtu/tablefy-v2/inertia";
 
 const server = useServerTable({ url: "/users", defaultPageSize: 15 });
 <DataTable data={users.data} columns={t.columns} config={t.config}
@@ -195,7 +195,7 @@ und „Zurücksetzen"). Sie funktionieren in **beiden** Modi (server: `setFilter
 TanStack-Column-Filter).
 
 ```tsx
-import { TableSchema, SelectFilter, TernaryFilter, DateFilter } from "@nccirtu/tablefy";
+import { TableSchema, SelectFilter, TernaryFilter, DateFilter } from "@nccirtu/tablefy-v2";
 
 TableSchema.make<User>()
   .filters(
@@ -224,7 +224,7 @@ Backend-Vertrag siehe §5.4.
 - **Confirm-Dialoge** für destruktive Aktionen:
 
 ```tsx
-import { ConfirmProvider, confirm } from "@nccirtu/tablefy";
+import { ConfirmProvider, confirm } from "@nccirtu/tablefy-v2";
 
 // einmal um die App:  <ConfirmProvider><App/></ConfirmProvider>
 const ok = await confirm({ title: "Löschen?", description: "…", variant: "destructive" });
@@ -235,10 +235,10 @@ if (ok) router.delete(`/users/${id}`);
 
 ## 4. Formulare
 
-Import aus `@nccirtu/tablefy/forms` (oder Re-Export aus `@nccirtu/tablefy`).
+Import aus `@nccirtu/tablefy-v2/forms` (oder Re-Export aus `@nccirtu/tablefy-v2`).
 
 ```tsx
-import { FormSchema, TextInput, Select, Textarea, FormRenderer } from "@nccirtu/tablefy/forms";
+import { FormSchema, TextInput, Select, Textarea, FormRenderer } from "@nccirtu/tablefy-v2/forms";
 
 type CreateUser = { name: string; email: string; role: string; bio: string };
 
@@ -312,10 +312,10 @@ FileUpload.make("scratch").dehydrated(false),              // nur UI, nicht gese
 
 Felder **und** Layout in einem Zug — wie bei den Cards (`CardRow`). Die Felder
 leben direkt im Layout-Container; **keine** String-Referenzen mehr. Import von
-`Section` / `FormRow` / `Tab` / `WizardStep` aus `@nccirtu/tablefy/forms`.
+`Section` / `FormRow` / `Tab` / `WizardStep` aus `@nccirtu/tablefy-v2/forms`.
 
 ```tsx
-import { FormSchema, Section, FormRow, TextInput, Toggle } from "@nccirtu/tablefy/forms";
+import { FormSchema, Section, FormRow, TextInput, Toggle } from "@nccirtu/tablefy-v2/forms";
 
 FormSchema.make<User>()
   .schema([
@@ -411,7 +411,7 @@ protected string $fileVisibility = 'public';
 
 ---
 
-## 5. Inertia-Integration (`@nccirtu/tablefy/inertia`)
+## 5. Inertia-Integration (`@nccirtu/tablefy-v2/inertia`)
 
 ### 5.1 `useInertiaForm`
 Verbindet ein `FormSchema` mit Inertias `useForm`:
@@ -435,7 +435,7 @@ löst `router.visit(url, { data })` aus (Suche debounced).
 Deklarative Komponente, die `useServerTable` + `DataTable server={...}` selbst verkabelt:
 
 ```tsx
-import { ServerDataTable, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
+import { ServerDataTable, type PaginatedResponse } from "@nccirtu/tablefy-v2/inertia";
 
 export default function ListUsers({ users }: { users: PaginatedResponse<User> }) {
   return <ServerDataTable schema={usersTable} paginator={users} url="/users" />;
@@ -481,7 +481,7 @@ Antwort: ein Laravel-Paginator → `{ data, current_page, last_page, per_page, t
 
 ## 6. Das Resource-Pattern (Laravel-Companion)
 
-Das Composer-Paket **`nccirtu/tablefy-php`** (Quelle: `packages/tablefy-php/`) liefert einen
+Das Composer-Paket **`nccirtu/tablefy-v2-php`** (Quelle: `packages/tablefy-php/`) liefert einen
 Generator, der eine komplette CRUD-Resource scaffoldet – du erstellst nur Model + Migration:
 
 ```bash
@@ -510,6 +510,97 @@ Customer::query()->tablefy($request)->paginate(15);
 // wendet ?search / ?filter[col] / ?sort&direction an (per Model-Whitelist abgesichert)
 ```
 
+### Mandanten / Standorte (Tenancy)
+
+Resourcen können auf einen **Mandanten** (Team, Standort, Workspace) begrenzt werden. Das
+Package bringt dafür keinen eigenen Mandantenbegriff mit, sondern einen Vertrag, den die App
+erfüllt.
+
+**1. Routen unter das Präfix.** `Route::tablefyResource()` registriert *relative* URIs und erbt
+den Gruppen-Prefix — Resource-Routen, `bulk-destroy`, `kanban/move`, `relations/*` und
+`Route::tablefyNotifications()` inklusive:
+
+```php
+Route::prefix('{current_team}')
+    ->middleware(['auth', EnsureTeamMembership::class, SetTeamUrlDefaults::class])
+    ->group(function () {
+        Route::tablefyNotifications();
+        require __DIR__.'/tablefy.php';
+    });
+```
+
+Die Middleware, die `URL::defaults([...])` setzt, muss **Route**-Middleware sein — nur dann
+erkennt Wayfinder den Parameter als optional und `applyUrlDefaults` füllt ihn in generierten
+URLs. Hängt sie nur im globalen `web`-Stack, bleibt der Parameter Pflicht.
+
+**2. Resolver binden.**
+
+```php
+// config/tablefy.php  (php artisan vendor:publish --tag=tablefy-config)
+'tenancy' => ['resolver' => App\Tablefy\TeamTenantResolver::class],
+```
+
+```php
+class TeamTenantResolver implements Nccirtu\Tablefy\Contracts\TenantResolver
+{
+    public function id(): int|string|null { /* aktueller Mandant */ }
+    public function foreignKey(): string  { return 'team_id'; }
+    public function routeParameter(): ?string { return 'current_team'; }
+}
+```
+
+Ein Klassenname, **keine Closure** — `config:cache` kann Closures nicht serialisieren.
+
+**3. Models markieren.** Ein Model, das `Nccirtu\Tablefy\Contracts\BelongsToTenant`
+implementiert, wird vom Base-Controller gescopt: `index`, Card-Grid, Kanban-Spalten,
+`show/edit/update/destroy`, `bulk-destroy`, `kanban/move` und die Relation-Routen laufen alle
+über `baseQuery()`; `store()` setzt den Mandanten-Key über `newRecord()`.
+
+> ⚠️ **Der Controller ist die zweite Verteidigungslinie, nicht die erste.** Stat-Groups,
+> Chart-Widgets und Relation-Manager sind App-Code und queryn direkt am Model — sie erreicht
+> kein Controller-Filter. Die Durchsetzung gehört als **Global Scope** ans Model.
+
+**Überschreibbare Seams** im `TablefyController`:
+
+| Methode | Zweck |
+|---|---|
+| `baseQuery(): Builder` | Basis-Query aller Lesezugriffe |
+| `findRecord(Request): Model` | Datensatz der aktuellen Route |
+| `findParent(Request): Model` | Parent einer Relation-Route |
+| `newRecord(): Model` | neuer Datensatz mit gesetztem Mandanten-Key |
+| `recordKey(Request): string` | Route-Parameter des Datensatzes |
+
+**4. Route-Parameter werden nach Namen aufgelöst, nicht nach Position.** Laravel übergibt
+Route-Parameter positionell — unter `/{current_team}/facilities/{facility}` bekäme
+`show(Request $request, string $id)` den **Mandanten-Slug**. Alle Actions des Base-Controllers
+nehmen deshalb nur `Request` entgegen und lesen ihre Parameter über `$request->route()`.
+Standard ist der **letzte** Route-Parameter; abweichend über `protected ?string $routeParameter`.
+
+**Wer eigene Actions ergänzt, hält sich daran** — sonst bricht die Resource, sobald sie unter
+einem Präfix liegt.
+
+**5. Frontend.** `{Singular}Resource.routes.*` sind **Funktionen** über die Wayfinder-Actions,
+keine Strings: sie werden beim Aufruf ausgewertet und tragen den Mandanten-Slug aus den
+URL-Defaults. Ein beim Import berechneter Wert hätte ihn je nach Ladereihenfolge nicht.
+
+```tsx
+FacilityResource.routes.index()          // /standort-a/facilities
+FacilityResource.routes.edit(12)         // /standort-a/facilities/12/edit
+```
+
+Dafür setzt die App die Defaults einmal clientseitig:
+
+```ts
+import { setUrlDefaults } from '@/wayfinder';
+setUrlDefaults(() => ({ current_team: currentSlug }));
+```
+
+**6. Navigation und Glocke ohne Mandanten-Kontext.** Auf Seiten ohne gesetzten
+Mandanten-Default (Login, Registrierung) liefert `props.tablefy.navigation` ein leeres Array,
+statt beim URL-Bau eine `UrlGenerationException` zu werfen. Ebenso ist
+`props.tablefy.notifications.baseUrl` dann `null` und `<TablefyNotifications>` rendert nichts.
+Die Glocke darf ihren Pfad daher **nicht** hart verdrahten — sie liest ihn aus dieser Prop.
+
 ### Navigation (Auto-Sidebar)
 
 Resourcen erscheinen automatisch im Menü. Der Controller deklariert Nav-Attribute:
@@ -531,7 +622,7 @@ deine **eigene** Sidebar (das Package rendert sie nicht selbst — so bleibt der
 
 ```tsx
 // components/app-sidebar.tsx
-import { useTablefyNav } from "@nccirtu/tablefy/inertia";
+import { useTablefyNav } from "@nccirtu/tablefy-v2/inertia";
 import type { NavItem } from "@/types";
 
 const mainNavItems: NavItem[] = [{ title: "Dashboard", href: dashboard(), icon: LayoutGrid }];
@@ -577,7 +668,7 @@ Sidebar bringt `useTablefyNav` im Starter-Kit oft schon mit; im **Header**-Layou
 
 ```tsx
 // components/app-header.tsx (Header-Variante) — Nav-Items + Glocke
-import { TablefyHeaderActions, useTablefyNav } from '@nccirtu/tablefy/inertia';
+import { TablefyHeaderActions, useTablefyNav } from '@nccirtu/tablefy-v2/inertia';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }];
@@ -597,7 +688,7 @@ Glocken-/Toaster-/Routen-/Tabellen-Setup: siehe Abschnitt **Notifications**.
 ### Render Hooks (Slots)
 
 Benannte Slots, in die du Inhalt einklinkst — **ohne** Package-Markup zu überschreiben
-(Filament-„Render Hooks", in React). Das System kommt aus `@nccirtu/tablefy`, zuerst in der
+(Filament-„Render Hooks", in React). Das System kommt aus `@nccirtu/tablefy-v2`, zuerst in der
 Sidebar genutzt; es wächst auf Tabellen-Toolbar und Page-Header (Schicht B).
 
 Zwei Bausteine:
@@ -608,14 +699,14 @@ Zwei Bausteine:
 
 ```tsx
 // app-sidebar.tsx — Injection-Point setzen:
-import { RenderHook } from "@nccirtu/tablefy";
+import { RenderHook } from "@nccirtu/tablefy-v2";
 <SidebarContent>
   <NavMain items={[...mainNavItems, ...tablefyNav]} />
   <RenderHook name="sidebar.nav.end" />
 </SidebarContent>
 
 // resources/js/tablefy-hooks.tsx — Inhalt registrieren (mit DEINEN Komponenten):
-import { registerTablefyRenderHook } from "@nccirtu/tablefy";
+import { registerTablefyRenderHook } from "@nccirtu/tablefy-v2";
 registerTablefyRenderHook("sidebar.nav.end", () => <YourNavSection />);
 
 // resources/js/app.tsx
@@ -639,8 +730,8 @@ Schema **in der Page** (wo die Inertia-Props da sind) und fütterst deine Kompon
 Controller-Daten:
 
 ```tsx
-import { PageSchema, Grid, Section } from "@nccirtu/tablefy";
-import { TablefyPage } from "@nccirtu/tablefy/inertia";
+import { PageSchema, Grid, Section } from "@nccirtu/tablefy-v2";
+import { TablefyPage } from "@nccirtu/tablefy-v2/inertia";
 
 export default function ListUsers({ users, stats }) {
   const page = PageSchema.make()
@@ -676,8 +767,8 @@ export default function ListUsers({ users, stats }) {
 > `$listStats`, …) ist **editierbar** und wird bei erneutem `make:tablefy-resource` **nicht**
 > überschrieben (nur mit `--force`); die Pages sind `@generated` und werden aktualisiert.
 
-**Builder:** `PageSchema`, `Grid`, `Section` aus `@nccirtu/tablefy`; `<TablefyPage>` aus
-`@nccirtu/tablefy/inertia` (SPA-Links via Inertia). Code: `packages/tablefy/src/schema/` +
+**Builder:** `PageSchema`, `Grid`, `Section` aus `@nccirtu/tablefy-v2`; `<TablefyPage>` aus
+`@nccirtu/tablefy-v2/inertia` (SPA-Links via Inertia). Code: `packages/tablefy/src/schema/` +
 `src/inertia/tablefy-page.tsx`. Additiv geplant: `Tabs`/`Group`, read-only `Infolist`.
 
 ### Stats (Übersichts-Karten)
@@ -727,7 +818,7 @@ Der Basis-Controller liefert dann `hasStats: bool` (sofort) + `stats: StatGroupD
 **Frontend** — die generierte List-Page rendert sie bereits; Schema/Anpassung optional:
 
 ```tsx
-import { TablefyStats, Stats } from "@nccirtu/tablefy";
+import { TablefyStats, Stats } from "@nccirtu/tablefy-v2";
 
 // Default: <TablefyStats data={stats} />  (Skeleton solange stats === undefined)
 // Anpassen via Schema (nur Präsentation):
@@ -744,7 +835,7 @@ Code: PHP `packages/tablefy-php/src/Stats/` + Command `MakeTablefyStatCommand`; 
 
 ### Charts (shadcn/recharts)
 
-Wie Stats, nur mit Diagrammen — Backend liefert die Daten (deferred Prop `charts`), das Frontend rendert config-driven über `<TablefyCharts>` (recharts ist gebundelt, kein Host-Setup). **Import-Pfad:** `@nccirtu/tablefy/charts`.
+Wie Stats, nur mit Diagrammen — Backend liefert die Daten (deferred Prop `charts`), das Frontend rendert config-driven über `<TablefyCharts>` (recharts ist gebundelt, kein Host-Setup). **Import-Pfad:** `@nccirtu/tablefy-v2/charts`.
 
 Chart-Arten: `area` (interaktiv), `bar`, `bar-multiple`, `line`, `radar`, `radial`, `pie`.
 
@@ -781,11 +872,11 @@ php artisan make:tablefy-chart RevenueChart --resource=Building   # fragt nach d
 php artisan make:tablefy-chart RevenueChart --resource=Building --type=area --component
 ```
 
-Code: PHP `packages/tablefy-php/src/Charts/ChartWidget.php` + `MakeTablefyChartCommand`; TS `packages/tablefy/src/charts/` (`@nccirtu/tablefy/charts`).
+Code: PHP `packages/tablefy-php/src/Charts/ChartWidget.php` + `MakeTablefyChartCommand`; TS `packages/tablefy/src/charts/` (`@nccirtu/tablefy-v2/charts`).
 
 ### Card-Grid-Ansicht (Inertia Infinite-Scroll / „Mehr laden")
 
-Eine dritte Listen-Variante neben Tabelle & Kanban: ein **Card-Grid** (Cover-Bild + Titel + Badges + Actions) mit **Infinite-Scroll / „Mehr laden"**. **Import:** `@nccirtu/tablefy/cards`.
+Eine dritte Listen-Variante neben Tabelle & Kanban: ein **Card-Grid** (Cover-Bild + Titel + Badges + Actions) mit **Infinite-Scroll / „Mehr laden"**. **Import:** `@nccirtu/tablefy-v2/cards`.
 
 **Backend** (im Controller aktivieren):
 ```php
@@ -794,11 +885,11 @@ protected int $cardsPerPage = 12;   // = <ServerCards perPage>
 ```
 Liefert pro Anfrage eine optionale Prop `cards` = `{ items, hasMore }` (über `?cards_page=` / `?cards_per_page=`). `<ServerCards>` akkumuliert die Seiten **lokal**: „Mehr laden"/Scroll hängt an, und sobald sich Suche/Filter ändern (URL ohne `cards_page`), wird **Seite 1 sauber neu geladen** (ersetzt) — Suchergebnisse vermischen sich nie mit alten Seiten.
 
-**Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
+**Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy-v2/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
 ```tsx
-import { CardSchema, CardRow } from "@nccirtu/tablefy/card";
+import { CardSchema, CardRow } from "@nccirtu/tablefy-v2/card";
 import { TextColumn, BadgeColumn, NumberColumn, ProgressColumn }
-  from "@nccirtu/tablefy/columns";
+  from "@nccirtu/tablefy-v2/columns";
 
 export const buildingCardContent = CardSchema.make<Building>()
   .image("image_url")                                 // Cover (Grid) / Avatar (Kanban)
@@ -817,7 +908,7 @@ Zellen = die Table-Column-Builder (Text/Badge/Number/Date/Progress/Boolean/Enum/
 
 **Grid-Page** (dritter `<TablefyViews>`-Tab):
 ```tsx
-import { ServerCards } from "@nccirtu/tablefy/cards";
+import { ServerCards } from "@nccirtu/tablefy-v2/cards";
 
 <ServerCards schema={buildingCardContent} columns={4} perPage={12} />        // „Mehr laden" (Default)
 <ServerCards schema={buildingCardContent} columns={4} loadMode="infinite" /> // Auto-Scroll
@@ -868,18 +959,18 @@ Route::tablefyNotifications();
 ```tsx
 // 4. Glocke in den Header — einmal, layout-unabhängig (rendert Glocke +
 //    "header.actions"-Slot; egal welches Layout/Nav du nutzt).
-import { TablefyHeaderActions } from '@nccirtu/tablefy/inertia';
+import { TablefyHeaderActions } from '@nccirtu/tablefy-v2/inertia';
 <TablefyHeaderActions className="ml-auto" />
 
 // 5. Toaster einmal im App-Root (mountet Sonner + Flash-Listener intern)
-import { TablefyToaster } from '@nccirtu/tablefy/inertia';
+import { TablefyToaster } from '@nccirtu/tablefy-v2/inertia';
 <TablefyToaster />
 ```
 6. (Optional) Für `ShouldQueue`-Notifications/Stage-Actions: `QUEUE_CONNECTION=database` + `php artisan queue:work`.
 
 `<TablefyHeaderActions>` ist die native, zentrale Header-Zone (wie der Nav-Renderer für Items): einmal pro Header platziert, zeigt sie die Glocke und einen `header.actions`-Render-Hook-Slot. Weitere Widgets registrierst du zentral, ohne den Header-Code zu ändern:
 ```tsx
-import { registerTablefyRenderHook } from '@nccirtu/tablefy';
+import { registerTablefyRenderHook } from '@nccirtu/tablefy-v2';
 registerTablefyRenderHook('header.actions', () => <ThemeToggle />);
 ```
 Nur die Glocke ohne Wrapper: `<TablefyNotifications />`. `<TablefyToaster>` bündelt Sonner (kein eigener `sonner`-Install/Wrapper nötig), folgt dem `.dark`-Class und re-exportiert `toast` für client-seitige Toasts. Code: PHP `packages/tablefy-php/src/Notifications/` + `TablefyNotificationsController`; TS `packages/tablefy/src/inertia/tablefy-notifications.tsx` + `tablefy-toaster.tsx`.
@@ -891,7 +982,7 @@ Nur die Glocke ohne Wrapper: `<TablefyNotifications />`. `<TablefyToaster>` bün
 <TablefyHeaderActions poll="30s" />
 
 // Global als Standard (einmal im App-Root):
-import { setTablefyNotificationDefaults } from '@nccirtu/tablefy/inertia';
+import { setTablefyNotificationDefaults } from '@nccirtu/tablefy-v2/inertia';
 setTablefyNotificationDefaults({ poll: '30s' });
 ```
 Pro-Instanz-`poll` überschreibt den globalen Default; `poll={0}` schaltet eine Instanz wieder ab. (Pollt konstant, auch bei inaktivem Tab.)
@@ -919,7 +1010,7 @@ Detail-Stats erzeugst du mit `make:tablefy-stat CustomerDetailStats --resource=C
 
 **Frontend** — `<TablefyTabs>` (aus `/inertia`): normale Tabs rendern direkt; ein Tab mit `lazy:"users"`
 lädt die Relation beim ersten Öffnen und zeigt bis dahin ein Skeleton. **Der Tab-Inhalt ist selbst
-schema-fähig** — mit `<TablefySchema>` (aus `@nccirtu/tablefy`) verschachtelst du `Section`/`Grid`/JSX
+schema-fähig** — mit `<TablefySchema>` (aus `@nccirtu/tablefy-v2`) verschachtelst du `Section`/`Grid`/JSX
 wie in einer Page, nur ohne Page-Header:
 
 Für die **Relationstabelle** legst du — wie bei Filament — ein **eigenes, vollwertiges `TableSchema`**
@@ -929,7 +1020,7 @@ als separate Datei unter `…/Tables/` an (z.B. `CompanyUsersTable.tsx`) und ren
 
 ```tsx
 // Companies/Tables/CompanyUsersTable.tsx
-import { TableSchema, TextColumn, DateColumn } from "@nccirtu/tablefy";
+import { TableSchema, TextColumn, DateColumn } from "@nccirtu/tablefy-v2";
 export type CompanyUser = { id: number; name: string; email: string; created_at: string | null };
 export const companyUsersTable = TableSchema.make<CompanyUser>()
   .searchable({ placeholder: "Users suchen…" }).sortable()
@@ -943,8 +1034,8 @@ export const companyUsersTable = TableSchema.make<CompanyUser>()
 
 ```tsx
 // Companies/Pages/ViewCompany.tsx
-import { Grid, Section, TablefySchema, DataTable } from "@nccirtu/tablefy";
-import { TablefyTabs } from "@nccirtu/tablefy/inertia";
+import { Grid, Section, TablefySchema, DataTable } from "@nccirtu/tablefy-v2";
+import { TablefyTabs } from "@nccirtu/tablefy-v2/inertia";
 import { companyUsersTable, type CompanyUser } from "../Tables/CompanyUsersTable";
 
 <TablefyTabs
@@ -985,7 +1076,7 @@ Eine **imperative** Dialog-Engine, von überall aufrufbar (Row-/Page-Actions, JS
 **eine** Ergänzung am Starter-Kit: `<TablefyDialogs />` einmal in `app.tsx → withApp` (neben `<Toaster/>`).
 
 ```tsx
-import { dialog } from "@nccirtu/tablefy";
+import { dialog } from "@nccirtu/tablefy-v2";
 
 await dialog.confirm({ title: "Löschen?", variant: "destructive" });  // → Promise<boolean>
 dialog.form({ title: "Neu", schema: companyForm, url: "/companies", method: "post" });
@@ -1044,7 +1135,7 @@ Details: `packages/tablefy-php/README.md`.
 
 Eine Liste kann zusätzlich als **Kanban-Board** angezeigt werden (List ⇄ Kanban-Umschalter). Drag verschiebt eine Karte in eine andere Spalte (ändert das `groupBy`-Feld), sortiert innerhalb der Spalte (`position`) und verschiebt Spalten (nur UI). Pagination: pro Spalte mit „Mehr laden".
 
-**Import-Pfad:** `@nccirtu/tablefy/kanban` (dnd-kit ist gebundelt — kein Host-Setup).
+**Import-Pfad:** `@nccirtu/tablefy-v2/kanban` (dnd-kit ist gebundelt — kein Host-Setup).
 
 **Spalten-Modell (Hybrid):** Statische Enum-Spalten leben im Card-Schema (`.columns([...])`); dynamische kommen vom Backend (`Kanban::make()->columnsFrom(...)`) und das Card-Schema lässt `.columns()` weg.
 
@@ -1069,7 +1160,7 @@ Route: `Route::tablefyResource('tasks', TaskController::class, kanban: true);` �
 **Card-Schema (`Schemas/XxxCard.tsx`):**
 
 ```tsx
-import { KanbanSchema } from "@nccirtu/tablefy/kanban";
+import { KanbanSchema } from "@nccirtu/tablefy-v2/kanban";
 
 export const taskCard = KanbanSchema.make<Task>()
   .groupBy("status")
@@ -1083,7 +1174,7 @@ export const taskCard = KanbanSchema.make<Task>()
   .build();
 ```
 
-Der Karten-**Inhalt** kommt aus dem geteilten **`CardSchema`** (`@nccirtu/tablefy/card`) — dieselben Table-Column-Typen in Rows/Columns, identisch für Kanban- und Grid-Cards (Bild = Avatar im Kanban, Cover im Grid). Die Karte rendert mit den vendored shadcn-`Card`-Primitives (Chrome/Typografie zentral). `.actions()` im CardSchema = derselbe Builder wie die Tabelle; das Öffnen des Menüs löst keinen Drag aus (Drag startet erst ab ~8px Bewegung).
+Der Karten-**Inhalt** kommt aus dem geteilten **`CardSchema`** (`@nccirtu/tablefy-v2/card`) — dieselben Table-Column-Typen in Rows/Columns, identisch für Kanban- und Grid-Cards (Bild = Avatar im Kanban, Cover im Grid). Die Karte rendert mit den vendored shadcn-`Card`-Primitives (Chrome/Typografie zentral). `.actions()` im CardSchema = derselbe Builder wie die Tabelle; das Öffnen des Menüs löst keinen Drag aus (Drag startet erst ab ~8px Bewegung).
 
 **Page:** `<ServerKanban schema={taskCard} />` (Spalten füllen responsive die Viewport-Höhe und scrollen intern; per `height="calc(100dvh - 16rem)"` justierbar). Leere Spalten zeigen einen Empty-State — Text via `.emptyText("…")` im Card-Schema. (liest `kanban`-Config + deferred `kanbanColumns` aus den Page-Props, persistiert Moves, lädt pro Spalte nach). Bei `--kanban` baut der Generator den List ⇄ Kanban-Umschalter automatisch über `<TablefyViews>` (shadcn ButtonGroup) ein. Der Kanban-Tab erscheint nur, wenn das Backend Kanban aktiviert hat — `useKanbanEnabled()` liest die `kanban`-Prop:
 
@@ -1095,7 +1186,7 @@ Der Karten-**Inhalt** kommt aus dem geteilten **`CardSchema`** (`@nccirtu/tablef
 ]} />
 ```
 
-`<TablefyViews>` (aus `@nccirtu/tablefy`) ist generisch: bei nur einem aktiven View entfällt der Umschalter. `views[].enabled` blendet einen View samt Button aus.
+`<TablefyViews>` (aus `@nccirtu/tablefy-v2`) ist generisch: bei nur einem aktiven View entfällt der Umschalter. `views[].enabled` blendet einen View samt Button aus.
 
 Generieren / nachrüsten:
 
@@ -1187,7 +1278,7 @@ npx tablefy add <name>    # einzelne Tablefy-Komponente ins Projekt kopieren
 
 ## 9. Styling (Tailwind v4)
 
-Das Package liefert **`@nccirtu/tablefy/styles.css`** mit Default-Design-Tokens (light/dark,
+Das Package liefert **`@nccirtu/tablefy-v2/styles.css`** mit Default-Design-Tokens (light/dark,
 Tailwind v4 `@theme inline`). Die Komponenten nutzen **semantische Tokens** (`bg-primary`,
 `text-muted-foreground`, `border-border`, `rounded-md`), die auf **CSS-Variablen** zeigen.
 Anpassung erfolgt über diese Variablen im **eigenen Stylesheet** (nach der `styles.css`
@@ -1195,7 +1286,7 @@ geladen) – Komponenten-Code muss nie angefasst werden:
 
 ```css
 @import "tailwindcss";
-@import "@nccirtu/tablefy/styles.css";
+@import "@nccirtu/tablefy-v2/styles.css";
 
 :root { --primary: 25 95% 53%; --radius: 0.75rem; }   /* überschreibt Defaults */
 .dark { --primary: 25 95% 53%; }
@@ -1225,7 +1316,7 @@ Users aufgelöst (`@/…`-Imports im `dist` = 0).
 - **Peers** (vom Host bereitgestellt): `react`, `react-dom`, `tailwindcss` (v4),
   `@tanstack/react-table`; optional `@inertiajs/react`, `zod`.
 
-Ergebnis: `npm install @nccirtu/tablefy` genügt – kein shadcn, kein `@/`-Alias.
+Ergebnis: `npm install @nccirtu/tablefy-v2` genügt – kein shadcn, kein `@/`-Alias.
 
 ---
 

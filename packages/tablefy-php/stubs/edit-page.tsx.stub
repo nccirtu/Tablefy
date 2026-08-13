@@ -1,9 +1,9 @@
 // @generated – Formular → update (vorbefüllt). Selten zu ändern.
 
 import { Head } from "@inertiajs/react";
-import { PageSchema } from "@nccirtu/tablefy";
-import { FormRenderer } from "@nccirtu/tablefy/forms";
-import { TablefyPage, useInertiaForm } from "@nccirtu/tablefy/inertia";
+import { PageSchema } from "@nccirtu/tablefy-v2";
+import { FormRenderer } from "@nccirtu/tablefy-v2/forms";
+import { TablefyPage, useInertiaForm } from "@nccirtu/tablefy-v2/inertia";
 import { {{ singularCamel }}Form } from "../Schemas/{{ singular }}Form";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
@@ -26,7 +26,7 @@ export default function Edit{{ singular }}({
   const page = PageSchema.make()
     .title("{{ singular }} bearbeiten")
     .breadcrumbs([
-      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index },
+      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index() },
       { label: "Bearbeiten" },
     ])
     .schema([

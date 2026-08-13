@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DataTableConfig, EmptyStateBuilder } from "@nccirtu/tablefy";
+import { DataTableConfig, EmptyStateBuilder } from "@nccirtu/tablefy-v2";
 import { DataTableHeader } from "./data-table-header";
 import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";

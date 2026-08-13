@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { EmptyStateConfig } from "@nccirtu/tablefy";
+import { EmptyStateConfig } from "@nccirtu/tablefy-v2";
 
 interface DataTableEmptyProps {
   config: EmptyStateConfig;

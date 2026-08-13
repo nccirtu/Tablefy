@@ -1,20 +1,20 @@
 # Tablefy for Laravel
 
-Laravel companion for [`@nccirtu/tablefy`](https://github.com/nccirtu/Tablefy): a resource
+Laravel companion for [`@nccirtu/tablefy-v2`](https://github.com/nccirtu/Tablefy): a resource
 generator, a generic CRUD controller, and a server-side table query helper for Inertia.
 
 > Status: developed alongside the npm package under `packages/tablefy-php/`. Intended to be
-> published separately as `nccirtu/tablefy-php`. **Not yet tested against a live Laravel
+> published separately as `nccirtu/tablefy-v2-php`. **Not yet tested against a live Laravel
 > app** — try it and report.
 
 ## Install
 
 ```bash
-composer require nccirtu/tablefy-php
+composer require nccirtu/tablefy-v2-php
 ```
 
 The service provider auto-registers. Make sure the frontend package is installed too
-(`npm install @nccirtu/tablefy`) and that your Inertia pages resolve from `resources/js/pages`.
+(`npm install @nccirtu/tablefy-v2`) and that your Inertia pages resolve from `resources/js/pages`.
 
 ## Generate a resource
 
@@ -104,7 +104,7 @@ matches your design. In `components/app-sidebar.tsx`:
 > for your static items and combine at render time:
 
 ```tsx
-import { useTablefyNav } from "@nccirtu/tablefy/inertia";
+import { useTablefyNav } from "@nccirtu/tablefy-v2/inertia";
 import type { NavItem } from "@/types";
 
 // static items stay at module level

@@ -16,7 +16,7 @@ export interface TablefyToasterProps {
  * `Notification::send()` emits (Inertia `flash` event), so the consumer needs no
  * own flash→toast wiring. Mount once in the app root.
  *
- *   import { TablefyToaster } from "@nccirtu/tablefy/inertia";
+ *   import { TablefyToaster } from "@nccirtu/tablefy-v2/inertia";
  *   <TablefyToaster />
  */
 export function TablefyToaster({

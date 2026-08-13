@@ -4,7 +4,7 @@
 //
 // Felder + Layout in einem Zug: Felder leben direkt in .schema([...]). Zum
 // Gruppieren in Cards: Section.make("Titel").columns(2).schema([ …felder… ])
-// (Sections aus "@nccirtu/tablefy/forms" importieren), optional FormRow für Zeilen.
+// (Sections aus "@nccirtu/tablefy-v2/forms" importieren), optional FormRow für Zeilen.
 
 import {
   FormSchema,
@@ -13,7 +13,7 @@ import {
   Select,
   Toggle,
   DatePicker,
-} from "@nccirtu/tablefy/forms";
+} from "@nccirtu/tablefy-v2/forms";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
 export const {{ singularCamel }}Form = FormSchema.make<{{ singular }}>()

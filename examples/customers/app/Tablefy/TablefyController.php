@@ -11,7 +11,7 @@ use Inertia\Inertia;
 /**
  * Generische Basis für alle Tablefy-Resources.
  *
- * Diese Klasse käme später aus dem Companion-Paket (composer require nccirtu/tablefy-php).
+ * Diese Klasse käme später aus dem Companion-Paket (composer require nccirtu/tablefy-v2-php).
  * Sie erledigt index/create/store/edit/update/destroy generisch – der konkrete
  * Resource-Controller liefert nur Model, Pfade und Validierungsregeln.
  *

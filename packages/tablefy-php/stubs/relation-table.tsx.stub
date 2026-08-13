@@ -7,7 +7,7 @@ import {
   NumberColumn,
   DateColumn,
   BadgeColumn,
-} from "@nccirtu/tablefy";
+} from "@nccirtu/tablefy-v2";
 
 export type {{ typeName }} = {
 {{ typeBody }}

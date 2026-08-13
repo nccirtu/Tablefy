@@ -23,6 +23,10 @@ interface NotificationItem {
 interface NotificationsProp {
   items: NotificationItem[];
   unread: number;
+  /** Resolved base path of the bell endpoints, sent by the PHP package. Null
+   *  when the current request cannot build them (e.g. a tenant-prefixed route
+   *  visited from a page without tenant context). */
+  baseUrl?: string | null;
 }
 
 const DOT: Record<string, string> = {
@@ -58,7 +62,11 @@ export function setTablefyNotificationDefaults(options: {
 }
 
 export interface TablefyNotificationsProps {
-  /** Base path for the notification endpoints (matches Route::tablefyNotifications()). */
+  /**
+   * Base path for the notification endpoints. Leave unset: the PHP package
+   * shares the resolved path (`tablefy.notifications.baseUrl`), which already
+   * carries any route prefix — a hardcoded path breaks under a tenant prefix.
+   */
   baseUrl?: string;
   /** Shared-prop key (default "tablefy"). */
   propKey?: string;
@@ -73,7 +81,7 @@ export interface TablefyNotificationsProps {
  * the user profile in the app header.
  */
 export function TablefyNotifications({
-  baseUrl = "/tablefy/notifications",
+  baseUrl,
   propKey = "tablefy",
   poll,
   className,
@@ -91,11 +99,17 @@ export function TablefyNotifications({
     ?.notifications as NotificationsProp | undefined;
   const items = data?.items ?? [];
   const unread = data?.unread ?? 0;
+  const endpoints = baseUrl ?? data?.baseUrl ?? null;
 
   const opts = { preserveScroll: true, preserveState: true } as const;
-  const markRead = (id: string) => router.post(`${baseUrl}/${id}/read`, {}, opts);
-  const markAll = () => router.post(`${baseUrl}/read-all`, {}, opts);
-  const remove = (id: string) => router.delete(`${baseUrl}/${id}`, opts);
+  const markRead = (id: string) =>
+    endpoints && router.post(`${endpoints}/${id}/read`, {}, opts);
+  const markAll = () => endpoints && router.post(`${endpoints}/read-all`, {}, opts);
+  const remove = (id: string) => endpoints && router.delete(`${endpoints}/${id}`, opts);
+
+  // No reachable endpoints (e.g. the bell endpoints live behind a tenant
+  // prefix and this page has no tenant context) → no bell.
+  if (!endpoints) return null;
 
   return (
     <Popover>

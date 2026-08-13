@@ -1,5 +1,5 @@
 {
-  "name": "nccirtu/tablefy-php",
+  "name": "nccirtu/tablefy-v2-php",
   "description": "Laravel companion for Tablefy: the make:tablefy-resource generator, a generic resource controller, and a server-side table query helper for Inertia.",
   "keywords": ["laravel", "inertia", "tablefy", "datatable", "crud", "generator"],
   "license": "MIT",

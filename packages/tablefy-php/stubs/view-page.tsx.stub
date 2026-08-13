@@ -1,9 +1,9 @@
 // @generated – View-Page. Frei editierbar (Details + Lazy-Relation-Tabs).
 
 import { Head } from "@inertiajs/react";
-import { Grid, PageSchema, Section, TablefySchema, TablefyStats, type StatGroupData } from "@nccirtu/tablefy";
-import { TablefyPage, TablefyTabs } from "@nccirtu/tablefy/inertia";
-import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
+import { Grid, PageSchema, Section, TablefySchema, TablefyStats, type StatGroupData } from "@nccirtu/tablefy-v2";
+import { TablefyPage, TablefyTabs } from "@nccirtu/tablefy-v2/inertia";
+import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy-v2/charts";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
@@ -23,7 +23,7 @@ export default function View{{ singular }}({
   const page = PageSchema.make()
     .title(`{{ singular }} #${ {{ singularCamel }}.id }`)
     .breadcrumbs([
-      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index },
+      { label: {{ singular }}Resource.pluralLabel, href: {{ singular }}Resource.routes.index() },
       { label: `#${ {{ singularCamel }}.id }` },
     ])
     .headerActions((a) =>

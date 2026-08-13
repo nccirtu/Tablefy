@@ -2,12 +2,16 @@
 
 namespace Nccirtu\Tablefy\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Nccirtu\Tablefy\Contracts\BelongsToTenant;
+use Nccirtu\Tablefy\Contracts\TenantResolver;
 use Nccirtu\Tablefy\Kanban\Kanban;
 
 /**
@@ -31,6 +35,18 @@ abstract class TablefyController extends Controller
 
     /** Route-name prefix (e.g. "customers"). */
     protected string $routeName;
+
+    /**
+     * Route parameter holding the record key (e.g. "customer"). Defaults to the
+     * last parameter of the matched route.
+     *
+     * Route parameters are passed to controller methods *positionally*, so a
+     * signature like `show(Request $request, string $id)` receives the first
+     * route parameter — which under a prefix like `/{current_team}/…` is the
+     * tenant slug, not the record. Every action therefore resolves its
+     * parameters by name instead of by position.
+     */
+    protected ?string $routeParameter = null;
 
     // --- Navigation (resource appears in the sidebar; override per resource) ---
 
@@ -180,6 +196,100 @@ abstract class TablefyController extends Controller
         return "tablefy/{$this->folder}/Pages/{$name}";
     }
 
+    // --- Tenancy + route parameters -----------------------------------------
+    //
+    // Every read and write goes through these seams. Nothing in this class
+    // touches `$this->model::` directly, so a host app can scope, swap or
+    // decorate the query in one place.
+
+    protected function tenant(): TenantResolver
+    {
+        return app(TenantResolver::class);
+    }
+
+    /** Whether this resource's model is tenant-scoped. */
+    protected function isTenantScoped(): bool
+    {
+        return is_a($this->model, BelongsToTenant::class, true);
+    }
+
+    /**
+     * The base query for this resource — tenant-scoped when the model opts in.
+     *
+     * The model is expected to carry a global scope as well; this is the second
+     * line of defence, and the one the resource controller owns.
+     */
+    protected function baseQuery(): Builder
+    {
+        return $this->scopeToTenant($this->model::query());
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    protected function scopeToTenant(Builder $query): Builder
+    {
+        if (! $this->isTenantScoped()) {
+            return $query;
+        }
+
+        $tenant = $this->tenant();
+        $id = $tenant->id();
+
+        // A tenant-scoped resource reached without tenant context would
+        // otherwise silently query across all tenants.
+        abort_if($id === null, 403, 'No tenant context for this resource.');
+
+        return $query->where(
+            $query->getModel()->qualifyColumn($tenant->foreignKey()),
+            $id,
+        );
+    }
+
+    /** A new, unsaved record with the tenant key already applied. */
+    protected function newRecord(): Model
+    {
+        $record = new $this->model;
+
+        if ($this->isTenantScoped() && ($id = $this->tenant()->id()) !== null) {
+            // Set directly rather than via fill(), so the tenant key does not
+            // have to be mass-assignable on every model.
+            $record->setAttribute($this->tenant()->foreignKey(), $id);
+        }
+
+        return $record;
+    }
+
+    /**
+     * The record key from the current route, resolved by parameter *name*.
+     *
+     * @see $routeParameter
+     */
+    protected function recordKey(Request $request): string
+    {
+        $route = $request->route();
+        $name = $this->routeParameter ?? Arr::last($route?->parameterNames() ?? []);
+
+        abort_if($name === null, 404);
+
+        return (string) $route->parameter($name);
+    }
+
+    /** The record addressed by the current route, scoped to the tenant. */
+    protected function findRecord(Request $request): Model
+    {
+        return $this->baseQuery()->findOrFail($this->recordKey($request));
+    }
+
+    /** The parent record of a relation route, scoped to the tenant. */
+    protected function findParent(Request $request): Model
+    {
+        return $this->baseQuery()->findOrFail(
+            (string) $request->route()->parameter('parentId'),
+        );
+    }
+
     public function index(Request $request)
     {
         // Deferred so the page shell renders instantly and the table shows its
@@ -190,7 +300,7 @@ abstract class TablefyController extends Controller
             'hasCharts' => $this->listCharts !== [],
             ...$this->formOptions($request),
             Str::camel($this->plural) => Inertia::defer(
-                fn () => $this->model::query()
+                fn () => $this->baseQuery()
                     ->with($this->with)
                     ->tablefy($request)
                     ->paginate($request->integer('per_page', 15))
@@ -239,7 +349,7 @@ abstract class TablefyController extends Controller
     /** Paginator for the card-grid view (memoized per request via `once`). */
     protected function cardsPaginator(Request $request)
     {
-        return once(fn () => $this->model::query()
+        return once(fn () => $this->baseQuery()
             ->with($this->with)
             ->tablefy($request)
             ->paginate(
@@ -288,11 +398,11 @@ abstract class TablefyController extends Controller
         };
 
         $ids = $kanban->columnIds()
-            ?? $this->model::query()->distinct()->pluck($group)->filter()->map('strval')->all();
+            ?? $this->baseQuery()->distinct()->pluck($group)->filter()->map('strval')->all();
 
         $out = [];
         foreach ($ids as $id) {
-            $base = $applyScope($this->model::query()->with($this->with)->where($group, $id));
+            $base = $applyScope($this->baseQuery()->with($this->with)->where($group, $id));
             if ($sort) {
                 $base->orderBy($sort);
             }
@@ -327,7 +437,7 @@ abstract class TablefyController extends Controller
         $sort = $kanban->getSortColumn();
         $key = (new $this->model)->getKeyName();
 
-        $record = $this->model::findOrFail($data['id']);
+        $record = $this->baseQuery()->findOrFail($data['id']);
         $this->authorizeMove($record);
 
         $from = $record->{$group} === null ? null : (string) $record->{$group};
@@ -359,7 +469,7 @@ abstract class TablefyController extends Controller
             // order the client sent (siblings keep a consistent `position`).
             if ($sort && ! empty($data['ids'])) {
                 foreach (array_values($data['ids']) as $i => $rid) {
-                    $this->model::where($key, $rid)->update([$sort => $i]);
+                    $this->baseQuery()->where($key, $rid)->update([$sort => $i]);
                 }
             }
         });
@@ -456,7 +566,8 @@ abstract class TablefyController extends Controller
     {
         $data = $request->validate($this->rules());
         $data = $this->handleUploads($request, $data);
-        $this->model::create($data);
+
+        $this->newRecord()->fill($data)->save();
 
         return $this->redirectAfterWrite($request, "{$this->singular} created.");
     }
@@ -486,9 +597,9 @@ abstract class TablefyController extends Controller
         }
     }
 
-    public function edit(Request $request, string $id)
+    public function edit(Request $request)
     {
-        $record = $this->model::findOrFail($id);
+        $record = $this->findRecord($request);
 
         return Inertia::render($this->page("Edit{$this->singular}"), [
             Str::camel($this->singular) => $record,
@@ -501,9 +612,9 @@ abstract class TablefyController extends Controller
      * renders instantly; detail stats are deferred, and each relation is an
      * optional prop that loads only when its tab is opened.
      */
-    public function show(Request $request, string $id)
+    public function show(Request $request)
     {
-        $record = $this->model::with($this->with)->findOrFail($id);
+        $record = $this->baseQuery()->with($this->with)->findOrFail($this->recordKey($request));
 
         $props = [
             Str::camel($this->singular) => $record,
@@ -536,9 +647,9 @@ abstract class TablefyController extends Controller
         return Inertia::render($this->page("View{$this->singular}"), $props);
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        $record = $this->model::findOrFail($id);
+        $record = $this->findRecord($request);
         $data = $request->validate($this->rules($record));
         $data = $this->handleUploads($request, $data, $record);
         $record->update($data);
@@ -589,9 +700,9 @@ abstract class TablefyController extends Controller
         ]);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        $this->model::findOrFail($id)->delete();
+        $this->findRecord($request)->delete();
 
         $this->notifyWritten("{$this->singular} deleted.");
 
@@ -604,7 +715,9 @@ abstract class TablefyController extends Controller
         $ids = (array) $request->input('ids', []);
 
         if ($ids !== []) {
-            $this->model::whereIn((new $this->model)->getKeyName(), $ids)->delete();
+            // Through baseQuery(), so ids from another tenant are simply not
+            // matched instead of being deleted.
+            $this->baseQuery()->whereIn((new $this->model)->getKeyName(), $ids)->delete();
         }
 
         $this->notifyWritten(count($ids) . " {$this->plural} deleted.");
@@ -627,31 +740,46 @@ abstract class TablefyController extends Controller
     }
 
     /** Create a related record through the relationship (FK auto-set). */
-    public function relationStore(Request $request, string $parentId, string $relation)
+    public function relationStore(Request $request)
     {
-        $parent = $this->model::findOrFail($parentId);
+        $parent = $this->findParent($request);
+        $relation = $this->relationName($request);
         $manager = $this->resolveRelationManager($relation);
         $parent->{$relation}()->create($request->validate($manager->rules()));
 
         return back()->with('success', "{$this->singular} relation created.");
     }
 
-    public function relationUpdate(Request $request, string $parentId, string $relation, string $relatedId)
+    public function relationUpdate(Request $request)
     {
-        $parent = $this->model::findOrFail($parentId);
+        $parent = $this->findParent($request);
+        $relation = $this->relationName($request);
         $manager = $this->resolveRelationManager($relation);
-        $record = $parent->{$relation}()->findOrFail($relatedId);
+        $record = $parent->{$relation}()->findOrFail($this->relatedKey($request));
         $record->update($request->validate($manager->rules($record)));
 
         return back()->with('success', "{$this->singular} relation updated.");
     }
 
-    public function relationDestroy(string $parentId, string $relation, string $relatedId)
+    public function relationDestroy(Request $request)
     {
-        $parent = $this->model::findOrFail($parentId);
+        $parent = $this->findParent($request);
+        $relation = $this->relationName($request);
         $this->resolveRelationManager($relation);
-        $parent->{$relation}()->findOrFail($relatedId)->delete();
+        $parent->{$relation}()->findOrFail($this->relatedKey($request))->delete();
 
         return back()->with('success', "{$this->singular} relation deleted.");
+    }
+
+    /** Relation name from the current route (`{relation}`). */
+    protected function relationName(Request $request): string
+    {
+        return (string) $request->route()->parameter('relation');
+    }
+
+    /** Related-record key from the current route (`{relatedId}`). */
+    protected function relatedKey(Request $request): string
+    {
+        return (string) $request->route()->parameter('relatedId');
     }
 }

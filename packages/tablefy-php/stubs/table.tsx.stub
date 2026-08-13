@@ -11,7 +11,7 @@ import {
   BadgeColumn,
   EnumColumn,
   ActionsColumn,
-} from "@nccirtu/tablefy";
+} from "@nccirtu/tablefy-v2";
 import { router } from "@inertiajs/react";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
@@ -23,7 +23,7 @@ export const {{ pluralCamel }}Table = TableSchema.make<{{ singular }}>()
   .paginated({ pageSize: 15 })
 
   // Filter (erscheinen im Filter-Popover rechts). Eigene Filter via Builder
-  // (importiere z.B. SelectFilter/TextFilter aus "@nccirtu/tablefy"); die Spalte
+  // (importiere z.B. SelectFilter/TextFilter aus "@nccirtu/tablefy-v2"); die Spalte
   // muss in $tablefyFilterable des Models stehen:
   // .filters(
   //   SelectFilter.make("status").label("Status").options([{ value: "active", label: "Aktiv" }]),
@@ -44,7 +44,7 @@ export const {{ pluralCamel }}Table = TableSchema.make<{{ singular }}>()
       variant: "destructive",
       confirm: true,
       onClick: (rows) =>
-        router.post({{ singular }}Resource.routes.bulkDestroy, {
+        router.post({{ singular }}Resource.routes.bulkDestroy(), {
           ids: rows.map((r) => r.id),
         }),
     },

@@ -7,6 +7,6 @@
 //
 // Pass it to the table page:  <TablefyStats data={stats} schema={ {{ name }} } />
 
-import { Stats } from "@nccirtu/tablefy";
+import { Stats } from "@nccirtu/tablefy-v2";
 
 export const {{ name }} = Stats.make().columns(4);

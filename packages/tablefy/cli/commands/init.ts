@@ -169,8 +169,8 @@ export async function initCommand(options: InitOptions): Promise<void> {
   console.log(chalk.bold("Next steps:\n"));
   console.log(chalk.gray("1. Import and use Tablefy in your project:"));
   console.log(chalk.cyan(`
-   import { DataTable, TableSchema } from "@nccirtu/tablefy";
-   import { TextColumn, BadgeColumn } from "@nccirtu/tablefy/columns";
+   import { DataTable, TableSchema } from "@nccirtu/tablefy-v2";
+   import { TextColumn, BadgeColumn } from "@nccirtu/tablefy-v2/columns";
 `));
   
   console.log(chalk.gray("2. Create your first table:"));

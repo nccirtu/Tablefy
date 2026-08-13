@@ -5,7 +5,7 @@ gebaut auf [TanStack Table](https://tanstack.com/table) und [shadcn/ui](https://
 ausgelegt für **Laravel + Inertia.js v2 + Wayfinder**. Fluent, chainable Builder-API.
 
 ```bash
-npm install @nccirtu/tablefy
+npm install @nccirtu/tablefy-v2
 ```
 
 > 📖 **Vollständige Doku: [`docs/GUIDE.md`](https://github.com/nccirtu/Tablefy/blob/main/docs/GUIDE.md)** — die einzige Quelle der
@@ -26,7 +26,7 @@ npm install @nccirtu/tablefy
 ## Quick Start
 
 ```tsx
-import { DataTable, TableSchema, TextColumn, BadgeColumn } from "@nccirtu/tablefy";
+import { DataTable, TableSchema, TextColumn, BadgeColumn } from "@nccirtu/tablefy-v2";
 
 type User = { id: number; name: string; status: "active" | "inactive" };
 
@@ -45,7 +45,7 @@ const users = TableSchema.make<User>()
 Server-Modus (Laravel + Inertia), eine Zeile:
 
 ```tsx
-import { ServerDataTable } from "@nccirtu/tablefy/inertia";
+import { ServerDataTable } from "@nccirtu/tablefy-v2/inertia";
 
 <ServerDataTable schema={users} paginator={props.users} url="/users" />
 ```
@@ -53,10 +53,10 @@ import { ServerDataTable } from "@nccirtu/tablefy/inertia";
 ## Import-Pfade
 
 ```tsx
-import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy";        // alles
-import { TextColumn, SelectFilter } from "@nccirtu/tablefy/columns";          // Spalten/Filter
-import { FormSchema, TextInput, FormRenderer } from "@nccirtu/tablefy/forms"; // Formulare
-import { useInertiaForm, ServerDataTable } from "@nccirtu/tablefy/inertia";   // Inertia
+import { DataTable, TableSchema, TextColumn } from "@nccirtu/tablefy-v2";        // alles
+import { TextColumn, SelectFilter } from "@nccirtu/tablefy-v2/columns";          // Spalten/Filter
+import { FormSchema, TextInput, FormRenderer } from "@nccirtu/tablefy-v2/forms"; // Formulare
+import { useInertiaForm, ServerDataTable } from "@nccirtu/tablefy-v2/inertia";   // Inertia
 ```
 
 ## Beispiel-Resource

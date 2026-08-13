@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HeaderAction, SearchConfig } from "@nccirtu/tablefy";
+import { HeaderAction, SearchConfig } from "@nccirtu/tablefy-v2";
 
 interface DataTableHeaderProps<TData> {
   title?: string;

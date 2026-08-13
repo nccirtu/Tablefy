@@ -1,7 +1,7 @@
 // @generated – verdrahtet das Formular mit der Store-Route. Selten zu ändern.
 
-import { FormRenderer } from "@nccirtu/tablefy/forms";
-import { useInertiaForm } from "@nccirtu/tablefy/inertia";
+import { FormRenderer } from "@nccirtu/tablefy-v2/forms";
+import { useInertiaForm } from "@nccirtu/tablefy-v2/inertia";
 import { Head } from "@inertiajs/react";
 import { customerForm } from "../Schemas/CustomerForm";
 import { CustomerResource } from "../CustomerResource";

@@ -3,9 +3,9 @@
 // Zellen = Table-Column-Typen, angeordnet in Rows. Nutzbar für die Kanban-Card
 // (<ServerKanban>) UND die Card-Grid-Ansicht (<ServerCards schema={…} />).
 
-import { CardSchema, CardRow } from "@nccirtu/tablefy/card";
-import { TextColumn } from "@nccirtu/tablefy/columns";
-// import { BadgeColumn, NumberColumn, ProgressColumn } from "@nccirtu/tablefy/columns";
+import { CardSchema, CardRow } from "@nccirtu/tablefy-v2/card";
+import { TextColumn } from "@nccirtu/tablefy-v2/columns";
+// import { BadgeColumn, NumberColumn, ProgressColumn } from "@nccirtu/tablefy-v2/columns";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
 export const {{ singularCamel }}CardContent = CardSchema.make<{{ singular }}>()

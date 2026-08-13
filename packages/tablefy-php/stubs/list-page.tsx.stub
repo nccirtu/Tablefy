@@ -1,9 +1,9 @@
 // @generated – Server-Modus, deklarativ. Selten zu ändern.
 
 import { Head } from "@inertiajs/react";
-import { PageSchema, Section, TablefyStats{{ viewsImport }}, type StatGroupData } from "@nccirtu/tablefy";
-import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
-import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy/charts";
+import { PageSchema, Section, TablefyStats{{ viewsImport }}, type StatGroupData } from "@nccirtu/tablefy-v2";
+import { ServerDataTable, TablefyPage, type PaginatedResponse } from "@nccirtu/tablefy-v2/inertia";
+import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy-v2/charts";
 {{ listExtraImports }}import { {{ pluralCamel }}Table } from "../Tables/{{ plural }}Table";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";

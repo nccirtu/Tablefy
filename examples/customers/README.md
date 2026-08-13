@@ -40,7 +40,7 @@ routes/tablefy.php                         # @generated
 | `customer.ts` (Typ) | **Generator** – liest die Migration/DB |
 | `CustomerResource.tsx`, Pages, `CustomerController.php`, `routes/tablefy.php` | **Generator** – Grundgerüst |
 | `CustomersTable.tsx`, `CustomerForm.tsx` | **Generator** befüllt vor, **du** passt frei an (Farben, Spalten, Layout) |
-| `TablefyController.php` (Basis) | **Paket** (`nccirtu/tablefy-php`) |
+| `TablefyController.php` (Basis) | **Paket** (`nccirtu/tablefy-v2-php`) |
 
 ## Datenfluss (Backend → Frontend)
 
@@ -65,7 +65,7 @@ Für Resources ist **serverseitig der Standard**. Das ist eine Zeile:
 <ServerDataTable schema={customersTable} paginator={customers} url="/customers" />
 ```
 
-`ServerDataTable` (aus `@nccirtu/tablefy/inertia`) richtet `useServerTable` ein und füttert
+`ServerDataTable` (aus `@nccirtu/tablefy-v2/inertia`) richtet `useServerTable` ein und füttert
 `<DataTable server={...}>` mit der aktuellen Seite + Paginator-Meta. Default-Sort und Seitengröße
 kommen aus dem Schema.
 

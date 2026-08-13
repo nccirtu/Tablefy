@@ -4,7 +4,7 @@
 // Pagination laufen serverseitig gegen CustomerController@index. Defaults (Sort, Seitengröße)
 // kommen aus dem Schema – die Seite ist im Kern eine Zeile.
 
-import { ServerDataTable, type PaginatedResponse } from "@nccirtu/tablefy/inertia";
+import { ServerDataTable, type PaginatedResponse } from "@nccirtu/tablefy-v2/inertia";
 import { Head, Link } from "@inertiajs/react";
 import { customersTable } from "../Tables/CustomersTable";
 import { CustomerResource } from "../CustomerResource";

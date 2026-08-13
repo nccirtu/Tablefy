@@ -2,13 +2,13 @@
   "name": "tablefy",
   "version": "0.0.0",
   "private": true,
-  "description": "Tablefy monorepo: @nccirtu/tablefy (React/npm) + nccirtu/tablefy-php (Laravel/Composer).",
+  "description": "Tablefy monorepo: @nccirtu/tablefy-v2 (React/npm) + nccirtu/tablefy-v2-php (Laravel/Composer).",
   "license": "MIT",
   "workspaces": [
     "packages/tablefy"
   ],
   "scripts": {
-    "build": "npm run build -w @nccirtu/tablefy",
-    "test": "npm run test -w @nccirtu/tablefy"
+    "build": "npm run build -w @nccirtu/tablefy-v2",
+    "test": "npm run test -w @nccirtu/tablefy-v2"
   }
 }

@@ -1,6 +1,13 @@
 // @generated (Grundgerüst) – danach frei editierbar.
 //
 // Zentrale Meta-Daten + Routen der Resource an einer Stelle.
+//
+// Die Routen kommen aus Wayfinder und werden **beim Aufruf** ausgewertet, nicht
+// beim Import. Nur so tragen sie die per `setUrlDefaults()` gesetzten
+// URL-Defaults (z. B. den Standort-Slug) — ein beim Import berechneter String
+// wäre je nach Ladereihenfolge ohne Präfix.
+
+import {{ singular }}Controller from "@/actions/App/Http/Controllers/Tablefy/{{ singular }}Controller";
 
 export const {{ singular }}Resource = {
   name: "{{ singular }}",
@@ -11,13 +18,6 @@ export const {{ singular }}Resource = {
   formMode: "{{ formMode }}" as "page" | "modal",
 
   routes: {
-    index: "/{{ routeSlug }}",
-    create: "/{{ routeSlug }}/create",
-    store: "/{{ routeSlug }}",
-    show: (id: number | string) => `/{{ routeSlug }}/${id}`,
-    edit: (id: number | string) => `/{{ routeSlug }}/${id}/edit`,
-    update: (id: number | string) => `/{{ routeSlug }}/${id}`,
-    destroy: (id: number | string) => `/{{ routeSlug }}/${id}`,
-    bulkDestroy: "/{{ routeSlug }}/bulk-destroy",
+{{ resourceRoutes }}
   },
 } as const;

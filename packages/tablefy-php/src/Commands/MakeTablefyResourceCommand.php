@@ -32,6 +32,9 @@ class MakeTablefyResourceCommand extends Command
             '{{ pluralCamel }}' => Str::camel($plural),                    // customers
             '{{ singularKebab }}' => Str::kebab($singular),                // customer / blog-post
             '{{ routeSlug }}' => Str::kebab($plural),                      // customers / blog-posts
+            // Route::resource's wildcard for this slug — the key Wayfinder
+            // expects (customers → customer, blog-posts → blog_post).
+            '{{ routeParam }}' => str_replace('-', '_', Str::snake(Str::singular(Str::kebab($plural)))),
         ];
 
         $r = array_merge($r, $this->buildBodies($singular, $plural));
@@ -58,6 +61,11 @@ class MakeTablefyResourceCommand extends Command
                 . "\n    protected int \$cardsPerPage = 12;\n"
             : '';
 
+        // Wayfinder-backed route map for the Resource file. Only the routes that
+        // are actually registered are emitted — an unregistered one has no
+        // Wayfinder action and would not type-check.
+        $r['{{ resourceRoutes }}'] = $this->buildResourceRoutes($singular, $r['{{ routeParam }}'], $view, $modal);
+
         // Row action to the view page — only when the resource has one (--view),
         // otherwise the show route doesn't exist and the link would 404.
         $r['{{ viewAction }}'] = $view
@@ -73,8 +81,8 @@ class MakeTablefyResourceCommand extends Command
             ? "      .action({ label: \"Bearbeiten\", icon: \"pencil\", form: { schema: {$camel}Form, method: \"put\", url: (r) => {$singular}Resource.routes.update(r.id), data: (r) => r } })\n"
             : "      .edit((r) => router.visit({$singular}Resource.routes.edit(r.id)))\n";
         $r['{{ newAction }}'] = $modal
-            ? "{ label: \"Neu\", icon: \"plus\", form: { schema: {$camel}Form, url: {$singular}Resource.routes.store, method: \"post\" } }"
-            : "{ label: \"Neu\", href: {$singular}Resource.routes.create, icon: \"plus\" }";
+            ? "{ label: \"Neu\", icon: \"plus\", form: { schema: {$camel}Form, url: {$singular}Resource.routes.store(), method: \"post\" } }"
+            : "{ label: \"Neu\", href: {$singular}Resource.routes.create(), icon: \"plus\" }";
 
         // target => [stub, editable?]  (editable files are not overwritten without --force)
         $files = [
@@ -287,7 +295,7 @@ class MakeTablefyResourceCommand extends Command
             $content = "          <ServerDataTable\n"
                 . "            schema={ {$pluralCamel}Table }\n"
                 . "            paginator={ {$pluralCamel} }\n"
-                . "            url={ {$singular}Resource.routes.index }\n"
+                . "            url={ {$singular}Resource.routes.index() }\n"
                 . "            only={['{$pluralCamel}']}\n"
                 . "          />,";
 
@@ -305,12 +313,12 @@ class MakeTablefyResourceCommand extends Command
         $imports = [];
         if ($kanban) {
             $icons[] = 'Columns3';
-            $imports[] = 'import { ServerKanban, useKanbanEnabled } from "@nccirtu/tablefy/kanban";';
+            $imports[] = 'import { ServerKanban, useKanbanEnabled } from "@nccirtu/tablefy-v2/kanban";';
             $imports[] = "import { {$camel}Card } from \"../Schemas/{$singular}Card\";";
         }
         if ($cards) {
             $icons[] = 'LayoutGrid';
-            $imports[] = 'import { ServerCards } from "@nccirtu/tablefy/cards";';
+            $imports[] = 'import { ServerCards } from "@nccirtu/tablefy-v2/cards";';
             $imports[] = "import { {$camel}CardContent } from \"../Schemas/{$singular}CardContent\";";
         }
         array_unshift($imports, 'import { ' . implode(', ', $icons) . ' } from "lucide-react";');
@@ -330,7 +338,7 @@ class MakeTablefyResourceCommand extends Command
             . "                  <ServerDataTable\n"
             . "                    schema={ {$pluralCamel}Table }\n"
             . "                    paginator={ {$pluralCamel} }\n"
-            . "                    url={ {$singular}Resource.routes.index }\n"
+            . "                    url={ {$singular}Resource.routes.index() }\n"
             . "                    only={['{$pluralCamel}']}\n"
             . "                  />\n"
             . "                ),\n"
@@ -501,6 +509,39 @@ class MakeTablefyResourceCommand extends Command
 
         $verb = $existed ? '<fg=blue>update</>' : '<fg=green>create</>';
         $this->line("  {$verb} " . $this->rel($target));
+    }
+
+    /**
+     * The `routes:` block of the Resource file, wired to the Wayfinder actions.
+     *
+     * Every entry is a function so the URL is built at call time and picks up
+     * the URL defaults (tenant slug) — a value computed at import time would
+     * miss them depending on module load order.
+     */
+    protected function buildResourceRoutes(string $singular, string $routeParam, bool $view, bool $modal): string
+    {
+        $controller = "{$singular}Controller";
+        $key = "{ {$routeParam}: id }";
+
+        $lines = [
+            "    index: () => {$controller}.index.url(),",
+            "    store: () => {$controller}.store.url(),",
+        ];
+
+        if (! $modal) {
+            $lines[] = "    create: () => {$controller}.create.url(),";
+            $lines[] = "    edit: (id: number | string) => {$controller}.edit.url({$key}),";
+        }
+
+        if ($view) {
+            $lines[] = "    show: (id: number | string) => {$controller}.show.url({$key}),";
+        }
+
+        $lines[] = "    update: (id: number | string) => {$controller}.update.url({$key}),";
+        $lines[] = "    destroy: (id: number | string) => {$controller}.destroy.url({$key}),";
+        $lines[] = "    bulkDestroy: () => {$controller}.bulkDestroy.url(),";
+
+        return implode("\n", $lines);
     }
 
     protected function stub(string $name): string

@@ -48,7 +48,7 @@ export interface ServerPaginationMeta {
  * Controls for driving a table from the server.
  *
  * Structurally compatible with the return value of `useServerTable`
- * (from `@nccirtu/tablefy/inertia`) plus a `meta` paginator object.
+ * (from `@nccirtu/tablefy-v2/inertia`) plus a `meta` paginator object.
  * Pass it to `<DataTable server={...} />` to switch search, sorting and
  * pagination from client-side to server-side.
  */

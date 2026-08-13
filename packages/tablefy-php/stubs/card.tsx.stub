@@ -5,7 +5,7 @@
 // Card-Grid-Ansicht (<ServerCards />) nutzt. `groupBy` muss zum Controller-
 // `kanban()->groupBy(...)` passen.
 
-import { KanbanSchema } from "@nccirtu/tablefy/kanban";
+import { KanbanSchema } from "@nccirtu/tablefy-v2/kanban";
 import { {{ singularCamel }}CardContent } from "./{{ singular }}CardContent";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 

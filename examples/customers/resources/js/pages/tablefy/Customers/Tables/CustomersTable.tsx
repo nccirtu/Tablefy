@@ -12,7 +12,7 @@ import {
   DateColumn,
   ActionsColumn,
   SelectFilter,
-} from "@nccirtu/tablefy";
+} from "@nccirtu/tablefy-v2";
 import { router } from "@inertiajs/react";
 import type { Customer } from "@/types/tablefy/customer";
 import { CustomerResource } from "../CustomerResource";
