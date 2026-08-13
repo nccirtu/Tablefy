@@ -5,11 +5,8 @@ import { Toaster as SonnerToaster, toast, type ToasterProps } from "sonner";
 
 type ToastType = "success" | "info" | "warning" | "error";
 
-export interface TablefyToasterProps {
-  position?: ToasterProps["position"];
-  richColors?: boolean;
-  closeButton?: boolean;
-}
+export interface TablefyToasterProps
+  extends Omit<ToasterProps, "theme"> {}
 
 /**
  * Drop-in toaster: mounts Sonner AND listens for the `toast` flash that
@@ -18,11 +15,17 @@ export interface TablefyToasterProps {
  *
  *   import { TablefyToaster } from "@nccirtu/tablefy-v2/inertia";
  *   <TablefyToaster />
+ *
+ * The surface follows the design tokens (`--popover`, `--border`), so a toast
+ * matches the app's cards and menus instead of Sonner's own palette. Any
+ * further Sonner prop passes straight through — `expand`, `duration`, `offset`.
  */
 export function TablefyToaster({
   position = "top-right",
   richColors = true,
   closeButton = true,
+  style,
+  ...props
 }: TablefyToasterProps = {}): ReactNode {
   // Follow the app's `.dark` class on <html>.
   const [theme, setTheme] = useState<"light" | "dark">(() =>
@@ -61,6 +64,16 @@ export function TablefyToaster({
       richColors={richColors}
       closeButton={closeButton}
       position={position}
+      className="toaster group"
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          ...style,
+        } as React.CSSProperties
+      }
+      {...props}
     />
   );
 }
