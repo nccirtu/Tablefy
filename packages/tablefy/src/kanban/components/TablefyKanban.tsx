@@ -68,22 +68,6 @@ export interface TablefyKanbanProps<T extends Record<string, any>> {
   className?: string;
 }
 
-/** Nearest scrollable ancestor (for layouts where the content area scrolls, not <body>). */
-function getScrollParent(node: HTMLElement | null): HTMLElement | null {
-  let el = node?.parentElement ?? null;
-  while (el) {
-    const oy = getComputedStyle(el).overflowY;
-    if (
-      (oy === "auto" || oy === "scroll") &&
-      el.scrollHeight > el.clientHeight
-    ) {
-      return el;
-    }
-    el = el.parentElement;
-  }
-  return null;
-}
-
 function normalizeColumns(
   input: KanbanColumnInput[] | undefined,
 ): KanbanColumnDef[] {
@@ -134,45 +118,11 @@ export function TablefyKanban<T extends Record<string, any>>({
     [records, resolvedColumns, config.groupBy],
   );
 
-  // Fill from the board's top edge down so the page itself does NOT scroll;
-  // columns scroll internally. Measured live (adapts to header/toolbar height),
-  // then self-corrected by the actual residual overflow of the real scroll
-  // container — so layout padding / nested scroll areas can't push a page
-  // scrollbar back in. An explicit `height` prop overrides the measurement.
-  const boardRef = useRef<HTMLDivElement>(null);
-  const [autoHeight, setAutoHeight] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    if (height || typeof window === "undefined") return;
-    const GAP = 8;
-    let raf = 0;
-    const apply = (h: number) =>
-      setAutoHeight(`${Math.max(240, Math.round(h))}px`);
-
-    const measure = () => {
-      const el = boardRef.current;
-      if (!el) return;
-      const base = window.innerHeight - el.getBoundingClientRect().top - GAP;
-      apply(base);
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const sc = getScrollParent(el) ?? document.scrollingElement;
-        if (!sc) return;
-        const overflow = sc.scrollHeight - sc.clientHeight;
-        if (overflow > 1) apply(base - overflow);
-      });
-    };
-
-    measure();
-    // Re-measure once after deferred content (stats/toolbar) has settled.
-    const t = setTimeout(measure, 250);
-    window.addEventListener("resize", measure);
-    return () => {
-      window.removeEventListener("resize", measure);
-      clearTimeout(t);
-      cancelAnimationFrame(raf);
-    };
-  }, [height]);
-  const columnHeight = height ?? autoHeight ?? "60vh";
+  // Default: columns grow with their content and the PAGE scrolls — a single
+  // scrollbar, no per-column scroll areas, no measurement. Pass an explicit
+  // `height` to opt into fixed-height columns that scroll internally (board
+  // stays within the viewport).
+  const fixedHeight = !!height;
 
   const [value, setValue] = useState(grouped);
   // Don't clobber live drag state with a server refresh that lands mid-drag.
@@ -262,7 +212,7 @@ export function TablefyKanban<T extends Record<string, any>>({
       onDragEnd={handleDragEnd}
       className={className}
     >
-      <KanbanBoard ref={boardRef} className="flex gap-4 overflow-x-auto pb-2">
+      <KanbanBoard className="flex gap-4 overflow-x-auto pb-2">
         {resolvedColumns.map((col, colIndex) => {
           const items = value[col.id] ?? [];
           const total = counts?.[col.id] ?? items.length;
@@ -278,7 +228,7 @@ export function TablefyKanban<T extends Record<string, any>>({
             <KanbanColumn
               key={col.id}
               value={col.id}
-              style={{ height: columnHeight }}
+              style={fixedHeight ? { height } : undefined}
               className="flex w-72 shrink-0 flex-col rounded-none border-0 bg-transparent p-0 dark:bg-transparent"
             >
               {pipeline ? (
@@ -319,8 +269,14 @@ export function TablefyKanban<T extends Record<string, any>>({
                   {handle}
                 </div>
               )}
-              {/* Card list fills the column and scrolls internally. */}
-              <div className="flex flex-1 flex-col gap-2 overflow-y-auto border-l-2 border-dotted border-muted-foreground/50 pl-2">
+              {/* Card list. Default: grows with content (page scrolls). With an
+                  explicit height: fills the column and scrolls internally. */}
+              <div
+                className={cn(
+                  "flex flex-1 flex-col gap-2 border-l-2 border-dotted border-muted-foreground/50 pl-2",
+                  fixedHeight ? "overflow-y-auto" : "min-h-32",
+                )}
+              >
                 {items.length === 0 ? (
                   <div className="flex flex-1 items-center justify-center text-center text-xs text-muted-foreground">
                     {config.emptyText ?? "Keine Einträge"}
