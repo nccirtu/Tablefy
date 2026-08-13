@@ -3,9 +3,7 @@ import React, { ReactNode, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { WizardStepConfig } from "../types/layout";
 import { BuiltField } from "../types/form";
-import { FieldRenderer } from "./field-renderer";
-import { SectionRenderer } from "./section-renderer";
-import { GridLayout } from "./grid-layout";
+import { FormBody } from "./form-body";
 
 export interface WizardRendererProps<TData extends Record<string, any>> {
   steps: WizardStepConfig<TData>[];
@@ -61,10 +59,6 @@ export function WizardRenderer<TData extends Record<string, any>>({
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  const stepFields = currentStepConfig?.fields
-    ? fields.filter((f) => currentStepConfig.fields!.includes(f.name))
-    : [];
-
   return (
     <div className="space-y-6">
       {/* Progress header */}
@@ -99,41 +93,17 @@ export function WizardRenderer<TData extends Record<string, any>>({
 
       {/* Step content */}
       <div>
-        {currentStepConfig?.sections ? (
-          <div className="space-y-4">
-            {currentStepConfig.sections.map((section) => (
-              <SectionRenderer
-                key={section.id}
-                section={section}
-                fields={fields}
-                data={data}
-                errors={errors}
-                onChange={onChange}
-                onBlur={onBlur}
-                isFieldVisible={isFieldVisible}
-                isFieldDisabled={isFieldDisabled}
-              />
-            ))}
-          </div>
-        ) : (
-          <GridLayout columns={columns}>
-            {stepFields.map((field) => {
-              if (!isFieldVisible(field)) return null;
-              return (
-                <FieldRenderer
-                  key={field.name}
-                  field={field}
-                  value={data[field.name as keyof TData]}
-                  error={errors[field.name as keyof TData]}
-                  disabled={isFieldDisabled(field)}
-                  data={data}
-                  onChange={(v) => onChange(field.name as keyof TData, v)}
-                  onBlur={onBlur ? () => onBlur(field.name) : undefined}
-                />
-              );
-            })}
-          </GridLayout>
-        )}
+        <FormBody
+          items={currentStepConfig?.items ?? []}
+          columns={columns}
+          fields={fields}
+          data={data}
+          errors={errors}
+          onChange={onChange}
+          onBlur={onBlur}
+          isFieldVisible={isFieldVisible}
+          isFieldDisabled={isFieldDisabled}
+        />
       </div>
 
       {/* Navigation buttons */}

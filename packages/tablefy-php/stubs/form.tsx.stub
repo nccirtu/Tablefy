@@ -1,6 +1,10 @@
 // @generated (vorbefüllt aus dem DB-Schema) – ab hier FREI editierbar.
 //
 // Für Create UND Edit. Validierungs-Wahrheit liegt im Backend ({{ singular }}Controller::rules()).
+//
+// Felder + Layout in einem Zug: Felder leben direkt in .schema([...]). Zum
+// Gruppieren in Cards: Section.make("Titel").columns(2).schema([ …felder… ])
+// (Sections aus "@nccirtu/tablefy/forms" importieren), optional FormRow für Zeilen.
 
 import {
   FormSchema,
@@ -14,9 +18,9 @@ import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
 export const {{ singularCamel }}Form = FormSchema.make<{{ singular }}>()
   .columns(2)
-  .fields(
+  .schema([
 {{ formFields }}
-  )
+  ])
   .actions((a) =>
     a.submit({ label: "Speichern" }).cancel({ label: "Abbrechen", href: "/{{ routeSlug }}" }),
   )

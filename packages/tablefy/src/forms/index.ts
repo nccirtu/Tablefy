@@ -1,8 +1,9 @@
 // Builders
 export { FormSchema } from "./builders/form-schema";
 export { ActionsBuilder } from "./builders/actions-builder";
-export { SectionBuilder } from "./builders/section-builder";
-export { TabBuilder } from "./builders/tab-builder";
+export { Section } from "./builders/section-builder";
+export { FormRow } from "./builders/form-row";
+export { Tab } from "./builders/tab-builder";
 export { WizardStep } from "./builders/wizard-builder";
 
 // Fields

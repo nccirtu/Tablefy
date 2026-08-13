@@ -5,11 +5,11 @@ import { FormSchema, Select } from "../../src/forms";
 describe("relationship Select.optionsFrom", () => {
   it("resolves its options from the external page props", () => {
     const schema = FormSchema.make<{ company_id: string }>()
-      .fields(
+      .schema([
         Select.make<{ company_id: string }>("company_id")
           .label("Company")
           .optionsFrom("companyOptions"),
-      )
+      ])
       .build();
 
     render(

@@ -53,3 +53,10 @@ console.log("Fixed dist/cards/index.d.ts");
 writeFileSync("dist/card/index.d.ts", `export * from "./card/index";\n`);
 
 console.log("Fixed dist/card/index.d.ts");
+
+// Fix dist/forms/index.d.ts — re-export the correctly-rooted nested decl.
+// (Without this, the main index's d.ts leaks here and `Section` resolves to
+// the page-layout Section instead of the forms Section.)
+writeFileSync("dist/forms/index.d.ts", `export * from "./forms/index";\n`);
+
+console.log("Fixed dist/forms/index.d.ts");

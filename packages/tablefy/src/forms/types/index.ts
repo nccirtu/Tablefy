@@ -27,6 +27,9 @@ export type {
 
 export type {
   SectionConfig,
+  FormRowConfig,
+  FormItemConfig,
+  FormBodyItemConfig,
   TabConfig,
   WizardStepConfig,
 } from "./layout";

@@ -112,6 +112,18 @@ abstract class TablefyController extends Controller
     /** Send a default success toast after create/update/delete. */
     protected bool $notifyOnWrite = true;
 
+    // --- File uploads (FileUpload fields are auto-stored; the column receives
+    //     the path). Configure the target disk/directory/visibility per resource. ---
+
+    /** Filesystem disk for uploaded files. */
+    protected string $fileDisk = 'public';
+
+    /** Directory (within the disk) for uploaded files. */
+    protected string $fileDirectory = 'tablefy';
+
+    /** Visibility for stored files ('public' | 'private'). */
+    protected string $fileVisibility = 'public';
+
     /** Validation rules — the single source of validation truth (backend). */
     abstract protected function rules(?Model $record = null): array;
 
@@ -442,7 +454,9 @@ abstract class TablefyController extends Controller
 
     public function store(Request $request)
     {
-        $this->model::create($request->validate($this->rules()));
+        $data = $request->validate($this->rules());
+        $data = $this->handleUploads($request, $data);
+        $this->model::create($data);
 
         return $this->redirectAfterWrite($request, "{$this->singular} created.");
     }
@@ -525,9 +539,54 @@ abstract class TablefyController extends Controller
     public function update(Request $request, string $id)
     {
         $record = $this->model::findOrFail($id);
-        $record->update($request->validate($this->rules($record)));
+        $data = $request->validate($this->rules($record));
+        $data = $this->handleUploads($request, $data, $record);
+        $record->update($data);
 
         return $this->redirectAfterWrite($request, "{$this->singular} updated.");
+    }
+
+    /**
+     * Store any uploaded files and swap the field value for the stored path.
+     * Detected generically from the request (no schema needed) — FileUpload
+     * fields submit a real file. On update, the previous file is deleted.
+     *
+     * The field must be in `rules()` (so the file survives validation) and in
+     * the model's `$fillable`, with a string column to hold the path.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function handleUploads(Request $request, array $data, ?Model $record = null): array
+    {
+        foreach ($request->allFiles() as $field => $file) {
+            if (is_array($file)) {
+                $data[$field] = array_map(
+                    fn ($f) => $this->storeUploadedFile($f, $field),
+                    $file,
+                );
+
+                continue;
+            }
+
+            // Replace an existing single file on update.
+            if ($record && is_string($old = $record->getAttribute($field)) && $old !== '') {
+                \Illuminate\Support\Facades\Storage::disk($this->fileDisk)->delete($old);
+            }
+
+            $data[$field] = $this->storeUploadedFile($file, $field);
+        }
+
+        return $data;
+    }
+
+    /** Persist one uploaded file and return its stored path. Override to customize. */
+    protected function storeUploadedFile(\Illuminate\Http\UploadedFile $file, string $field): string
+    {
+        return $file->store($this->fileDirectory, [
+            'disk' => $this->fileDisk,
+            'visibility' => $this->fileVisibility,
+        ]);
     }
 
     public function destroy(string $id)

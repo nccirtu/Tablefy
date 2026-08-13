@@ -53,9 +53,9 @@ describe("field params — builder config", () => {
 describe("field params — submit / hydration", () => {
   it("formatStateUsing transforms the hydrated value", () => {
     const schema = FormSchema.make<any>()
-      .fields(
+      .schema([
         TextInput.make("price").formatStateUsing((v) => Number(v).toFixed(2)),
-      )
+      ])
       .build();
 
     const { result } = renderHook(() =>
@@ -66,12 +66,12 @@ describe("field params — submit / hydration", () => {
 
   it("dehydrated(false) drops the field and mutateBeforeSave transforms it", () => {
     const schema = FormSchema.make<any>()
-      .fields(
+      .schema([
         TextInput.make("name").mutateBeforeSave((v) =>
           typeof v === "string" ? v.trim() : v,
         ),
         Select.make("ui").dehydrated(false),
-      )
+      ])
       .build();
 
     const { result } = renderHook(() => useInertiaForm({ schema, url: "/x" }));

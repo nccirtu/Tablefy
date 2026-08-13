@@ -12,8 +12,7 @@ import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { SectionConfig } from "../types/layout";
 import { BuiltField } from "../types/form";
-import { FieldRenderer } from "./field-renderer";
-import { GridLayout } from "./grid-layout";
+import { FormContent } from "./form-content";
 
 export interface SectionRendererProps<TData extends Record<string, any>> {
   section: SectionConfig<TData>;
@@ -39,10 +38,6 @@ export function SectionRenderer<TData extends Record<string, any>>({
   const [isCollapsed, setIsCollapsed] = useState(section.collapsed ?? false);
 
   if (section.hidden && section.hidden(data)) return null;
-
-  const sectionFields = fields.filter((f) =>
-    section.fields.includes(f.name),
-  );
 
   return (
     <Card>
@@ -76,23 +71,17 @@ export function SectionRenderer<TData extends Record<string, any>>({
       </CardHeader>
       {!isCollapsed && (
         <CardContent>
-          <GridLayout columns={section.columns}>
-            {sectionFields.map((field) => {
-              if (!isFieldVisible(field)) return null;
-              return (
-                <FieldRenderer
-                  key={field.name}
-                  field={field}
-                  value={data[field.name as keyof TData]}
-                  error={errors[field.name as keyof TData]}
-                  disabled={isFieldDisabled(field)}
-                  data={data}
-                  onChange={(v) => onChange(field.name as keyof TData, v)}
-                  onBlur={onBlur ? () => onBlur(field.name) : undefined}
-                />
-              );
-            })}
-          </GridLayout>
+          <FormContent
+            items={section.items}
+            columns={section.columns}
+            fields={fields}
+            data={data}
+            errors={errors}
+            onChange={onChange}
+            onBlur={onBlur}
+            isFieldVisible={isFieldVisible}
+            isFieldDisabled={isFieldDisabled}
+          />
         </CardContent>
       )}
     </Card>

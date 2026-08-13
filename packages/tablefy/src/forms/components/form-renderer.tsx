@@ -4,10 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FormBuildResult, BuiltField } from "../types/form";
 import { FormOperation, FieldStateSetter } from "../types/field";
-import { FieldRenderer } from "./field-renderer";
-import { GridLayout } from "./grid-layout";
 import { FormActions } from "./form-actions";
-import { SectionRenderer } from "./section-renderer";
+import { FormBody } from "./form-body";
 import { TabRenderer } from "./tab-renderer";
 import { WizardRenderer } from "./wizard-renderer";
 import { TablefyDataContext } from "../context";
@@ -137,26 +135,6 @@ export function FormRenderer<TData extends Record<string, any>>({
     [disabled, config.disabled, data, operation],
   );
 
-  const renderFieldsFlat = () => (
-    <GridLayout columns={config.columns}>
-      {fields.map((field) => {
-        if (!isFieldVisible(field)) return null;
-        return (
-          <FieldRenderer
-            key={field.name}
-            field={field}
-            value={data[field.name as keyof TData]}
-            error={errors[field.name as keyof TData]}
-            disabled={isFieldDisabled(field)}
-            data={data}
-            onChange={(v) => handleChange(field.name as keyof TData, v)}
-            onBlur={onBlur ? () => onBlur(field.name) : undefined}
-          />
-        );
-      })}
-    </GridLayout>
-  );
-
   const renderContent = () => {
     // Wizard mode
     if (config.wizardSteps?.length) {
@@ -194,29 +172,20 @@ export function FormRenderer<TData extends Record<string, any>>({
       );
     }
 
-    // Sections mode
-    if (config.sections?.length) {
-      return (
-        <div className="space-y-4">
-          {config.sections.map((section) => (
-            <SectionRenderer
-              key={section.id}
-              section={section}
-              fields={fields}
-              data={data}
-              errors={errors}
-              onChange={handleChange}
-              onBlur={onBlur}
-              isFieldVisible={isFieldVisible}
-              isFieldDisabled={isFieldDisabled}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    // Flat mode (default)
-    return renderFieldsFlat();
+    // Body mode (default): ordered sections / fields / rows / nodes.
+    return (
+      <FormBody
+        items={config.body ?? []}
+        columns={config.columns}
+        fields={fields}
+        data={data}
+        errors={errors}
+        onChange={handleChange}
+        onBlur={onBlur}
+        isFieldVisible={isFieldVisible}
+        isFieldDisabled={isFieldDisabled}
+      />
+    );
   };
 
   const spacingClass = {

@@ -150,13 +150,12 @@ export type {
   StatsConfig,
 } from "./types";
 
-// Forms - re-export for convenience
+// Forms - re-export for convenience. Layout builders (Section/Tab/WizardStep/
+// FormRow) are intentionally NOT re-exported here — import them from
+// "@nccirtu/tablefy/forms" (avoids colliding with the page-layout `Section`).
 export {
   FormSchema,
   ActionsBuilder,
-  SectionBuilder,
-  TabBuilder,
-  WizardStep,
   TextInput,
   Textarea,
   Select,

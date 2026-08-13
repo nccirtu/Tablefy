@@ -3,7 +3,7 @@ import { useInertiaForm } from "../../src/inertia/use-inertia-form";
 import { FormSchema, TextInput } from "../../src/forms";
 
 const schema = FormSchema.make<any>()
-  .fields(TextInput.make("name"), TextInput.make("email").email())
+  .schema([TextInput.make("name"), TextInput.make("email").email()])
   .build();
 
 describe("useInertiaForm", () => {

@@ -1,6 +1,10 @@
 import { ReactNode } from "react";
 import { BaseFieldConfig } from "./field";
-import { SectionConfig, TabConfig, WizardStepConfig } from "./layout";
+import {
+  TabConfig,
+  WizardStepConfig,
+  FormBodyItemConfig,
+} from "./layout";
 import { FormActionConfig } from "./actions";
 
 export type FieldType =
@@ -47,7 +51,8 @@ export interface FormSchemaConfig<TData extends Record<string, any>> {
   bordered?: boolean;
   spacing?: "compact" | "normal" | "relaxed";
   fields: BuiltField<TData>[];
-  sections?: SectionConfig<TData>[];
+  /** Ordered top-level render list (fields, rows, nodes, sections). */
+  body?: FormBodyItemConfig<TData>[];
   tabs?: TabConfig<TData>[];
   wizardSteps?: WizardStepConfig<TData>[];
   actions?: FormActionConfig<TData>[];

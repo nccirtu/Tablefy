@@ -245,22 +245,26 @@ type CreateUser = { name: string; email: string; role: string; bio: string };
 const schema = FormSchema.make<CreateUser>()
   .title("Benutzer anlegen")
   .columns(2)
-  .fields(
+  .schema([
     TextInput.make<CreateUser>("name").label("Name").required(),
     TextInput.make<CreateUser>("email").label("E-Mail").email().required(),
     Select.make<CreateUser>("role").label("Rolle").options([
       { value: "admin", label: "Admin" }, { value: "editor", label: "Editor" },
     ]).required(),
     Textarea.make<CreateUser>("bio").label("Bio").rows(4).columnSpan(2),
-  )
+  ])
   .actions((a) => a.submit({ label: "Anlegen" }).cancel({ label: "Abbrechen" }))
   .build(); // → { fields, config }
 ```
 
+> **Felder + Layout in einem Zug.** Felder leben direkt in `.schema([...])` —
+> kein separates `.fields()` mit anschließenden String-Referenzen. Zum Gruppieren
+> in Cards stehen die Felder direkt in der `Section` (s. 4.3).
+
 ### 4.1 `FormSchema`-Methoden
 `title`, `description` (beide auch als `(data)=>string`), `columns(n)`, `bordered`,
-`spacing`, `disabled`, `fields(...)`, `sections(...)`, `tabs(...)`, `wizard(...)`,
-`actions(fn)`, `actionsPosition`, `build()`.
+`spacing`, `disabled`, `schema([...])` (Felder **und** Sections), `tabs(...)`,
+`wizard(...)`, `actions(fn)`, `actionsPosition`, `build()`.
 
 ### 4.2 Feldtypen
 Basis-Methoden (alle): `label`, `placeholder`, `helperText`, `required`, `disabled`,
@@ -306,23 +310,44 @@ FileUpload.make("scratch").dehydrated(false),              // nur UI, nicht gese
 
 ### 4.3 Layouts (Cards / Tabs / Wizard)
 
-Felder werden in `.fields(...)` **definiert** und per **Namen** in Sections/Tabs/Steps gruppiert.
-`.sections()` / `.tabs()` / `.wizard()` sind **variadisch** (komma-separiert, **kein** Array — wie `.fields()`):
+Felder **und** Layout in einem Zug — wie bei den Cards (`CardRow`). Die Felder
+leben direkt im Layout-Container; **keine** String-Referenzen mehr. Import von
+`Section` / `FormRow` / `Tab` / `WizardStep` aus `@nccirtu/tablefy/forms`.
 
 ```tsx
+import { FormSchema, Section, FormRow, TextInput, Toggle } from "@nccirtu/tablefy/forms";
+
 FormSchema.make<User>()
-  .fields( TextInput.make("name")…, TextInput.make("email")…, Toggle.make("active")… )
-  .sections(
-    SectionBuilder.make("Stammdaten").columns(2).fields(["name", "email"]),
-    SectionBuilder.make("Einstellungen").collapsible().fields(["active"]),
-  )
+  .schema([
+    Section.make("Stammdaten").columns(2).schema([
+      TextInput.make("name").label("Name"),
+      TextInput.make("email").label("E-Mail").email(),
+    ]),
+    Section.make("Einstellungen").collapsible().schema([
+      Toggle.make("active").label("Aktiv"),
+    ]),
+  ])
   .build();
 ```
 
-- **Sections** (Cards): `SectionBuilder.make("Titel").description(…).columns(2).collapsible().fields([...])`
-- **Tabs**: `.tabs(TabBuilder.make("Profil").icon(<User/>).fields([...]), …)`
-- **Wizard** (mehrstufig): `.wizard(WizardStep.make("Konto").fields([...]), …)`
-- Felder, die in **keiner** Section/Tab/Step stehen, werden **nicht** gerendert.
+- **Sections** (Cards): `Section.make("Titel").description(…).columns(2).collapsible().schema([ …felder… ])`. `.columns(n)` ordnet Felder automatisch ins Raster; pro Feld optional `.columnSpan(n)`.
+- **FormRow** (explizite Zeilen, wie `CardRow`): innerhalb einer Section `Section.schema([ FormRow.make([a, b]), FormRow.make([c]).columns(1) ])`. Grid-Breite = Feldzahl, via `.columns(n)` übersteuerbar.
+- **Tabs**: `.tabs(Tab.make("Profil").icon(<User/>).schema([ …felder oder Sections… ]), …)`
+- **Wizard** (mehrstufig): `.wizard(WizardStep.make("Konto").schema([ …felder oder Sections… ]), …)`
+- **Lose Felder** ohne Section (z. B. `Hidden.make("token")`) stehen direkt im `FormSchema.schema([...])` und werden mitgesendet/gerendert.
+- **Beliebige Komponenten** (Alert, Bild, eigenes JSX) dürfen **überall** in der Liste stehen — top-level, in einer Section, in Tab/Step. Sie rendern in Reihenfolge, full-width (unterbrechen den Spalten-Fluss):
+
+```tsx
+import { Alert } from "@/components/ui/alert";
+
+FormSchema.make<Building>().schema([
+  Section.make("Kennzahlen").columns(3).schema([ /* felder */ ]),
+  <Alert type="info" title="Hinweis">Beliebiges JSX direkt im Schema.</Alert>,
+  Section.make("Beschreibung").schema([ /* felder */ ]),
+]);
+```
+
+- Intern legt `.build()` alles in eine flache `fields[]`-Liste (Quelle der Wahrheit für Submit/Reaktivität) + eine geordnete `body`-Liste (Felder/Rows/Nodes/Sections). Felder werden ins `columns`-Raster gruppiert; Rows und Nodes brechen full-width aus. Renderer: gemeinsame `FormContent`/`FormBody`-Komponenten.
 
 ### 4.4 Rendern
 ```tsx
@@ -331,6 +356,58 @@ FormSchema.make<User>()
 ```
 Props: `schema`, `data`, `errors`, `onChange`, `onSubmit`, `processing`, `className`,
 `disabled`, `onBlur`.
+
+### 4.5 Validierung
+
+**Wahrheit liegt im Backend.** Die Feld-Methoden (`.required()`, `.email()`, `.validate()`,
+`.rules()`) sind clientseitig **UX-Marker** (Sternchen/Hinweise) — der Submit wird **nicht**
+clientseitig geblockt. Validiert wird in `Controller::rules()`:
+
+```php
+protected function rules(?Model $record = null): array
+{
+    return ['name' => ['required', 'string', 'max:255'], 'plan' => ['required', 'in:free,pro']];
+}
+```
+
+`store/update` rufen `$request->validate($this->rules())`. Schlägt das fehl (**422**), kommen
+die Fehler als Inertia-`errors` zurück und werden **pro Feld** gerendert (rotes Label +
+Meldung unter dem Feld). `FormRenderer errors={form.errors}` ist in beiden Pfaden verdrahtet
+(Page-Create/Edit **und** Modal via `TablefyDialogs`).
+
+> ⚠️ **DB-Constraint ≠ Validierung.** Lässt `rules()` etwas durch, das die DB ablehnt
+> (z. B. rule `nullable`, aber Spalte `NOT NULL`), kommt ein **500** statt 422 — und 500er
+> rendern **nicht** am Feld. `rules()` muss zur DB passen. Der Generator (`--generate`)
+> leitet `required`/`nullable` aus der Spalte ab; handgeschriebene Schemas selbst abgleichen.
+
+**Live-Validierung (optional):** mit Laravel **Precognition** (`HandlePrecognitiveRequests`-
+Middleware auf der Route) validiert `createPrecognitionBlur(form, field)` onBlur live gegen
+dieselben `rules()`. Verschachtelte Repeater-Fehler (`contacts.0.label`) mappen aktuell
+nicht auf das Sub-Feld.
+
+### 4.6 Datei-Uploads
+
+`FileUpload` sammelt echte `File`-Objekte; der Upload wird **end-to-end** abgewickelt:
+
+```tsx
+FileUpload.make<Building>("image").label("Bild").image().maxSize(2 * 1024 * 1024),
+```
+```php
+// Controller: Feld in rules() (überlebt Validierung) + im Model-$fillable, Spalte für den Pfad.
+'image' => ['nullable', 'image', 'max:2048'],
+
+// Optional pro Resource konfigurierbar (Defaults):
+protected string $fileDisk = 'public';
+protected string $fileDirectory = 'tablefy';
+protected string $fileVisibility = 'public';
+```
+
+- `useInertiaForm` erkennt File-Objekte → sendet automatisch `multipart/form-data`; bei
+  `PUT/PATCH` schaltet es auf `POST` + `_method`-Spoofing um (PHP parst Multipart nur bei POST).
+- `TablefyController` speichert jede hochgeladene Datei (`->store()`) und schreibt den **Pfad**
+  in die Spalte; beim Update wird die **alte Datei gelöscht**. Override: `storeUploadedFile()`.
+- Anzeige im Frontend via `Storage::url($path)` (oder ein accessor auf dem Model).
+- Reine UI-Felder (nicht senden): `.dehydrated(false)`.
 
 ---
 

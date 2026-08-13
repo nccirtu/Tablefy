@@ -6,12 +6,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import { TabConfig } from "../types/layout";
 import { BuiltField } from "../types/form";
-import { FieldRenderer } from "./field-renderer";
-import { SectionRenderer } from "./section-renderer";
-import { GridLayout } from "./grid-layout";
+import { FormBody } from "./form-body";
 
 export interface TabRendererProps<TData extends Record<string, any>> {
   tabs: TabConfig<TData>[];
@@ -47,11 +44,7 @@ export function TabRenderer<TData extends Record<string, any>>({
             typeof tab.badge === "function" ? tab.badge(data) : tab.badge;
 
           return (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              disabled={isDisabled}
-            >
+            <TabsTrigger key={tab.id} value={tab.id} disabled={isDisabled}>
               <span className="flex items-center gap-2">
                 {tab.icon}
                 {tab.label}
@@ -65,55 +58,21 @@ export function TabRenderer<TData extends Record<string, any>>({
           );
         })}
       </TabsList>
-      {tabs.map((tab) => {
-        const tabFields = tab.fields
-          ? fields.filter((f) => tab.fields!.includes(f.name))
-          : [];
-
-        return (
-          <TabsContent key={tab.id} value={tab.id} className="mt-4">
-            {tab.sections ? (
-              <div className="space-y-4">
-                {tab.sections.map((section) => (
-                  <SectionRenderer
-                    key={section.id}
-                    section={section}
-                    fields={fields}
-                    data={data}
-                    errors={errors}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    isFieldVisible={isFieldVisible}
-                    isFieldDisabled={isFieldDisabled}
-                  />
-                ))}
-              </div>
-            ) : (
-              <GridLayout columns={columns}>
-                {tabFields.map((field) => {
-                  if (!isFieldVisible(field)) return null;
-                  return (
-                    <FieldRenderer
-                      key={field.name}
-                      field={field}
-                      value={data[field.name as keyof TData]}
-                      error={errors[field.name as keyof TData]}
-                      disabled={isFieldDisabled(field)}
-                      data={data}
-                      onChange={(v) =>
-                        onChange(field.name as keyof TData, v)
-                      }
-                      onBlur={
-                        onBlur ? () => onBlur(field.name) : undefined
-                      }
-                    />
-                  );
-                })}
-              </GridLayout>
-            )}
-          </TabsContent>
-        );
-      })}
+      {tabs.map((tab) => (
+        <TabsContent key={tab.id} value={tab.id} className="mt-4">
+          <FormBody
+            items={tab.items}
+            columns={columns}
+            fields={fields}
+            data={data}
+            errors={errors}
+            onChange={onChange}
+            onBlur={onBlur}
+            isFieldVisible={isFieldVisible}
+            isFieldDisabled={isFieldDisabled}
+          />
+        </TabsContent>
+      ))}
     </Tabs>
   );
 }

@@ -2,6 +2,17 @@ import { useForm as useInertiaUseForm } from "@inertiajs/react";
 import { useMemo, useCallback } from "react";
 import { UseInertiaFormOptions, UseInertiaFormReturn } from "./types";
 
+/** Recursively detect File/Blob/FileList in the payload (drives multipart). */
+function containsFiles(value: any): boolean {
+  if (typeof File !== "undefined" && value instanceof File) return true;
+  if (typeof Blob !== "undefined" && value instanceof Blob) return true;
+  if (typeof FileList !== "undefined" && value instanceof FileList) return true;
+  if (Array.isArray(value)) return value.some(containsFiles);
+  if (value && typeof value === "object")
+    return Object.values(value).some(containsFiles);
+  return false;
+}
+
 export function useInertiaForm<TData extends Record<string, any>>(
   options: UseInertiaFormOptions<TData>,
 ): UseInertiaFormReturn<TData> {
@@ -68,7 +79,16 @@ export function useInertiaForm<TData extends Record<string, any>>(
   const handleSubmit = useCallback(() => {
     if (!url) return;
 
-    form.transform(transformPayload);
+    // PHP only parses multipart bodies on POST — so when files are present and
+    // the verb is PUT/PATCH/DELETE, send POST + `_method` spoofing (FormData).
+    const hasFiles = containsFiles(transformPayload(form.data));
+    const spoof = hasFiles && method !== "post";
+
+    form.transform((data) =>
+      spoof
+        ? { ...transformPayload(data), _method: method.toUpperCase() }
+        : transformPayload(data),
+    );
 
     const submitOptions = {
       onSuccess: () => onSuccess?.(),
@@ -76,10 +96,11 @@ export function useInertiaForm<TData extends Record<string, any>>(
       onBefore: () => onBefore?.(),
       onFinish: () => onFinish?.(),
       preserveScroll,
+      ...(hasFiles ? { forceFormData: true } : {}),
       ...(headers ? { headers } : {}),
     };
 
-    switch (method) {
+    switch (spoof ? "post" : method) {
       case "post":
         form.post(url, submitOptions);
         break;
