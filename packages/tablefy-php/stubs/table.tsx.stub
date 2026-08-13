@@ -3,16 +3,8 @@
 // Spalten, Farben, Reihenfolge, Pagination: alles anpassbar. Der {{ singular }}-Typ
 // schützt nur die Feldnamen (Autocomplete), nicht das Aussehen.
 
-import {
-  TableSchema,
-  TextColumn,
-  NumberColumn,
-  DateColumn,
-  BadgeColumn,
-  EnumColumn,
-  ActionsColumn,
-} from "@nccirtu/tablefy-v2";
 import { router } from "@inertiajs/react";
+import { {{ tableImports }} } from "@nccirtu/tablefy-v2";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 import { {{ singular }}Resource } from "../{{ singular }}Resource";
 {{ formImport }}

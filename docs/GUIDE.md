@@ -502,6 +502,31 @@ app/Http/Controllers/Tablefy/CustomerController.php           @generated
 routes/tablefy.php                                            (Route angehängt)
 ```
 
+Der Generator schreibt Code, der die Gates eines Laravel-13-Projekts direkt besteht: der
+Controller ist `final`, hat `@return`-Typen und sortierte echte Imports (keine
+voll­qualifizierten Namen inline), die Routen-Datei führt ihre Controller als `use`-Block, und
+die TS-Dateien importieren nur die Spalten- und Feld-Builder, die im erzeugten Rumpf wirklich
+vorkommen. Geprüft gegen Pint, PHPStan (Level 7), `tsc` und ESLint.
+
+Zwei Dinge nach dem Lauf:
+
+```bash
+# 1. routes/web.php muss die Routen-Datei einbinden (einmalig)
+require __DIR__.'/tablefy.php';
+
+# 2. nach JEDEM Lauf — die Resource-Datei importiert das Wayfinder-Action-Modul
+php artisan wayfinder:generate --with-form
+```
+
+`--with-form` ist nicht optional: ohne das Flag verliert die App die `.form`-Varianten, die
+das Vite-Plugin erzeugt.
+
+> **Mandantenfähige Models:** Implementiert das Model `BelongsToTenant`, lässt der Generator
+> die Mandanten-Spalte überall weg — kein Formularfeld, keine Regel, keine Optionsliste, kein
+> `$with`. Der Wert kommt vom Backend. Ohne diese Ausnahme entstünde ein Pflichtfeld, das
+> niemand befüllen kann, und eine Optionsliste, die jedem Mandanten die Zeilen aller anderen
+> ausliefert.
+
 Das Paket bietet außerdem die generische `TablefyController`-Basis (CRUD geerbt) und einen
 Eloquent-`tablefy()`-Macro als Backend-Hälfte zu `useServerTable`/`ServerDataTable`:
 

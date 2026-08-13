@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Nccirtu\Tablefy\Contracts\BelongsToTenant;
+use Nccirtu\Tablefy\Contracts\TenantResolver;
 use Nccirtu\Tablefy\Support\ColumnMapper;
 
 class MakeTablefyResourceCommand extends Command
@@ -84,6 +86,16 @@ class MakeTablefyResourceCommand extends Command
             ? "{ label: \"Neu\", icon: \"plus\", form: { schema: {$camel}Form, url: {$singular}Resource.routes.store(), method: \"post\" } }"
             : "{ label: \"Neu\", href: {$singular}Resource.routes.create(), icon: \"plus\" }";
 
+        // Imports of the generated controller, sorted — Pint's ordered_imports
+        // would otherwise rewrite the file on its first run.
+        $r['{{ imports }}'] = $this->buildImports([
+            "App\\Models\\{$singular}",
+            \Illuminate\Database\Eloquent\Model::class,
+            \Nccirtu\Tablefy\Http\Controllers\TablefyController::class,
+            $kanban ? \Nccirtu\Tablefy\Kanban\Kanban::class : null,
+            ...$this->formOptionImports,
+        ]);
+
         // target => [stub, editable?]  (editable files are not overwritten without --force)
         $files = [
             "resources/js/types/tablefy/{$r['{{ singularKebab }}']}.ts" => ['type.ts', false],
@@ -130,6 +142,9 @@ class MakeTablefyResourceCommand extends Command
         $this->newLine();
         $this->info("Tablefy resource [{$singular}] scaffolded.");
         $this->line("Next: make sure routes/web.php contains  <fg=cyan>require __DIR__.'/tablefy.php';</>");
+        // The Resource file imports the Wayfinder action module for this
+        // controller; until it is generated, the page does not type-check.
+        $this->line("       then run <fg=cyan>php artisan wayfinder:generate --with-form</> so the new routes exist in TS.");
 
         if ($kanban) {
             $this->line("Kanban: add <fg=cyan>'position'</> to the model's \$fillable, then run <fg=cyan>php artisan migrate</>.");
@@ -173,10 +188,13 @@ class MakeTablefyResourceCommand extends Command
         $this->detectedColumns = $columns;
 
         if ($columns) {
-            $relations = $this->resolveRelations($columns);
-            $parts = ColumnMapper::build($columns, $singular, $relations);
+            $skip = $this->tenantColumns($singular);
+            $relations = array_diff_key($this->resolveRelations($columns), array_flip($skip));
+            $parts = ColumnMapper::build($columns, $singular, $relations, $skip);
 
             return [
+                '{{ tableImports }}' => $this->usedBuilders($parts['tableColumns'], ['TableSchema', 'ActionsColumn']),
+                '{{ formImports }}' => $this->usedBuilders($parts['formFields'], ['FormSchema']),
                 '{{ typeBody }}' => $parts['type'],
                 '{{ tableColumns }}' => $parts['tableColumns'],
                 '{{ detailFields }}' => $parts['detailFields'],
@@ -190,6 +208,8 @@ class MakeTablefyResourceCommand extends Command
         $camel = Str::camel($singular);
 
         return [
+            '{{ tableImports }}' => 'ActionsColumn, TableSchema, TextColumn',
+            '{{ formImports }}' => 'FormSchema, TextInput',
             '{{ typeBody }}' => "  id: number;\n  // TODO: add your model's fields",
             '{{ tableColumns }}' => "    // TODO: add columns, z.B. TextColumn.make<{$singular}>(\"name\").label(\"Name\").sortable(),",
             '{{ detailFields }}' => "                      <Field label=\"ID\" value={{$camel}.id} />,\n                      {/* TODO: weitere Felder */}",
@@ -201,6 +221,25 @@ class MakeTablefyResourceCommand extends Command
     }
 
     /**
+     * Columns the resource must not expose: the tenant key is set by the
+     * backend, so putting it in the form would make it a field nobody can
+     * fill, and building its options would hand every tenant's rows to the
+     * client.
+     *
+     * @return array<int, string>
+     */
+    protected function tenantColumns(string $singular): array
+    {
+        $model = "\\App\\Models\\{$singular}";
+
+        if (! is_a($model, BelongsToTenant::class, true)) {
+            return [];
+        }
+
+        return [app(TenantResolver::class)->foreignKey()];
+    }
+
+    /**
      * Kanban placeholders. The group field + columns are derived from the first
      * enum column found by --generate; without one, sensible TODO defaults.
      *
@@ -209,7 +248,7 @@ class MakeTablefyResourceCommand extends Command
     protected function buildKanban(bool $kanban, bool $cards, string $singular): array
     {
         $empty = [
-            '{{ kanbanUse }}' => '',
+
             '{{ kanbanMethod }}' => '',
             '{{ kanbanGroupBy }}' => 'status',
             '{{ kanbanColumns }}' => "        // TODO: { id: 'open', label: 'Open', color: 'amber' },",
@@ -273,7 +312,7 @@ class MakeTablefyResourceCommand extends Command
             . "\n    }\n";
 
         return [
-            '{{ kanbanUse }}' => "\nuse Nccirtu\\Tablefy\\Kanban\\Kanban;",
+
             '{{ kanbanMethod }}' => $method,
             '{{ kanbanGroupBy }}' => $groupBy,
             '{{ kanbanColumns }}' => $columnsTs,
@@ -454,6 +493,43 @@ class MakeTablefyResourceCommand extends Command
     }
 
     /** @param array<string, array{relation:string, model:string, label:string, optionsProp:string}> $relations */
+    /**
+     * The builders a generated body actually calls, as a sorted import list.
+     * Importing a fixed set instead would leave unused imports behind, which
+     * the host's linter rejects.
+     *
+     * @param  array<int, string>  $always
+     */
+    protected function usedBuilders(string $body, array $always = []): string
+    {
+        preg_match_all('/\b([A-Z][A-Za-z0-9]*)\.make\b/', $body, $m);
+
+        $names = array_values(array_unique([...$always, ...$m[1]]));
+        sort($names);
+
+        return implode(', ', $names);
+    }
+
+    /**
+     * Classes the generated formOptions() needs — collected while building it.
+     *
+     * @var array<int, string>
+     */
+    protected array $formOptionImports = [];
+
+    /**
+     * A sorted `use` block. Nulls are dropped, duplicates collapsed.
+     *
+     * @param  array<int, string|null>  $classes
+     */
+    protected function buildImports(array $classes): string
+    {
+        $classes = array_values(array_unique(array_filter($classes)));
+        sort($classes);
+
+        return implode("\n", array_map(fn (string $c) => "use {$c};", $classes));
+    }
+
     protected function buildWith(array $relations): string
     {
         if ($relations === []) {
@@ -464,7 +540,7 @@ class MakeTablefyResourceCommand extends Command
             $relations,
         ));
 
-        return "    protected array \$with = [{$list}];\n";
+        return "    /** @var array<int, string> */\n    protected array \$with = [{$list}];\n";
     }
 
     /** @param array<string, array{relation:string, model:string, label:string, optionsProp:string}> $relations */
@@ -474,15 +550,19 @@ class MakeTablefyResourceCommand extends Command
             return '';
         }
 
+        $this->formOptionImports[] = \Illuminate\Http\Request::class;
+
         $lines = [];
         foreach ($relations as $r) {
-            $lines[] = "            '{$r['optionsProp']}' => \\App\\Models\\{$r['model']}::orderBy('{$r['label']}')"
+            $this->formOptionImports[] = "App\\Models\\{$r['model']}";
+            $lines[] = "            '{$r['optionsProp']}' => {$r['model']}::orderBy('{$r['label']}')"
                 . "->get(['id', '{$r['label']}'])"
                 . "->map(fn (\$m) => ['value' => (string) \$m->id, 'label' => \$m->{$r['label']}])->all(),";
         }
         $body = implode("\n", $lines);
 
-        return "\n    protected function formOptions(\\Illuminate\\Http\\Request \$request): array\n    {\n        return [\n{$body}\n        ];\n    }\n";
+        return "\n    /**\n     * Options for the relationship selects, shared as page props.\n     *\n     * @return array<string, mixed>\n     */\n"
+            . "    protected function formOptions(Request \$request): array\n    {\n        return [\n{$body}\n        ];\n    }\n";
     }
 
     protected function resolveTable(string $singular, string $plural): string
@@ -556,8 +636,8 @@ class MakeTablefyResourceCommand extends Command
     protected function appendRoute(string $slug, string $singular, bool $view = false, bool $modal = false, bool $kanban = false): void
     {
         $path = base_path('routes/tablefy.php');
-        $controller = "\\App\\Http\\Controllers\\Tablefy\\{$singular}Controller::class";
-        $args = "'{$slug}', {$controller}"
+        $controller = "{$singular}Controller";
+        $args = "'{$slug}', {$controller}::class"
             . ($view ? ', view: true' : '')
             . ($modal ? ', modal: true' : '')
             . ($kanban ? ', kanban: true' : '');
@@ -580,14 +660,37 @@ class MakeTablefyResourceCommand extends Command
                 return;
             }
 
-            File::put($path, preg_replace($pattern, $line, $current));
+            File::put($path, $this->withControllerImport(preg_replace($pattern, $line, $current), $singular));
             $this->line("  <fg=blue>update</> routes/tablefy.php");
 
             return;
         }
 
-        File::append($path, $line . "\n");
+        File::put($path, $this->withControllerImport($current, $singular) . $line . "\n");
         $this->line("  <fg=green>route</>  routes/tablefy.php");
+    }
+
+    /**
+     * Add the controller's `use` statement to the route file, keeping the
+     * import block sorted — a fully-qualified name inline would be rewritten
+     * by the host's formatter on its next run.
+     */
+    protected function withControllerImport(string $contents, string $singular): string
+    {
+        $import = "use App\\Http\\Controllers\\Tablefy\\{$singular}Controller;";
+
+        if (str_contains($contents, $import)) {
+            return $contents;
+        }
+
+        preg_match_all('/^use .+;$/m', $contents, $matches);
+        $imports = [...$matches[0], $import];
+        sort($imports);
+
+        $body = preg_replace('/^use .+;\n/m', '', $contents);
+        $body = preg_replace("/^<\?php\n+/", '', $body);
+
+        return "<?php\n\n" . implode("\n", $imports) . "\n\n" . ltrim($body, "\n");
     }
 
     protected function rel(string $path): string

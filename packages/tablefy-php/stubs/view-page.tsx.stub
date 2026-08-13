@@ -1,11 +1,13 @@
 // @generated – View-Page. Frei editierbar (Details + Lazy-Relation-Tabs).
 
 import { Head } from "@inertiajs/react";
-import { Grid, PageSchema, Section, TablefySchema, TablefyStats, type StatGroupData } from "@nccirtu/tablefy-v2";
+import { Grid, PageSchema, Section, TablefySchema, TablefyStats } from "@nccirtu/tablefy-v2";
+import type { StatGroupData } from "@nccirtu/tablefy-v2";
+import { TablefyCharts } from "@nccirtu/tablefy-v2/charts";
+import type { ChartWidgetData } from "@nccirtu/tablefy-v2/charts";
 import { TablefyPage, TablefyTabs } from "@nccirtu/tablefy-v2/inertia";
-import { TablefyCharts, type ChartWidgetData } from "@nccirtu/tablefy-v2/charts";
-import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
 
 export default function View{{ singular }}({
   {{ singularCamel }},
@@ -71,11 +73,19 @@ export default function View{{ singular }}({
 }
 
 /** Kleines Label/Wert-Paar für die Detail-Grids. */
-function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
+function Field({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | boolean | null | undefined;
+}) {
   return (
     <div>
       <div className="text-sm text-muted-foreground">{label}</div>
-      <div className="font-medium">{value ?? "—"}</div>
+      <div className="font-medium">
+        {typeof value === "boolean" ? (value ? "Ja" : "Nein") : (value ?? "—")}
+      </div>
     </div>
   );
 }

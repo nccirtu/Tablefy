@@ -6,14 +6,7 @@
 // Gruppieren in Cards: Section.make("Titel").columns(2).schema([ …felder… ])
 // (Sections aus "@nccirtu/tablefy-v2/forms" importieren), optional FormRow für Zeilen.
 
-import {
-  FormSchema,
-  TextInput,
-  Textarea,
-  Select,
-  Toggle,
-  DatePicker,
-} from "@nccirtu/tablefy-v2/forms";
+import { {{ formImports }} } from "@nccirtu/tablefy-v2/forms";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
 
 export const {{ singularCamel }}Form = FormSchema.make<{{ singular }}>()

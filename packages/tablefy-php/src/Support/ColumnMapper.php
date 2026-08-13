@@ -25,8 +25,11 @@ class ColumnMapper
     /**
      * @param  array<int, array{name:string, type:string, nullable:bool}>  $columns
      * @param  array<string, array{relation:string, model:string, label:string, optionsProp:string}>  $relations
+     * @param  array<int, string>  $skip  Columns kept out of the table, the form
+     *                                    and the rules — e.g. the tenant key,
+     *                                    which the backend sets itself.
      */
-    public static function build(array $columns, string $singular, array $relations = []): array
+    public static function build(array $columns, string $singular, array $relations = [], array $skip = []): array
     {
         $type = [];
         $tableColumns = [];
@@ -47,6 +50,10 @@ class ColumnMapper
 
             // --- TS type ---
             $type[] = "  {$name}: " . self::tsType($t) . ($nullable ? ' | null' : '') . ';';
+
+            if (in_array($name, $skip, true)) {
+                continue;
+            }
 
             // --- Table column + detail field ---
             if (! in_array($name, self::SKIP_COLUMNS, true)) {
@@ -169,6 +176,9 @@ class ColumnMapper
             'boolean' => "'boolean'",
             'date', 'datetime' => "'date'",
             'json' => "'array'",
+            // A TEXT column takes far more than 255 characters; capping it here
+            // would reject values the database happily stores.
+            'text' => "'string'",
             default => "'string', 'max:255'",
         };
         return "[{$head}, {$body}]";

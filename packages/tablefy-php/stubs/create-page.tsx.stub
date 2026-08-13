@@ -4,9 +4,9 @@ import { Head } from "@inertiajs/react";
 import { PageSchema } from "@nccirtu/tablefy-v2";
 import { FormRenderer } from "@nccirtu/tablefy-v2/forms";
 import { TablefyPage, useInertiaForm } from "@nccirtu/tablefy-v2/inertia";
-import { {{ singularCamel }}Form } from "../Schemas/{{ singular }}Form";
-import { {{ singular }}Resource } from "../{{ singular }}Resource";
 import type { {{ singular }} } from "@/types/tablefy/{{ singularKebab }}";
+import { {{ singular }}Resource } from "../{{ singular }}Resource";
+import { {{ singularCamel }}Form } from "../Schemas/{{ singular }}Form";
 
 export default function Create{{ singular }}(props: Record<string, unknown> = {}) {
   // `props` carries relationship/enum option sets (e.g. companyOptions) for
