@@ -1278,21 +1278,57 @@ npx tablefy add <name>    # einzelne Tablefy-Komponente ins Projekt kopieren
 
 ## 9. Styling (Tailwind v4)
 
-Das Package liefert **`@nccirtu/tablefy-v2/styles.css`** mit Default-Design-Tokens (light/dark,
-Tailwind v4 `@theme inline`). Die Komponenten nutzen **semantische Tokens** (`bg-primary`,
-`text-muted-foreground`, `border-border`, `rounded-md`), die auf **CSS-Variablen** zeigen.
-Anpassung erfolgt über diese Variablen im **eigenen Stylesheet** (nach der `styles.css`
-geladen) – Komponenten-Code muss nie angefasst werden:
+Die Komponenten nutzen ausschließlich **semantische Tokens** (`bg-primary`,
+`text-muted-foreground`, `border-border`, `rounded-md`), die auf CSS-Variablen zeigen.
+Angepasst wird über diese Variablen — Komponenten-Code muss nie angefasst werden.
+
+### 9.1 `@source` ist Pflicht
+
+Tailwind v4 scannt `node_modules` **nicht**. Ohne diese Zeile fehlen sämtliche Utilities der
+Package-Komponenten, und die Oberfläche kommt unformatiert an:
+
+```css
+@import "tailwindcss";
+@source "../../node_modules/@nccirtu/tablefy-v2/dist";
+```
+
+Der Pfad ist relativ zur CSS-Datei und zeigt auf das **`dist`**, nicht auf `src` — die App
+konsumiert das Build-Ergebnis. Symlinks (lokal verlinktes Package) folgt der Scanner.
+
+### 9.2 Tokens
+
+Zwei Wege, je nachdem, was die App schon mitbringt:
+
+**Die App hat ein eigenes Token-Set** (jedes shadcn-Projekt hat das): nichts weiter zu tun.
+Die `@theme`-Mappings und `:root`/`.dark`-Werte der App gelten auch für die
+Package-Komponenten. `styles.css` wird dann **nicht** importiert.
+
+**Die App hat keins:** die Defaults des Pakets importieren und punktuell überschreiben.
 
 ```css
 @import "tailwindcss";
 @import "@nccirtu/tablefy-v2/styles.css";
+@source "../../node_modules/@nccirtu/tablefy-v2/dist";
 
-:root { --primary: 25 95% 53%; --radius: 0.75rem; }   /* überschreibt Defaults */
-.dark { --primary: 25 95% 53%; }
+:root { --primary: oklch(0.55 0.2 265); --radius: 0.75rem; }
+.dark { --primary: oklch(0.62 0.19 265); }
 ```
 
-Punktuell: `className`-Props an `DataTable`/Spalten/Feldern.
+Wichtig ist die **Reihenfolge**: eigene Werte gehören *nach* den Import, sonst gewinnen die
+Defaults.
+
+> ⚠️ **Formatwechsel gegenüber 0.9.x.** Bis 0.9.3 standen die Werte als HSL-Kanäle
+> (`--primary: 240 5.9% 10%`) und die Utilities lasen sie über `hsl(var(--primary))`.
+> Ab 2.0 stehen dort **ganze Farbwerte** (`oklch(…)`, Hex, `rgba(…)`) — dasselbe Format, das
+> shadcn und die Laravel-Starter-Kits benutzen. Wer Variablen überschrieben hatte, stellt sie
+> um; ein übrig gebliebener HSL-Kanal ergibt `hsl(oklch(…))` — ungültig, die Farbe fällt
+> komplett aus.
+
+Vollständiges Set: die 19 shadcn-Farben, `--chart-1..5`, die `--sidebar-*`-Gruppe und
+`--radius` (aus dem sich `rounded-sm/md/lg` ableiten). `.dark` setzt zusätzlich
+`color-scheme: dark`, sonst bleiben Bildlaufleisten, Datums-Popups und Auswahlfelder hell.
+
+Punktuell nachjustieren: `className`-Props an `DataTable`, Spalten und Feldern.
 
 > **Geplant:** ein `eject <component>`-Befehl, um eine einzelne UI-Komponente zur vollen
 > Kontrolle ins Projekt zu kopieren (Escape Hatch).
