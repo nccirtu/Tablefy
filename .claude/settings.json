@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Applications/XAMPP/xamppfiles/htdocs/Tablefy Test/**)",
+      "Bash(php -l app/Models/Building.php)",
+      "Bash(php artisan *)"
+    ]
+  }
+}

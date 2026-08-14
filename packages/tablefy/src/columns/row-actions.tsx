@@ -16,7 +16,7 @@ import type { ConfirmOptions, FormSchemaInput } from "../dialog/types";
 export interface ActionFormConfig<TData> {
   title?: string;
   description?: string;
-  schema: FormSchemaInput;
+  schema: FormSchemaInput<TData>;
   method?: "post" | "put" | "patch";
   url: string | ((row: TData) => string);
   data?: Record<string, unknown> | ((row: TData) => Record<string, unknown>);

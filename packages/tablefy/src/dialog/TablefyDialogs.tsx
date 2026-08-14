@@ -34,7 +34,9 @@ import type {
   FormSchemaInput,
 } from "./types";
 
-function resolveSchema(input: FormSchemaInput): FormBuildResult<Record<string, unknown>> {
+function resolveSchema(
+  input: FormSchemaInput<never>,
+): FormBuildResult<Record<string, unknown>> {
   return typeof (input as { build?: unknown }).build === "function"
     ? (input as { build(): FormBuildResult<Record<string, unknown>> }).build()
     : (input as FormBuildResult<Record<string, unknown>>);

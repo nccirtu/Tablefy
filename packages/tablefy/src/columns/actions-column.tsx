@@ -64,13 +64,20 @@ export class ActionsColumn<TData> {
 
   delete(
     onClick: (row: TData) => void,
-    options?: { confirm?: boolean | ConfirmOptions },
+    options?: {
+      confirm?: boolean | ConfirmOptions;
+      /** Hide the entry for rows that may not be deleted. */
+      hidden?: (row: TData) => boolean;
+      disabled?: (row: TData) => boolean;
+    },
   ): this {
     return this.action({
       label: "Löschen",
       onClick,
       variant: "destructive",
       separator: true,
+      hidden: options?.hidden,
+      disabled: options?.disabled,
       // Confirm by default; opt out with .delete(fn, { confirm: false }).
       confirm:
         options?.confirm ?? {

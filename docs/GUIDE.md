@@ -1125,13 +1125,21 @@ dialog.open({ title: "Custom", content: <MeinPanel/> });
    ```
 3. **Imperativ** — `dialog.confirm/form/open` direkt.
 
+**Typisierte Schemas:** `FormSchemaInput<TData>` ist generisch — ein mit `FormSchema.make<Tax>()`
+gebautes Schema lässt sich direkt an eine Row- oder Page-Action geben. (Vorher war der Typ auf
+`Record<string, unknown>` festgenagelt; damit war **jedes** typisierte Schema unzuweisbar, auch die
+vom Generator erzeugten.)
+
 **Backend:** Form-Modals posten auf die bestehenden `store`/`update`-Routen (dieselbe `rules()`).
 Validierungsfehler (422) erscheinen **inline im Modal**; bei Erfolg schließt es. Der Submit sendet
 `X-Tablefy-Modal` → der Basis-Controller antwortet mit `back()` statt Index-Redirect → **du bleibst auf
 der Seite** (deferred Props laden neu, Tabelle aktualisiert sich). Edit-Modals prefillen aus der Row
 (kein Extra-Request).
 
-`.delete()` bestätigt **standardmäßig** (Opt-out: `.delete(fn, { confirm: false })`). Dialog-Primitive:
+`.delete()` bestätigt **standardmäßig** (Opt-out: `.delete(fn, { confirm: false })`). Zeilen, die
+nicht gelöscht werden dürfen, blenden den Eintrag aus:
+`.delete(fn, { hidden: (row) => row.readonly })` — `hidden`/`disabled` gibt es damit an **allen**
+Actions, nicht nur an `.action({...})`. Dialog-Primitive:
 `alert-dialog` (Confirm) + `dialog` (Forms, aus dem Starter-Kit gespiegelt). Engine in
 `packages/tablefy/src/dialog/` (Store auf `globalThis` → über main- + /inertia-Bundle geteilt).
 

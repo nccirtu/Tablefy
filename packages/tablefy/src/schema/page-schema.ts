@@ -6,7 +6,7 @@ import type { ConfirmOptions, FormSchemaInput } from "../dialog/types";
 export interface PageFormConfig {
   title?: string;
   description?: string;
-  schema: FormSchemaInput;
+  schema: FormSchemaInput<never>;
   method?: "post" | "put" | "patch";
   url: string;
   data?: Record<string, unknown>;

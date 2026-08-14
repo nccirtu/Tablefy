@@ -4,10 +4,17 @@ import type { FormBuildResult } from "../forms";
 
 export type { ConfirmOptions };
 
-/** A form schema: an already-built result, or a builder exposing `.build()`. */
-export type FormSchemaInput =
-  | FormBuildResult<Record<string, unknown>>
-  | { build(): FormBuildResult<Record<string, unknown>> };
+/**
+ * A form schema: an already-built result, or a builder exposing `.build()`.
+ *
+ * Generic over the record type, so a schema built with `FormSchema.make<Tax>()`
+ * can be handed to a row or page action. Pinning this to
+ * `Record<string, unknown>` made every typed schema unassignable — including
+ * the ones the generator itself emits.
+ */
+export type FormSchemaInput<TData = Record<string, unknown>> =
+  | FormBuildResult<TData>
+  | { build(): FormBuildResult<TData> };
 
 export interface FormDialogOptions {
   title?: string;
