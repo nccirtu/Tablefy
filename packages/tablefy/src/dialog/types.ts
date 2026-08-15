@@ -12,7 +12,7 @@ export type { ConfirmOptions };
  * `Record<string, unknown>` made every typed schema unassignable — including
  * the ones the generator itself emits.
  */
-export type FormSchemaInput<TData = Record<string, unknown>> =
+export type FormSchemaInput<TData extends Record<string, any> = Record<string, unknown>> =
   | FormBuildResult<TData>
   | { build(): FormBuildResult<TData> };
 
@@ -20,7 +20,7 @@ export interface FormDialogOptions {
   title?: string;
   description?: string;
   /** The form schema (`FormSchema.make()....build()` or the builder itself). */
-  schema: FormSchemaInput;
+  schema: FormSchemaInput<any>;
   /** Where to submit (store/update route). */
   url: string;
   method?: "post" | "put" | "patch";

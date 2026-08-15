@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ColumnDef, Row } from "@tanstack/react-table";
@@ -143,14 +144,19 @@ export class TextColumn<TData> extends BaseColumn<
           );
         }
 
-        // Prefix/Suffix hinzufügen
-        const displayValue = `${prefix || ""}${value}${suffix || ""}`;
+        // Prefix/Suffix sind Textwerkzeuge — nur dann in einen String gießen.
+        // Ein Formatter darf einen ReactNode liefern; der wird gerendert, nicht
+        // interpoliert (sonst steht dort "[object Object]").
+        const content =
+          prefix || suffix
+            ? `${prefix || ""}${value}${suffix || ""}`
+            : (value as React.ReactNode);
 
         return (
           <span
             className={cn(this.getAlignmentClass(), this.config.cellClassName)}
           >
-            {displayValue}
+            {content}
           </span>
         );
       },

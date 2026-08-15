@@ -15,4 +15,6 @@ export { TextColumn } from "./text-column";
 export { ActionsColumn } from "./actions-column";
 export { EnumColumn } from "./enum-column";
 export type { EnumOption } from "./enum-column";
+export { FlagColumn } from "./flag-column";
+export { ToggleColumn } from "./toggle-column";
 export type * from "./types";

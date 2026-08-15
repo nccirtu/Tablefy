@@ -32,7 +32,10 @@ export function FieldRenderer<TData extends Record<string, any>>({
   }
 
   // Checkbox and Toggle handle their own labels inline
+  // These field types draw their own header — label and helper text sit
+  // inside the control, so the shared header would duplicate them.
   const skipLabel = field.type === "checkbox" || field.type === "toggle";
+  const skipHelper = field.type === "toggle";
 
   const required =
     typeof field.config.required === "function"
@@ -96,7 +99,7 @@ export function FieldRenderer<TData extends Record<string, any>>({
         external,
       })}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {!error && field.config.helperText && (
+      {!error && !skipHelper && field.config.helperText && (
         <p className="text-sm text-muted-foreground">
           {field.config.helperText}
         </p>

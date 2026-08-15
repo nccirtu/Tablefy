@@ -11,12 +11,13 @@ import { MoreHorizontal } from "lucide-react";
 import { ReactNode } from "react";
 import { dialog } from "../dialog/dialog";
 import type { ConfirmOptions, FormSchemaInput } from "../dialog/types";
+import { renderActionIcon } from "../lib/icons";
 
 /** Open a schema form in a modal from a row action (url/data may use the row). */
 export interface ActionFormConfig<TData> {
   title?: string;
   description?: string;
-  schema: FormSchemaInput<TData>;
+  schema: FormSchemaInput<any>;
   method?: "post" | "put" | "patch";
   url: string | ((row: TData) => string);
   data?: Record<string, unknown> | ((row: TData) => Record<string, unknown>);
@@ -145,7 +146,11 @@ export function DropdownActions<TData>({
                 )}
                 onClick={() => runAction(action, record)}
               >
-                {action.icon && <span className="mr-2">{action.icon}</span>}
+                {action.icon && (
+                  <span className="mr-2">
+                    {renderActionIcon(action.icon)}
+                  </span>
+                )}
                 {action.label}
               </DropdownMenuItem>
             )}
@@ -156,5 +161,50 @@ export function DropdownActions<TData>({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/**
+ * Renders the same actions as icon buttons in a row, instead of behind a
+ * three-dots trigger. Same `ActionItem` list, same behaviour — only the shape
+ * differs, so a screen can pick whichever the design calls for.
+ */
+export function InlineActions<TData>({
+  record,
+  actions,
+}: {
+  record: TData;
+  actions: ActionItem<TData>[];
+}): ReactNode {
+  const visible = actions.filter((a) => !a.hidden || !a.hidden(record));
+
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      {visible.map((action, index) =>
+        action.render ? (
+          <span key={index}>{action.render(record)}</span>
+        ) : (
+          <Button
+            key={index}
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={action.label}
+            title={action.label}
+            disabled={action.disabled?.(record)}
+            className={cn(
+              "size-8",
+              action.variant === "destructive" &&
+                "text-destructive hover:text-destructive",
+            )}
+            onClick={() => runAction(action, record)}
+          >
+            {renderActionIcon(action.icon) ?? action.label}
+          </Button>
+        ),
+      )}
+    </div>
   );
 }

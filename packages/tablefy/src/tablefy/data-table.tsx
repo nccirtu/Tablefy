@@ -287,9 +287,11 @@ export function DataTable<TData, TValue>({
         columnVisibilityLabel={config.columnVisibilityLabel}
       />
 
+      {/* Luft zwischen Kopf und erster Zeile — der Kopf trägt Titel,
+          Beschreibung und Aktionen, die sonst an der Tabelle kleben. */}
       <div
         className={cn(
-          "overflow-hidden",
+          "overflow-hidden pt-2",
           config.bordered !== false && "rounded-md border",
         )}
       >

@@ -33,6 +33,10 @@ export { Skeleton } from "./components/ui/skeleton";
 // Button primitive (handy for custom actions, relation managers, etc.)
 export { Button } from "./components/ui/button";
 
+// Icon by name — the same vocabulary the actions accept.
+export { Icon, resolveLucideIcon } from "./lib/icons";
+export type { WriteRequest } from "./lib/requests";
+
 // Page schema (nested layout components)
 export {
   PageSchema,
@@ -77,6 +81,13 @@ export {
   ButtonColumn,
   ButtonColumn as buttonColumn,
 } from "./columns/button-column";
+
+export {
+  ToggleColumn,
+  ToggleColumn as toggleColumn,
+} from "./columns/toggle-column";
+
+export { FlagColumn, FlagColumn as flagColumn } from "./columns/flag-column";
 
 export {
   CheckboxColumn,

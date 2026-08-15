@@ -15,7 +15,8 @@ import {
 import { ChevronDown, Search, X, Columns, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderAction, SearchConfig, FilterConfig, BulkAction } from "../types";
-import { resolveLucideIcon } from "../lib/icons";
+import { renderActionIcon, resolveLucideIcon } from "../lib/icons";
+import { dialog } from "../dialog/dialog";
 import { DataTableFilters } from "./data-table-filters";
 
 interface DataTableHeaderProps<TData> {
@@ -58,7 +59,11 @@ export function DataTableHeader<TData>({
   className,
 }: DataTableHeaderProps<TData>) {
   const hasFilters = !!filters && filters.length > 0;
-  const normalActions = actions.filter((a) => !a.hidden);
+  const visibleActions = actions.filter((a) => !a.hidden);
+  // Buttons by default — the same shape a page action has. `overflow: true`
+  // puts one behind the three-dots menu instead.
+  const buttonActions = visibleActions.filter((a) => !a.overflow);
+  const overflowActions = visibleActions.filter((a) => a.overflow);
   const showBulk = selectedCount > 0 && !!bulkActions && bulkActions.length > 0;
 
   const bulkIcon = (action: BulkAction<TData>) => {
@@ -66,10 +71,30 @@ export function DataTableHeader<TData>({
     return Icon ? <Icon className="mr-2 h-4 w-4" /> : null;
   };
 
+  const runHeaderAction = (action: HeaderAction<TData>) => {
+    if (action.form) {
+      const f = action.form;
+      dialog.form({
+        title: f.title ?? action.label,
+        description: f.description,
+        schema: f.schema,
+        method: f.method,
+        url: f.url,
+        data: f.data,
+        submitLabel: f.submitLabel,
+        onSuccess: f.onSuccess,
+      });
+
+      return;
+    }
+
+    action.onClick?.();
+  };
+
   if (
     !title &&
     !description &&
-    normalActions.length === 0 &&
+    visibleActions.length === 0 &&
     !showBulk &&
     !search?.enabled &&
     !hasFilters
@@ -79,20 +104,60 @@ export function DataTableHeader<TData>({
 
   return (
     <div className={cn("flex flex-col gap-4 mb-4", className)}>
-      {(title || description) && (
-        <div className="space-y-1">
-          {title && (
-            <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-          )}
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+      {(title || description || buttonActions.length > 0) && (
+        <div className="flex flex-row items-start justify-between gap-4">
+          <div className="space-y-1">
+            {title && (
+              <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+            )}
+            {description && (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            )}
+          </div>
+
+          {buttonActions.length > 0 && (
+            <div className="flex shrink-0 items-center gap-2">
+              {buttonActions.map((action, index) =>
+                action.render ? (
+                  <span key={action.id || index}>{action.render()}</span>
+                ) : (
+                  <Button
+                    key={action.id || index}
+                    type="button"
+                    variant={action.variant}
+                    size={action.size}
+                    disabled={action.disabled || action.loading}
+                    asChild={!!action.href}
+                    onClick={
+                      action.href ? undefined : () => runHeaderAction(action)
+                    }
+                  >
+                    {action.href ? (
+                      <a href={action.href}>
+                        {action.icon && (
+                          <span className="mr-1">
+                            {renderActionIcon(action.icon)}
+                          </span>
+                        )}
+                        {action.label}
+                      </a>
+                    ) : (
+                      <>
+                        {action.icon && renderActionIcon(action.icon)}
+                        {action.label}
+                      </>
+                    )}
+                  </Button>
+                ),
+              )}
+            </div>
           )}
         </div>
       )}
 
       {(search?.enabled ||
         hasFilters ||
-        normalActions.length > 0 ||
+        overflowActions.length > 0 ||
         (enableColumnVisibility && !!table)) && (
         <div className="flex items-center justify-between gap-4">
           {search?.enabled && (
@@ -168,8 +233,8 @@ export function DataTableHeader<TData>({
               />
             )}
 
-            {/* Header-Actions als 3-Punkte-Dropdown */}
-            {normalActions.length > 0 && (
+            {/* Nur was ausdrücklich ins Überlaufmenü gehört */}
+            {overflowActions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" aria-label="Aktionen">
@@ -177,12 +242,14 @@ export function DataTableHeader<TData>({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[220px]">
-                  {normalActions.map((action, index) =>
+                  {overflowActions.map((action, index) =>
                     action.href ? (
                       <DropdownMenuItem key={action.id || index} asChild>
                         <a href={action.href}>
                           {action.icon && (
-                            <span className="mr-2">{action.icon}</span>
+                            <span className="mr-2">
+                              {renderActionIcon(action.icon)}
+                            </span>
                           )}
                           {action.label}
                         </a>
@@ -190,7 +257,7 @@ export function DataTableHeader<TData>({
                     ) : (
                       <DropdownMenuItem
                         key={action.id || index}
-                        onClick={action.onClick}
+                        onClick={() => runHeaderAction(action)}
                         disabled={action.disabled || action.loading}
                         className={cn(
                           action.variant === "destructive" &&
@@ -198,7 +265,9 @@ export function DataTableHeader<TData>({
                         )}
                       >
                         {action.icon && (
-                          <span className="mr-2">{action.icon}</span>
+                          <span className="mr-2">
+                            {renderActionIcon(action.icon)}
+                          </span>
                         )}
                         {action.label}
                       </DropdownMenuItem>

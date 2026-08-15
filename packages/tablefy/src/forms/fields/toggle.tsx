@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { BaseField } from "./base-field";
@@ -32,26 +33,45 @@ export class Toggle<
     error,
     disabled,
   }: FieldRenderProps<TData>): ReactNode {
-    const { onLabel, offLabel, className } = this.config;
-    const displayLabel = value ? onLabel : offLabel;
+    const { onLabel, offLabel, className, label, helperText, name } =
+      this.config;
+
+    // The switch carries its own header: the shared field renderer skips the
+    // label for toggles, so without this the field would appear unlabelled.
+    // Layout follows the design — text left, switch right, in its own box.
+    const stateLabel = value ? onLabel : offLabel;
 
     return (
-      <div className={cn("flex items-center space-x-2", className)}>
+      <div
+        className={cn(
+          "flex items-center justify-between gap-4 rounded-md border p-3",
+          className,
+        )}
+      >
+        <div className="space-y-1.5">
+          {label && (
+            <Label
+              htmlFor={name}
+              className={cn(error && "text-destructive")}
+            >
+              {label}
+            </Label>
+          )}
+          {helperText && (
+            <p className="text-xs text-muted-foreground">{helperText}</p>
+          )}
+          {stateLabel && (
+            <p className="text-xs text-muted-foreground">{stateLabel}</p>
+          )}
+        </div>
+
         <Switch
-          id={this.config.name}
+          id={name}
           checked={!!value}
           onCheckedChange={(checked) => onChange(checked)}
           disabled={disabled}
           className={cn(error && "border-destructive")}
         />
-        {displayLabel && (
-          <label
-            htmlFor={this.config.name}
-            className="text-sm text-muted-foreground"
-          >
-            {displayLabel}
-          </label>
-        )}
       </div>
     );
   }

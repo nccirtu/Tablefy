@@ -128,8 +128,20 @@ import { DataTable } from "@nccirtu/tablefy-v2";
 `DataTable`-Props: `columns`, `data`, `config`, `className`, `isLoading`, `isError`,
 `onRetry`, **`server`** (siehe §3.5).
 
-**Toolbar-Layout (shadcn-Standard):** Suche links; rechts (`justify-between`) ein Cluster
-**[Spalten ▾] [Filter ▾] [⋯ Header-Actions]**. Die **Spaltenauswahl ist standardmäßig an**
+**Kopf-Layout:** `title`/`description` links, die **Header-Actions als Buttons** rechts daneben —
+dieselbe Form wie eine Page-Action, und damit die übliche Karten-Kopfzeile. Eine Action, die
+stattdessen ins ⋯-Menü soll, setzt `overflow: true`. Header-Actions können wie Row- und
+Page-Actions ein Formular öffnen:
+
+```ts
+.headerActions([
+  { label: "Neuer Steuersatz", icon: "plus",
+    form: { schema: taxForm(), url: TaxResource.routes.store(), method: "post" } },
+  { label: "Export", icon: "download", overflow: true, onClick: () => … },
+])
+```
+
+**Toolbar-Zeile darunter:** Suche links; rechts **[Spalten ▾] [Filter ▾] [⋯ Überlauf]**. Die **Spaltenauswahl ist standardmäßig an**
 (abschaltbar via `.columnVisibility(false)`) und zeigt die **Column-Labels** im Select
 (`meta.visibilityLabel`, aus `.label()`). Filter kommen aus `.filters([...])` (eigene/Custom-Filter
 via `SelectFilter`/`TextFilter`/… Builder). `.headerActions([...])` landen im 3-Punkte-Dropdown.
@@ -161,6 +173,39 @@ Alle Spalten erben **Basis-Methoden**: `label`, `sortable`, `searchable`, `hidde
 > **Legacy:** `ButtonColumn`/`DropdownColumn` nutzen noch die alte Funktions-API
 > (`ButtonColumn({ ... })`, ohne `.build()`) und sind **nicht** mit `TableSchema.columns()`
 > kompatibel. Für neue Tabellen `ActionsColumn` verwenden.
+
+### 3.4.1 Schreibende Spalten (`ToggleColumn`, `FlagColumn`)
+
+Zwei Spalten, die **selbst schreiben** — die Seite gibt nur die Ziel-URL an und
+schreibt nie `router.patch` von Hand:
+
+```tsx
+// Schalter in der Zeile. Der Feldname ist der Accessor der Spalte.
+ToggleColumn.make<Tax>("is_active")
+  .label("Aktiv")
+  .disabled((row) => row.is_default)     // rendert, aber inaktiv
+  .patch((row) => TaxResource.routes.update(row.id))
+
+// „Genau einer trägt die Markierung" — Standardsatz, Hauptadresse, …
+// Die markierte Zeile zeigt den Marker, jede andere die Aktion, die ihn holt.
+FlagColumn.make<Tax>("is_default")
+  .label("Standard")
+  .setLabel("Als Standard setzen")
+  .hidden((row) => row.readonly)         // weder Marker noch Aktion
+  .patch((row) => TaxResource.routes.update(row.id), {
+    data: () => ({ is_active: true }),   // was zusätzlich mitgeht
+  })
+```
+
+`.patch()` schickt `{ [accessor]: wert }` plus `data`, mit `preserveScroll`.
+`.onChange()` bleibt als Ausweg für alles, was die deklarative Form nicht deckt.
+
+> **Achtung im Backend:** Diese Spalten patchen **einzelne Felder**. Ein
+> `required` auf den übrigen Feldern lässt so einen Request auflaufen — beim
+> Update gehören die Regeln auf `sometimes`.
+
+> **`TextColumn.formatter()` darf einen ReactNode liefern** — der wird gerendert, nicht in einen
+> String interpoliert. Prefix/Suffix bleiben Textwerkzeuge und greifen nur bei Strings.
 
 ### 3.5 Client- vs. Server-Modus
 
@@ -267,6 +312,12 @@ const schema = FormSchema.make<CreateUser>()
 `wizard(...)`, `actions(fn)`, `actionsPosition`, `build()`.
 
 ### 4.2 Feldtypen
+
+> **`Toggle` trägt seinen Kopf selbst.** Label und `helperText` stehen **im** Feld — Text links,
+> Schalter rechts, in einem eigenen Kasten. Der gemeinsame Feld-Renderer überspringt beides für
+> Toggles, sonst stünde es doppelt da. (Vorher übersprang er das Label, und das Feld rendert keins:
+> der Schalter erschien **ohne Beschriftung**.)
+
 Basis-Methoden (alle): `label`, `placeholder`, `helperText`, `required`, `disabled`,
 `readOnly`, `hidden`, `default(v)`, `columnSpan(n)`, `className`, `rules`, `zodSchema`, `reactive`.
 `required`/`disabled`/`readOnly`/`hidden` akzeptieren auch `(data)=>boolean` (Field Dependencies).
@@ -1136,10 +1187,18 @@ Validierungsfehler (422) erscheinen **inline im Modal**; bei Erfolg schließt es
 der Seite** (deferred Props laden neu, Tabelle aktualisiert sich). Edit-Modals prefillen aus der Row
 (kein Extra-Request).
 
-`.delete()` bestätigt **standardmäßig** (Opt-out: `.delete(fn, { confirm: false })`). Zeilen, die
-nicht gelöscht werden dürfen, blenden den Eintrag aus:
-`.delete(fn, { hidden: (row) => row.readonly })` — `hidden`/`disabled` gibt es damit an **allen**
-Actions, nicht nur an `.action({...})`. Dialog-Primitive:
+`.delete()` bestätigt **standardmäßig** (Opt-out: `.delete(fn, { confirm: false })`) und nimmt
+**direkt die URL** — die Spalte setzt den Request selbst ab:
+`.delete((row) => TaxResource.routes.destroy(row.id), { hidden: (row) => row.readonly })`.
+Eine Callback-Form bleibt möglich. `hidden`/`disabled` gibt es an **allen** Actions.
+
+**Icons sind überall Namen.** Row-, Header- und Bulk-Actions nehmen `icon: "pencil"` genauso wie
+einen Knoten; der Name wird aufgelöst. (Vorher rendert die Row-Action den Namen als **Text** —
+im Menü stand „pencil".) Dieselbe Auflösung steht als `<Icon name="check-circle" />` zur Verfügung,
+damit eine eigene Zelle nicht lucide selbst importieren muss.
+
+**Zeilen-Aktionen inline:** `ActionsColumn.make<T>().inline()` rendert Icon-Buttons nebeneinander
+statt eines ⋯-Menüs — gleiche Actions, gleiches Verhalten, andere Form. Dialog-Primitive:
 `alert-dialog` (Confirm) + `dialog` (Forms, aus dem Starter-Kit gespiegelt). Engine in
 `packages/tablefy/src/dialog/` (Store auf `globalThis` → über main- + /inertia-Bundle geteilt).
 

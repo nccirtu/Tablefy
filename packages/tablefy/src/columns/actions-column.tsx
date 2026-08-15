@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { writeForRow } from "../lib/requests";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { ReactNode } from "react";
@@ -15,7 +16,8 @@ import {
   ActionDialogConfig,
   ActionFormConfig,
   ActionItem,
-  runAction,
+  DropdownActions,
+  InlineActions,
 } from "./row-actions";
 
 // Re-exported for back-compat (the canonical definitions live in row-actions).
@@ -25,6 +27,8 @@ interface ActionsColumnConfig<TData> {
   actions: ActionItem<TData>[];
   label?: string;
   triggerIcon?: ReactNode;
+  /** "dropdown" (default) or "inline" icon buttons. */
+  variant?: "dropdown" | "inline";
 }
 
 export class ActionsColumn<TData> {
@@ -47,6 +51,15 @@ export class ActionsColumn<TData> {
     return this;
   }
 
+  /**
+   * Show the actions as icon buttons in the cell instead of behind a
+   * three-dots trigger. Same actions, same behaviour.
+   */
+  inline(enabled = true): this {
+    this.config.variant = enabled ? "inline" : "dropdown";
+    return this;
+  }
+
   // Action hinzufügen
   action(action: ActionItem<TData>): this {
     this.config.actions.push(action);
@@ -62,8 +75,14 @@ export class ActionsColumn<TData> {
     return this.action({ label: "Bearbeiten", onClick });
   }
 
+  /**
+   * Delete shortcut. Takes either the URL to send to — the column issues the
+   * request itself — or a callback for anything unusual.
+   *
+   *     .delete((row) => TaxResource.routes.destroy(row.id))
+   */
   delete(
-    onClick: (row: TData) => void,
+    target: string | ((row: TData) => string) | ((row: TData) => void),
     options?: {
       confirm?: boolean | ConfirmOptions;
       /** Hide the entry for rows that may not be deleted. */
@@ -71,8 +90,22 @@ export class ActionsColumn<TData> {
       disabled?: (row: TData) => boolean;
     },
   ): this {
+    // A function returning a string is a URL; one returning nothing does the
+    // work itself. Decided per row, since only the call can tell them apart.
+    const onClick = (row: TData) => {
+      const result =
+        typeof target === "function"
+          ? (target as (row: TData) => string | void)(row)
+          : target;
+
+      if (typeof result === "string") {
+        writeForRow({ url: result, method: "delete" }, row);
+      }
+    };
+
     return this.action({
       label: "Löschen",
+      icon: "trash",
       onClick,
       variant: "destructive",
       separator: true,
@@ -143,59 +176,25 @@ export class ActionsColumn<TData> {
   }
 
   build(): ColumnDef<TData, unknown> {
-    const { actions, label, triggerIcon } = this.config;
+    const { actions, label, triggerIcon, variant } = this.config;
 
     return {
       id: "actions",
       header: () => <span className="sr-only">{label}</span>,
-      cell: ({ row }) => {
-        const data = row.original;
-
-        const visibleActions = actions.filter(
-          (action) => !action.hidden || !action.hidden(data),
-        );
-
-        if (visibleActions.length === 0) return null;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-10 w-10 p-0">
-                <span className="sr-only">{label}</span>
-                {triggerIcon || <MoreHorizontal className="h-8 w-8" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {visibleActions.map((action, index) => (
-                <div key={index}>
-                  {action.render ? (
-                    // Custom render function takes priority
-                    action.render(data)
-                  ) : (
-                    // Standard menu item
-                    <DropdownMenuItem
-                      disabled={action.disabled?.(data)}
-                      className={cn(
-                        action.variant === "destructive" &&
-                          "text-destructive focus:text-destructive",
-                      )}
-                      onClick={() => runAction(action, data)}
-                    >
-                      {action.icon && (
-                        <span className="mr-2">{action.icon}</span>
-                      )}
-                      {action.label}
-                    </DropdownMenuItem>
-                  )}
-                  {action.separator && index < visibleActions.length - 1 && (
-                    <DropdownMenuSeparator />
-                  )}
-                </div>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) =>
+        variant === "inline" ? (
+          <InlineActions record={row.original} actions={actions} />
+        ) : (
+          <DropdownActions
+            record={row.original}
+            actions={actions}
+            label={label}
+            triggerIcon={triggerIcon}
+          />
+        ),
+      enableSorting: false,
+      enableHiding: false,
+      meta: { align: "right" },
     };
   }
 }
