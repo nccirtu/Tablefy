@@ -71,7 +71,7 @@ const suppressWarnings = {
   },
 };
 
-function createPlugins() {
+function createPlugins(withDeclarations = false) {
   return [
     // Resolve vendored `@/...` imports to the package's own src/ files.
     alias({
@@ -83,8 +83,16 @@ function createPlugins() {
     commonjs(),
     typescript({
       tsconfig: "./tsconfig.build.json",
-      declaration: true,
-      declarationDir: "dist",
+      // Declarations are emitted **once**, by the main bundle, mirroring src/
+      // into dist/ — which is exactly what the exports map points at
+      // (`./card` → `dist/card/index.d.ts`).
+      //
+      // Every bundle emitting them meant each sub-bundle wrote a full mirror
+      // into its own folder, and `dist/card/index.d.ts` ended up holding the
+      // *main* barrel's declarations. The runtime bundles were fine, so this
+      // only showed up as "has no exported member" in a consuming app.
+      declaration: withDeclarations,
+      declarationDir: withDeclarations ? "dist" : undefined,
       noEmitOnError: false,
     }),
   ];
@@ -109,7 +117,7 @@ export default defineConfig([
         exports: "named",
       },
     ],
-    plugins: createPlugins(),
+    plugins: createPlugins(true),
     external: isExternal,
     ...suppressWarnings,
   },
