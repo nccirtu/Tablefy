@@ -204,6 +204,11 @@ FlagColumn.make<Tax>("is_default")
 > `required` auf den übrigen Feldern lässt so einen Request auflaufen — beim
 > Update gehören die Regeln auf `sometimes`.
 
+> **Zellen tragen die normale Vordergrundfarbe, Köpfe sind gedämpft.** Die Hilfsfunktion
+> `getAlignmentClass()` lieferte `text-muted-foreground` und wurde für **beides** benutzt — die
+> ganze Tabelle wirkte dadurch blass. Eigene Spalten nehmen `getCellClass()` bzw.
+> `getHeaderClass()`; die alte Funktion bleibt als Alias auf den Kopf.
+
 > **`TextColumn.formatter()` darf einen ReactNode liefern** — der wird gerendert, nicht in einen
 > String interpoliert. Prefix/Suffix bleiben Textwerkzeuge und greifen nur bei Strings.
 

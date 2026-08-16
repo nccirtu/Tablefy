@@ -96,16 +96,38 @@ export abstract class BaseColumn<
     return this.config.label;
   }
 
-  // Hilfsfunktion für Alignment-Klassen
-  protected getAlignmentClass(): string {
-    const baseClasses = "text-sm text-muted-foreground";
+  /** Ausrichtung allein — ohne Farbe, ohne Größe. */
+  protected getAlignment(): string {
     switch (this.config.align) {
       case "center":
-        return `${baseClasses} text-center`;
+        return "text-center";
       case "right":
-        return `${baseClasses} text-right`;
+        return "text-right";
       default:
-        return `${baseClasses} text-left`;
+        return "text-left";
     }
+  }
+
+  /**
+   * Klassen einer **Zelle**: normale Vordergrundfarbe.
+   *
+   * Zellen tragen den Inhalt — sie werden nicht gedämpft. Gedämpft ist der
+   * Spaltenkopf (`getHeaderClass()`), so wie es jede Tabelle im Design zeigt.
+   */
+  protected getCellClass(): string {
+    return `text-sm ${this.getAlignment()}`;
+  }
+
+  /** Klassen eines **Spaltenkopfs**: gedämpft. */
+  protected getHeaderClass(): string {
+    return `text-sm text-muted-foreground ${this.getAlignment()}`;
+  }
+
+  /**
+   * @deprecated Sagt nicht, wofür es gilt, und dämpfte deshalb auch Zellen.
+   * `getCellClass()` bzw. `getHeaderClass()` benutzen.
+   */
+  protected getAlignmentClass(): string {
+    return this.getHeaderClass();
   }
 }

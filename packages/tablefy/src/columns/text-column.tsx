@@ -96,7 +96,7 @@ export class TextColumn<TData> extends BaseColumn<
             <span
               className={cn(
                 "text-muted-foreground font-medium",
-                this.getAlignmentClass(),
+                this.getHeaderClass(),
                 this.config.headerClassName,
               )}
             >
@@ -112,7 +112,7 @@ export class TextColumn<TData> extends BaseColumn<
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className={cn(
               "text-muted-foreground font-medium",
-              this.getAlignmentClass(),
+              this.getHeaderClass(),
               this.config.headerClassName,
             )}
           >
@@ -135,7 +135,7 @@ export class TextColumn<TData> extends BaseColumn<
             <span
               className={cn(
                 "text-muted-foreground",
-                this.getAlignmentClass(),
+                this.getCellClass(),
                 this.config.cellClassName,
               )}
             >
@@ -154,7 +154,7 @@ export class TextColumn<TData> extends BaseColumn<
 
         return (
           <span
-            className={cn(this.getAlignmentClass(), this.config.cellClassName)}
+            className={cn(this.getCellClass(), this.config.cellClassName)}
           >
             {content}
           </span>

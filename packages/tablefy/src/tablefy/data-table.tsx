@@ -291,7 +291,7 @@ export function DataTable<TData, TValue>({
           Beschreibung und Aktionen, die sonst an der Tabelle kleben. */}
       <div
         className={cn(
-          "overflow-hidden pt-2",
+          "overflow-hidden pt-4",
           config.bordered !== false && "rounded-md border",
         )}
       >

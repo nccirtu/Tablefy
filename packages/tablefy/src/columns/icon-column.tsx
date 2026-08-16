@@ -444,7 +444,7 @@ export class IconColumn<TData> extends BaseColumn<
             <span
               className={cn(
                 "text-muted-foreground font-medium",
-                this.getAlignmentClass(),
+                this.getHeaderClass(),
                 this.config.headerClassName,
               )}
             >
@@ -460,7 +460,7 @@ export class IconColumn<TData> extends BaseColumn<
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className={cn(
               "text-muted-foreground font-medium",
-              this.getAlignmentClass(),
+              this.getHeaderClass(),
               this.config.headerClassName,
             )}
           >
@@ -497,7 +497,7 @@ export class IconColumn<TData> extends BaseColumn<
           <div
             className={cn(
               "flex items-center gap-2",
-              this.getAlignmentClass(),
+              this.getCellClass(),
               this.config.cellClassName,
             )}
           >

@@ -142,7 +142,7 @@ export class AvatarGroupColumn<TData> extends BaseColumn<
         <span
           className={cn(
             "text-muted-foreground font-medium",
-            this.getAlignmentClass(),
+            this.getHeaderClass(),
             this.config.headerClassName,
           )}
         >

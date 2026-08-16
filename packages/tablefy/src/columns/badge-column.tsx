@@ -98,7 +98,7 @@ export class BadgeColumn<TData> extends BaseColumn<
             <span
               className={cn(
                 "text-muted-foreground font-medium",
-                this.getAlignmentClass(),
+                this.getHeaderClass(),
                 this.config.headerClassName,
               )}
             >
@@ -114,7 +114,7 @@ export class BadgeColumn<TData> extends BaseColumn<
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className={cn(
               "text-muted-foreground font-medium",
-              this.getAlignmentClass(),
+              this.getHeaderClass(),
               this.config.headerClassName,
             )}
           >

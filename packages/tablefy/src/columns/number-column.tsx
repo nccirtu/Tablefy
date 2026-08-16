@@ -87,7 +87,7 @@ export class NumberColumn<TData> extends BaseColumn<
             <span
               className={cn(
                 "text-muted-foreground font-medium",
-                this.getAlignmentClass(),
+                this.getHeaderClass(),
                 this.config.headerClassName,
               )}
             >
@@ -103,7 +103,7 @@ export class NumberColumn<TData> extends BaseColumn<
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className={cn(
               "text-muted-foreground font-medium",
-              this.getAlignmentClass(),
+              this.getHeaderClass(),
               this.config.headerClassName,
             )}
           >
@@ -147,7 +147,7 @@ export class NumberColumn<TData> extends BaseColumn<
           <span
             className={cn(
               "tabular-nums",
-              this.getAlignmentClass(),
+              this.getCellClass(),
               this.config.cellClassName,
             )}
           >

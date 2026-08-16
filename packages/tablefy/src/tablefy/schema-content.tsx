@@ -37,7 +37,9 @@ function SectionNode({ node }: { node: SchemaNode }) {
   const hasHeader = !!(props.title || props.description);
 
   return (
-    <Card>
+    // Ohne eigenen Kopf beginnt der Inhalt sonst direkt an der Kante — die
+    // Tabelle bringt ihren Kopf selbst mit und braucht denselben Abstand.
+    <Card className={hasHeader ? undefined : "pt-6"}>
       {hasHeader && (
         <CardHeader
           className={props.collapsible ? "cursor-pointer" : undefined}
