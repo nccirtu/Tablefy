@@ -6,7 +6,7 @@ export type {
   PageFormConfig,
   PageBreadcrumb,
 } from "./page-schema";
-export { Grid, Section } from "./layout";
+export { Grid, Section, Tab, Tabs } from "./layout";
 export { LayoutComponent } from "./component";
 export { isSchemaNode } from "./types";
 export type { SchemaNode, SchemaItem, SchemaBuilder } from "./types";

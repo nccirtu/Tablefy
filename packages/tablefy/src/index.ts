@@ -43,6 +43,8 @@ export {
   PageActionsBuilder,
   Grid,
   Section,
+  Tab,
+  Tabs,
   isSchemaNode,
 } from "./schema";
 export type {

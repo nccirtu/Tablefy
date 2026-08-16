@@ -848,9 +848,25 @@ export default function ListUsers({ users, stats }) {
 > `$listStats`, …) ist **editierbar** und wird bei erneutem `make:tablefy-resource` **nicht**
 > überschrieben (nur mit `--force`); die Pages sind `@generated` und werden aktualisiert.
 
-**Builder:** `PageSchema`, `Grid`, `Section` aus `@nccirtu/tablefy-v2`; `<TablefyPage>` aus
+**Tabs:** `Tabs.make().schema([Tab.make("Räume").lazy("rooms")…])` — ein Layout-Baustein wie
+`Grid`/`Section`, also überall im `.schema([…])` einsetzbar.
+
+```tsx
+Tabs.make().default("leistungen").schema([
+  Tab.make("Gebäudetypen").icon("building").lazy("buildingTypes").schema([ <ServerCards … /> ]),
+  Tab.make("Leistungen").badge(count).lazy("services").schema([ <ServerDataTable … /> ]),
+])
+```
+
+- **`.lazy(prop)`** lädt die Daten des Tabs beim **ersten Öffnen** nach (`router.reload({ only })`)
+  statt alles auf der ersten Antwort mitzuschicken — der Unterschied zwischen einem und fünf
+  Datensätzen pro Seitenaufruf.
+- Der aktive Tab steht in der **URL** (`?tab=…`, via `.queryParameter()` änderbar oder `false`).
+  Ein Reload und jeder Schreibvorgang, der zurückspringt, landen wieder im selben Tab.
+
+**Builder:** `PageSchema`, `Grid`, `Section`, `Tabs`/`Tab` aus `@nccirtu/tablefy-v2`; `<TablefyPage>` aus
 `@nccirtu/tablefy-v2/inertia` (SPA-Links via Inertia). Code: `packages/tablefy/src/schema/` +
-`src/inertia/tablefy-page.tsx`. Additiv geplant: `Tabs`/`Group`, read-only `Infolist`.
+`src/inertia/tablefy-page.tsx`. Additiv geplant: `Group`, read-only `Infolist`.
 
 ### Stats (Übersichts-Karten)
 

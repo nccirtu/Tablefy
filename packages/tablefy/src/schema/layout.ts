@@ -64,3 +64,111 @@ export class Section extends LayoutComponent {
     };
   }
 }
+
+/**
+ * One tab inside a `Tabs` container.
+ *
+ * `lazy` names the Inertia prop that carries this tab's data. The tab then
+ * loads it on first activation (`router.reload({ only: [prop] })`) instead of
+ * every tab's data riding along on the first response — which is what makes a
+ * five-tab screen affordable.
+ */
+export class Tab extends LayoutComponent {
+  private tabValue?: string;
+
+  private tabLabel = "";
+
+  private tabIcon?: string;
+
+  private tabBadge?: string | number;
+
+  private lazyProp?: string;
+
+  static make(label: string, value?: string): Tab {
+    const tab = new Tab();
+    tab.tabLabel = label;
+    tab.tabValue = value;
+    return tab;
+  }
+
+  /** Icon name, as the actions take them. */
+  icon(name: string): this {
+    this.tabIcon = name;
+    return this;
+  }
+
+  /** A count or short marker next to the label. */
+  badge(value: string | number): this {
+    this.tabBadge = value;
+    return this;
+  }
+
+  /** Load this Inertia prop when the tab is first opened. */
+  lazy(prop: string): this {
+    this.lazyProp = prop;
+    return this;
+  }
+
+  build(): SchemaNode {
+    return {
+      __tablefy: "node",
+      type: "tab",
+      props: {
+        value: this.tabValue ?? slugify(this.tabLabel),
+        label: this.tabLabel,
+        icon: this.tabIcon,
+        badge: this.tabBadge,
+        lazy: this.lazyProp,
+      },
+      children: this.buildChildren(),
+    };
+  }
+}
+
+/**
+ * Tab container. `Tabs.make().schema([Tab.make("Räume")…])`.
+ *
+ * The active tab is kept in the URL (`?tab=…` by default), so a reload — and
+ * every write that redirects back — returns to the tab the user was on.
+ */
+export class Tabs extends LayoutComponent {
+  private queryKey = "tab";
+
+  private defaultValue?: string;
+
+  static make(): Tabs {
+    return new Tabs();
+  }
+
+  /** Query parameter carrying the active tab. `false` keeps it out of the URL. */
+  queryParameter(key: string | false): this {
+    this.queryKey = key === false ? "" : key;
+    return this;
+  }
+
+  default(value: string): this {
+    this.defaultValue = value;
+    return this;
+  }
+
+  build(): SchemaNode {
+    return {
+      __tablefy: "node",
+      type: "tabs",
+      props: { queryKey: this.queryKey, default: this.defaultValue },
+      children: this.buildChildren(),
+    };
+  }
+}
+
+/** Label → URL-safe value, for tabs that do not name one. */
+function slugify(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
