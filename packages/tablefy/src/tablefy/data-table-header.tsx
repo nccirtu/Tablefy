@@ -102,183 +102,154 @@ export function DataTableHeader<TData>({
     return null;
   }
 
+  const actionButtons = buttonActions.map((action, index) =>
+    action.render ? (
+      <span key={action.id || index}>{action.render()}</span>
+    ) : (
+      <Button
+        key={action.id || index}
+        type="button"
+        variant={action.variant}
+        size={action.size}
+        disabled={action.disabled || action.loading}
+        asChild={!!action.href}
+        onClick={action.href ? undefined : () => runHeaderAction(action)}
+      >
+        {action.href ? (
+          <a href={action.href}>
+            {action.icon && (
+              <span className="mr-1">{renderActionIcon(action.icon)}</span>
+            )}
+            {action.label}
+          </a>
+        ) : (
+          <>
+            {action.icon && renderActionIcon(action.icon)}
+            {action.label}
+          </>
+        )}
+      </Button>
+    ),
+  );
+
+  const searchField = search?.enabled ? (
+    <div className="relative w-full sm:w-48">
+      <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder={search.placeholder || "Suchen..."}
+        value={searchValue}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onSearchChange?.(e.target.value)
+        }
+        className="w-full pl-8"
+      />
+    </div>
+  ) : null;
+
+  const columnPicker =
+    enableColumnVisibility && table ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Columns className="h-4 w-4" />
+            <span className="ml-2 hidden sm:inline">
+              {columnVisibilityLabel}
+            </span>
+            <ChevronDown className="ml-2 hidden h-4 w-4 sm:inline" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[200px]">
+          <DropdownMenuLabel>{columnVisibilityLabel}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {table
+            .getAllColumns()
+            .filter((column) => column.getCanHide())
+            .map((column) => {
+              const meta = column.columnDef.meta as
+                | { visibilityLabel?: string }
+                | undefined;
+              return (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value: boolean) =>
+                    column.toggleVisibility(!!value)
+                  }
+                  onSelect={(e: Event) => e.preventDefault()}
+                >
+                  {meta?.visibilityLabel || column.id}
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
+
+  const overflowMenu =
+    overflowActions.length > 0 ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon" aria-label="Aktionen">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[220px]">
+          {overflowActions.map((action, index) => (
+            <DropdownMenuItem
+              key={action.id || index}
+              onClick={() => runHeaderAction(action)}
+              disabled={action.disabled || action.loading}
+              className={cn(
+                action.variant === "destructive" &&
+                  "text-destructive focus:text-destructive",
+              )}
+            >
+              {action.icon && (
+                <span className="mr-2">{renderActionIcon(action.icon)}</span>
+              )}
+              {action.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
+
+  const controls = [searchField, columnPicker, hasFilters && onFilterChange ? (
+    <DataTableFilters
+      key="filters"
+      filters={filters!}
+      values={filterValues}
+      onChange={onFilterChange}
+      onReset={onResetFilters || (() => {})}
+    />
+  ) : null, overflowMenu, ...actionButtons].filter(Boolean);
+
   return (
     <div className={cn("flex flex-col gap-4 mb-4", className)}>
-      {(title || description || buttonActions.length > 0) && (
-        <div className="flex flex-row items-start justify-between gap-4">
-          <div className="space-y-1">
-            {title && (
-              <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-            )}
-            {description && (
-              <p className="text-sm text-muted-foreground">{description}</p>
-            )}
-          </div>
-
-          {buttonActions.length > 0 && (
-            <div className="flex shrink-0 items-center gap-2">
-              {buttonActions.map((action, index) =>
-                action.render ? (
-                  <span key={action.id || index}>{action.render()}</span>
-                ) : (
-                  <Button
-                    key={action.id || index}
-                    type="button"
-                    variant={action.variant}
-                    size={action.size}
-                    disabled={action.disabled || action.loading}
-                    asChild={!!action.href}
-                    onClick={
-                      action.href ? undefined : () => runHeaderAction(action)
-                    }
-                  >
-                    {action.href ? (
-                      <a href={action.href}>
-                        {action.icon && (
-                          <span className="mr-1">
-                            {renderActionIcon(action.icon)}
-                          </span>
-                        )}
-                        {action.label}
-                      </a>
-                    ) : (
-                      <>
-                        {action.icon && renderActionIcon(action.icon)}
-                        {action.label}
-                      </>
-                    )}
-                  </Button>
-                ),
+      {/* Kopfzeile: Titel und Beschreibung links, Werkzeuge und Aktionen
+          rechts — dieselbe Anordnung, die das Design überall zeigt. */}
+      {(title || description || controls.length > 0) && (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          {(title || description) && (
+            <div className="space-y-1">
+              {title && (
+                <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
               )}
+              {description && (
+                <p className="text-sm text-muted-foreground">{description}</p>
+              )}
+            </div>
+          )}
+
+          {controls.length > 0 && (
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center lg:shrink-0">
+              {controls}
             </div>
           )}
         </div>
       )}
 
-      {(search?.enabled ||
-        hasFilters ||
-        overflowActions.length > 0 ||
-        (enableColumnVisibility && !!table)) && (
-        <div className="flex items-center justify-between gap-4">
-          {search?.enabled && (
-            <div className="relative max-w-sm flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={search.placeholder || "Suchen..."}
-                value={searchValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onSearchChange?.(e.target.value)
-                }
-                className="pl-9 pr-9"
-              />
-              {searchValue && (
-                <button
-                  onClick={() => onSearchChange?.("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Rechts (justify-between): Spalten · Filter · Header-Actions (⋯) */}
-          <div className="ml-auto flex items-center gap-2">
-            {/* Spaltenauswahl (shadcn-Standard) — Labels aus den Columns */}
-            {enableColumnVisibility && table && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Columns className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">
-                      {columnVisibilityLabel}
-                    </span>
-                    <ChevronDown className="ml-2 hidden h-4 w-4 sm:inline" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                  <DropdownMenuLabel>{columnVisibilityLabel}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      const meta = column.columnDef.meta as
-                        | { visibilityLabel?: string }
-                        | undefined;
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value: boolean) =>
-                            column.toggleVisibility(!!value)
-                          }
-                          onSelect={(e: Event) => e.preventDefault()}
-                        >
-                          {meta?.visibilityLabel || column.id}
-                        </DropdownMenuCheckboxItem>
-                      );
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* Filter (Popover) — eigene/Custom-Filter aus .filters([...]) */}
-            {hasFilters && onFilterChange && (
-              <DataTableFilters
-                filters={filters!}
-                values={filterValues}
-                onChange={onFilterChange}
-                onReset={onResetFilters || (() => {})}
-              />
-            )}
-
-            {/* Nur was ausdrücklich ins Überlaufmenü gehört */}
-            {overflowActions.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" aria-label="Aktionen">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[220px]">
-                  {overflowActions.map((action, index) =>
-                    action.href ? (
-                      <DropdownMenuItem key={action.id || index} asChild>
-                        <a href={action.href}>
-                          {action.icon && (
-                            <span className="mr-2">
-                              {renderActionIcon(action.icon)}
-                            </span>
-                          )}
-                          {action.label}
-                        </a>
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem
-                        key={action.id || index}
-                        onClick={() => runHeaderAction(action)}
-                        disabled={action.disabled || action.loading}
-                        className={cn(
-                          action.variant === "destructive" &&
-                            "text-destructive focus:text-destructive",
-                        )}
-                      >
-                        {action.icon && (
-                          <span className="mr-2">
-                            {renderActionIcon(action.icon)}
-                          </span>
-                        )}
-                        {action.label}
-                      </DropdownMenuItem>
-                    ),
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Bulk-Actions: eigene Zeile unter der Suchleiste, sobald Zeilen
           ausgewählt sind — 1 Action → Button, mehrere → „Aktionen"-Dropdown. */}

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { DropdownActions } from "../columns/row-actions";
 import { getByPath } from "../kanban/utils";
 import { renderCellValue } from "./render-cell";
+import { Badge } from "@/components/ui/badge";
 import { CardBuildResult } from "./types";
 
 export interface CardBodyProps<T extends Record<string, any>> {
@@ -13,6 +14,8 @@ export interface CardBodyProps<T extends Record<string, any>> {
   imageVariant?: "cover" | "avatar" | "none";
   /** Top-right control when there are no actions (e.g. the kanban drag grip). */
   trailing?: ReactNode;
+  /** No card frame: image, heading and badges only — a catalogue tile. */
+  bare?: boolean;
   className?: string;
 }
 
@@ -26,6 +29,7 @@ export function CardBody<T extends Record<string, any>>({
   record,
   imageVariant = "cover",
   trailing,
+  bare = false,
   className,
 }: CardBodyProps<T>): ReactNode {
   const { config } = schema;
@@ -63,9 +67,18 @@ export function CardBody<T extends Record<string, any>>({
   return (
     <div className={className}>
       {imageVariant === "cover" && imageUrl && (
-        <img src={imageUrl} alt="" className="aspect-video w-full object-cover" />
+        <img
+          src={imageUrl}
+          alt=""
+          className={cn(
+            "w-full object-cover",
+            bare
+              ? "aspect-4/3 rounded-md transition-transform group-hover:scale-105"
+              : "aspect-video",
+          )}
+        />
       )}
-      <div className="space-y-2 p-3">
+      <div className={cn("space-y-2", bare ? "space-y-1.5" : "p-3")}>
         {hasHeaderRow && (
           <div className="flex items-start justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
@@ -77,12 +90,40 @@ export function CardBody<T extends Record<string, any>>({
                 />
               )}
               {heading && (
-                <div className="min-w-0 truncate font-medium leading-tight">
+                <div
+                  className={cn(
+                    "min-w-0 truncate leading-tight",
+                    bare ? "text-sm font-semibold" : "font-medium",
+                  )}
+                >
                   {heading}
                 </div>
               )}
             </div>
             {trailingEl}
+          </div>
+        )}
+
+        {config.badges && config.badges.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {config.badges
+              .filter((badge) => !badge.hidden?.(record))
+              .map((badge, i) => {
+                const label =
+                  typeof badge.label === "function"
+                    ? badge.label(record)
+                    : badge.label;
+
+                if (label === null || label === undefined || label === "") {
+                  return null;
+                }
+
+                return (
+                  <Badge key={i} variant={badge.variant ?? "secondary"}>
+                    {label}
+                  </Badge>
+                );
+              })}
           </div>
         )}
 

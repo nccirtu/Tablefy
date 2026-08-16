@@ -982,6 +982,25 @@ protected int $cardsPerPage = 12;   // = <ServerCards perPage>
 ```
 Liefert pro Anfrage eine optionale Prop `cards` = `{ items, hasMore }` (über `?cards_page=` / `?cards_per_page=`). `<ServerCards>` akkumuliert die Seiten **lokal**: „Mehr laden"/Scroll hängt an, und sobald sich Suche/Filter ändern (URL ohne `cards_page`), wird **Seite 1 sauber neu geladen** (ersetzt) — Suchergebnisse vermischen sich nie mit alten Seiten.
 
+**Kopf, Suche und Filter am Card-Grid.** `CardSchema` trägt dieselben Methoden wie `TableSchema` —
+`title`, `description`, `headerActions`, `searchable`, `filters` — und `<ServerCards>` schreibt
+Suche und Filter in die **URL**. Das Backend liest denselben Vertrag wie die Tabelle
+(`?search=`, `?filter[spalte]=`, dazu `?cards_page=`), also braucht ein Raster keinen zweiten.
+
+```tsx
+CardSchema.make<Category>()
+  .title("Meine Leistungskategorien")
+  .description("Gruppiere Leistungen nach Bedarf.")
+  .searchable({ placeholder: "Kategorien suchen..." })
+  .filters(SelectFilter.make("origin").options([...]).build())
+  .headerActions([{ label: "Neu", icon: "plus", form: {...} }])
+  .plain()                                   // ohne Rahmen: Bild, Titel, Badges
+  .image("image_url")
+  .heading(TextColumn.make("name"))
+  .badges([{ label: (r) => `${r.count} Leistungen` }, { label: "System", variant: "outline" }])
+  .href((r) => `/kategorien/${r.id}`)        // ganze Kachel verlinkt
+```
+
 **Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy-v2/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
 ```tsx
 import { CardSchema, CardRow } from "@nccirtu/tablefy-v2/card";

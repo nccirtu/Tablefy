@@ -1,6 +1,7 @@
 import { ActionsColumn } from "../columns/actions-column";
 import { CardRow } from "./card-row";
-import { CardBuildResult, CardCell, CardSchemaConfig } from "./types";
+import { CardBadge, CardBuildResult, CardCell, CardSchemaConfig } from "./types";
+import type { FilterConfig, HeaderAction, SearchConfig } from "../types";
 
 type ImageInput<T> = (keyof T & string) | string | ((record: T) => string | undefined);
 
@@ -51,6 +52,54 @@ export class CardSchema<T extends Record<string, any>> {
 
   actions(build: (a: ActionsColumn<T>) => ActionsColumn<T>): this {
     this.config.actions = build(ActionsColumn.make<T>()).getActions();
+    return this;
+  }
+
+  /** Badges under the heading — count, origin, status. */
+  badges(badges: CardBadge<T>[]): this {
+    this.config.badges = badges;
+    return this;
+  }
+
+  /** Make the whole card a link. */
+  href(fn: (record: T) => string): this {
+    this.config.href = fn;
+    return this;
+  }
+
+  /** Drop the card frame — image, heading and badges only. */
+  plain(plain = true): this {
+    this.config.plain = plain;
+    return this;
+  }
+
+  // --- the header above the grid: same names as TableSchema ---
+
+  title(text: string): this {
+    this.config.title = text;
+    return this;
+  }
+
+  description(text: string): this {
+    this.config.description = text;
+    return this;
+  }
+
+  headerActions(actions: HeaderAction<T>[]): this {
+    this.config.headerActions = actions;
+    return this;
+  }
+
+  searchable(config?: { placeholder?: string } | boolean): this {
+    this.config.search =
+      config === false
+        ? { enabled: false }
+        : { enabled: true, ...(typeof config === "object" ? config : {}) };
+    return this;
+  }
+
+  filters(...filters: FilterConfig[]): this {
+    this.config.filters = filters;
     return this;
   }
 

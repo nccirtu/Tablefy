@@ -15,6 +15,8 @@ export interface ServerCardsProps<T extends Record<string, any>> {
   loadMode?: "button" | "infinite";
   /** Inertia prop name returning `{ items, hasMore }` (match the backend). */
   prop?: string;
+  loadMoreLabel?: string;
+  emptyText?: string;
   className?: string;
 }
 
@@ -34,6 +36,8 @@ export function ServerCards<T extends Record<string, any>>({
   perPage = 12,
   loadMode = "button",
   prop = "cards",
+  loadMoreLabel,
+  emptyText,
   className,
 }: ServerCardsProps<T>): ReactNode {
   const page = usePage();
@@ -43,6 +47,31 @@ export function ServerCards<T extends Record<string, any>>({
   const params = new URLSearchParams(queryStr ?? "");
   params.delete("cards_page");
   const baseKey = `${path}?${params.toString()}`;
+
+  // Search and filters live in the URL, exactly as the table's do — the
+  // backend reads the same `?search=` / `?filter[col]=` it already reads for
+  // `tablefy()`, so a grid needs no second contract.
+  const searchValue = params.get("search") ?? "";
+
+  const filterValues: Record<string, string> = {};
+  params.forEach((value, key) => {
+    const match = key.match(/^filter\[(.+)\]$/);
+    if (match) filterValues[match[1]] = value;
+  });
+
+  const navigate = (mutate: (next: URLSearchParams) => void) => {
+    const next = new URLSearchParams(queryStr ?? "");
+    next.delete("cards_page");
+    mutate(next);
+
+    const query = next.toString();
+    router.get(query ? `${path}?${query}` : path, {}, {
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+      only: [prop],
+    });
+  };
 
   const [items, setItems] = useState<T[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -84,6 +113,32 @@ export function ServerCards<T extends Record<string, any>>({
       loading={loading}
       onLoadMore={() => fetchPage(pageRef.current + 1, false)}
       loadMode={loadMode}
+      loadMoreLabel={loadMoreLabel}
+      emptyText={emptyText}
+      searchValue={searchValue}
+      onSearchChange={(value) =>
+        navigate((next) => {
+          if (value) next.set("search", value);
+          else next.delete("search");
+        })
+      }
+      filterValues={filterValues}
+      onFilterChange={(column, value) =>
+        navigate((next) => {
+          if (value === undefined || value === null || value === "") {
+            next.delete(`filter[${column}]`);
+          } else {
+            next.set(`filter[${column}]`, String(value));
+          }
+        })
+      }
+      onResetFilters={() =>
+        navigate((next) => {
+          [...next.keys()]
+            .filter((key) => key.startsWith("filter["))
+            .forEach((key) => next.delete(key));
+        })
+      }
       className={className}
     />
   );
