@@ -149,7 +149,7 @@ function TabsNode({ node }: { node: SchemaNode }) {
         <TabsContent
           key={String(tab.props.value)}
           value={String(tab.props.value)}
-          className="flex flex-col gap-4"
+          className="mt-6 flex flex-col gap-4"
         >
           <SchemaRenderer items={tab.children} />
         </TabsContent>

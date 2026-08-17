@@ -858,6 +858,8 @@ Tabs.make().default("leistungen").schema([
 ])
 ```
 
+- Zwischen Tab-Leiste und Inhalt liegt Abstand (`mt-6`) — die Leiste ist die Überschrift des
+  Bereichs, kein Etikett direkt am Inhalt.
 - **`.lazy(prop)`** lädt die Daten des Tabs beim **ersten Öffnen** nach (`router.reload({ only })`)
   statt alles auf der ersten Antwort mitzuschicken — der Unterschied zwischen einem und fünf
   Datensätzen pro Seitenaufruf.
