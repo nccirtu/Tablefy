@@ -133,7 +133,9 @@ export function DataTableHeader<TData>({
   );
 
   const searchField = search?.enabled ? (
-    <div className="relative w-full sm:w-48">
+    // Wide enough for the longest placeholder a catalogue puts here
+    // ("Gebäudetypen suchen…"), which 12rem cut off mid-word.
+    <div className="relative w-full sm:w-64">
       <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"
