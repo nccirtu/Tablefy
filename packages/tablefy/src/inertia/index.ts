@@ -4,6 +4,11 @@ export { ServerDataTable } from "./server-data-table";
 export { useTablefyNav, useTablefyNavGroups } from "./navigation";
 export { TablefyPage } from "./tablefy-page";
 export { TablefyTabs } from "./tablefy-tabs";
+export {
+  TablefyBreadcrumbs,
+  usePublishedBreadcrumbs,
+} from "./tablefy-breadcrumbs";
+export { publishBreadcrumbs, useBreadcrumbTrail } from "./breadcrumb-store";
 export { TablefySearch } from "./tablefy-search";
 export {
   TablefyNotifications,
@@ -24,6 +29,7 @@ export type {
 export type { TablefyNavItem, TablefyNavPayloadItem } from "./navigation";
 export type { TablefyPageProps } from "./tablefy-page";
 export type { TablefyTab, TablefyTabsProps } from "./tablefy-tabs";
+export type { TablefyBreadcrumbsProps } from "./tablefy-breadcrumbs";
 export type { TablefySearchProps } from "./tablefy-search";
 export type {
   TablefyNotificationsProps,

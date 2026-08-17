@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Link, router, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,10 @@ import { SchemaRenderer } from "../tablefy/schema-content";
 import { TablefySearch } from "./tablefy-search";
 import { dialog } from "../dialog/dialog";
 import { setPageProps } from "../dialog/store";
-import { ChevronRight } from "lucide-react";
+import {
+  TablefyBreadcrumbs,
+  usePublishedBreadcrumbs,
+} from "./tablefy-breadcrumbs";
 
 function ActionButton({ action }: { action: PageAction }) {
   const Icon = typeof action.icon === "string" ? resolveLucideIcon(action.icon) : null;
@@ -71,14 +74,28 @@ function ActionButton({ action }: { action: PageAction }) {
 
 export interface TablefyPageProps {
   schema: PageBuildResult;
+  /**
+   * Render the breadcrumbs at the top of the page instead of publishing them
+   * to <TablefyBreadcrumbs> in your header. For layouts that have no header to
+   * put them in.
+   */
+  inlineBreadcrumbs?: boolean;
   className?: string;
 }
 
 /**
- * Renders a PageSchema: breadcrumbs + header (title/description/actions) + the
- * recursive content body. Lives inside your app layout; uses bundled components.
+ * Renders a PageSchema: header (title/description/actions) + the recursive
+ * content body. Lives inside your app layout; uses bundled components.
+ *
+ * Breadcrumbs are defined here — `PageSchema.breadcrumbs([...])` — but come out
+ * wherever <TablefyBreadcrumbs> is mounted, normally in the app header next to
+ * the sidebar trigger. Pass `inlineBreadcrumbs` to keep them on the page.
  */
-export function TablefyPage({ schema, className }: TablefyPageProps) {
+export function TablefyPage({
+  schema,
+  inlineBreadcrumbs = false,
+  className,
+}: TablefyPageProps) {
   const { title, description, breadcrumbs, actions, search, content } =
     schema.config;
   const hasHeader = !!(
@@ -95,43 +112,11 @@ export function TablefyPage({ schema, className }: TablefyPageProps) {
     setPageProps(page.props as Record<string, unknown>);
   }, [page.props]);
 
+  usePublishedBreadcrumbs(inlineBreadcrumbs ? undefined : breadcrumbs);
+
   return (
     <div className={cn("flex flex-1 flex-col gap-6 p-4", className)}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav
-          aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground"
-        >
-          {breadcrumbs.map((crumb, index) => {
-            // The last one is where you are: no link, and in the foreground so
-            // the trail reads as "there, there, *here*".
-            const isCurrent = index === breadcrumbs.length - 1;
-
-            return (
-              <Fragment key={index}>
-                {index > 0 && (
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-3.5 shrink-0"
-                  />
-                )}
-                {crumb.href && !isCurrent ? (
-                  <Link href={crumb.href} className="hover:text-foreground">
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <span
-                    aria-current={isCurrent ? "page" : undefined}
-                    className={isCurrent ? "text-foreground" : undefined}
-                  >
-                    {crumb.label}
-                  </span>
-                )}
-              </Fragment>
-            );
-          })}
-        </nav>
-      )}
+      {inlineBreadcrumbs && <TablefyBreadcrumbs items={breadcrumbs} />}
 
       {hasHeader && (
         <div className="flex items-center justify-between gap-4">

@@ -837,8 +837,22 @@ export default function ListUsers({ users, stats }) {
 - **`.schema([…])`** ist rekursiv: `Section`/`Grid` enthalten wieder `.schema([…])` (beliebig tief);
   rohe JSX-Knoten (deine Komponenten) werden direkt gerendert.
 - `Grid.make(n)` → responsives Grid; `Section.make(titel).description().collapsible()` → Card.
-- `<TablefyPage>` rendert Breadcrumbs + Header (mit gebundelten Buttons; Icon-Name oder JSX) + den
-  rekursiven Body — lebt **in** deinem `AppLayout`. Header-Slots: `page.*` (s.o.).
+- `<TablefyPage>` rendert Header (mit gebundelten Buttons; Icon-Name oder JSX) + den rekursiven
+  Body — lebt **in** deinem `AppLayout`. Header-Slots: `page.*` (s.o.).
+- **Breadcrumbs definiert die Seite, gerendert werden sie im App-Header.** `.breadcrumbs([…])`
+  meldet den Trail an; `<TablefyBreadcrumbs />` zeigt ihn. Einmal in deinen Header legen — neben
+  den Sidebar-Trigger — und jede `PageSchema` füllt ihn:
+
+  ```tsx
+  <header>
+    <SidebarTrigger />
+    <TablefyBreadcrumbs />          {/* items={…} als Fallback für Seiten ohne PageSchema */}
+    <TablefyHeaderActions className="ml-auto" />
+  </header>
+  ```
+
+  Ohne diesen Platz im Header erscheint der Trail nirgends. Für Layouts ganz ohne Header:
+  `<TablefyPage schema={page} inlineBreadcrumbs />` rendert ihn wieder oben auf der Seite.
 - Ein konditionales Element im `.schema([…])` (z.B. `hasStats && <TablefyStats … />`) wird sauber
   **übersprungen**, wenn es `false`/`null` ist — kein Crash.
 
