@@ -131,7 +131,9 @@ function TabsNode({ node }: { node: SchemaNode }) {
 
   return (
     <Tabs value={active} onValueChange={activate}>
-      <TabsList>
+      {/* Volle Breite, links ausgerichtet, waagerecht scrollbar — die Leiste
+          ist die Überschrift des Bereichs, kein Etikett am Inhalt. */}
+      <TabsList className="inline-flex h-10 w-full items-center justify-start overflow-x-auto">
         {tabs.map((tab) => (
           <TabsTrigger key={String(tab.props.value)} value={String(tab.props.value)}>
             {tab.props.icon ? renderActionIcon(tab.props.icon) : null}

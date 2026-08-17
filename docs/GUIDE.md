@@ -858,6 +858,7 @@ Tabs.make().default("leistungen").schema([
 ])
 ```
 
+- Die Leiste nimmt die **volle Breite**, links ausgerichtet und waagerecht scrollbar.
 - Zwischen Tab-Leiste und Inhalt liegt Abstand (`mt-6`) — die Leiste ist die Überschrift des
   Bereichs, kein Etikett direkt am Inhalt.
 - **`.lazy(prop)`** lädt die Daten des Tabs beim **ersten Öffnen** nach (`router.reload({ only })`)

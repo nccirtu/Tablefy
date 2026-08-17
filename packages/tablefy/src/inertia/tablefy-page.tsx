@@ -11,6 +11,7 @@ import { SchemaRenderer } from "../tablefy/schema-content";
 import { TablefySearch } from "./tablefy-search";
 import { dialog } from "../dialog/dialog";
 import { setPageProps } from "../dialog/store";
+import { ChevronRight } from "lucide-react";
 
 function ActionButton({ action }: { action: PageAction }) {
   const Icon = typeof action.icon === "string" ? resolveLucideIcon(action.icon) : null;
@@ -97,19 +98,38 @@ export function TablefyPage({ schema, className }: TablefyPageProps) {
   return (
     <div className={cn("flex flex-1 flex-col gap-6 p-4", className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          {breadcrumbs.map((crumb, index) => (
-            <Fragment key={index}>
-              {index > 0 && <span className="text-muted-foreground/50">/</span>}
-              {crumb.href ? (
-                <Link href={crumb.href} className="hover:text-foreground">
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span>{crumb.label}</span>
-              )}
-            </Fragment>
-          ))}
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground"
+        >
+          {breadcrumbs.map((crumb, index) => {
+            // The last one is where you are: no link, and in the foreground so
+            // the trail reads as "there, there, *here*".
+            const isCurrent = index === breadcrumbs.length - 1;
+
+            return (
+              <Fragment key={index}>
+                {index > 0 && (
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0"
+                  />
+                )}
+                {crumb.href && !isCurrent ? (
+                  <Link href={crumb.href} className="hover:text-foreground">
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span
+                    aria-current={isCurrent ? "page" : undefined}
+                    className={isCurrent ? "text-foreground" : undefined}
+                  >
+                    {crumb.label}
+                  </span>
+                )}
+              </Fragment>
+            );
+          })}
         </nav>
       )}
 
