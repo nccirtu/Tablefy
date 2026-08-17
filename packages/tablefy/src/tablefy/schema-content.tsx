@@ -27,6 +27,23 @@ const GRID_COLS: Record<number, string> = {
   4: "md:grid-cols-4",
   5: "md:grid-cols-5",
   6: "md:grid-cols-6",
+  12: "md:grid-cols-12",
+};
+
+// Written out because Tailwind reads source, not runtime strings.
+const SPAN_COLS: Record<number, string> = {
+  1: "md:col-span-1",
+  2: "md:col-span-2",
+  3: "md:col-span-3",
+  4: "md:col-span-4",
+  5: "md:col-span-5",
+  6: "md:col-span-6",
+  7: "md:col-span-7",
+  8: "md:col-span-8",
+  9: "md:col-span-9",
+  10: "md:col-span-10",
+  11: "md:col-span-11",
+  12: "md:col-span-12",
 };
 
 function SectionNode({ node }: { node: SchemaNode }) {
@@ -201,9 +218,20 @@ export function SchemaRenderer({ items }: { items: SchemaItem[] }) {
     <>
       {items.map((item, index) => {
         if (isSchemaNode(item)) {
+          // A span belongs to the child, not to what it renders: wrapping is
+          // the one way that works for a Card, a nested Grid and a tab strip
+          // alike.
+          const span = (item.props as { span?: number }).span;
+
           return (
             <Fragment key={index}>
-              <NodeRenderer node={item} />
+              {span ? (
+                <div className={cn("flex flex-col", SPAN_COLS[span])}>
+                  <NodeRenderer node={item} />
+                </div>
+              ) : (
+                <NodeRenderer node={item} />
+              )}
             </Fragment>
           );
         }

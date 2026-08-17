@@ -9,6 +9,10 @@ export interface WriteRequest<TData> {
   /** What to send. Defaults to nothing. */
   data?: RequestPayload | ((row: TData) => RequestPayload);
   method?: "patch" | "put" | "post" | "delete";
+  /** Reload only these props — a write beside a long list should not refetch it all. */
+  only?: string[];
+  /** Keep local component state (open search boxes, scroll inside a pane). */
+  preserveState?: boolean;
   /** Runs after the request succeeds. */
   onSuccess?: () => void;
 }
@@ -37,6 +41,11 @@ export function writeForRow<TData>(
   router[method](
     url,
     { ...data, ...extra },
-    { preserveScroll: true, onSuccess: request.onSuccess },
+    {
+      preserveScroll: true,
+      preserveState: request.preserveState,
+      only: request.only,
+      onSuccess: request.onSuccess,
+    },
   );
 }

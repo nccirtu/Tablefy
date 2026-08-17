@@ -15,7 +15,7 @@ export class Grid extends LayoutComponent {
     return {
       __tablefy: "node",
       type: "grid",
-      props: { columns: this.columnCount },
+      props: this.layoutProps({ columns: this.columnCount }),
       children: this.buildChildren(),
     };
   }
@@ -54,12 +54,12 @@ export class Section extends LayoutComponent {
     return {
       __tablefy: "node",
       type: "section",
-      props: {
+      props: this.layoutProps({
         title: this.sectionTitle,
         description: this.sectionDescription,
         collapsible: this.isCollapsible,
         collapsed: this.startCollapsed,
-      },
+      }),
       children: this.buildChildren(),
     };
   }

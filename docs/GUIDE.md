@@ -853,6 +853,35 @@ export default function ListUsers({ users, stats }) {
 
   Ohne diesen Platz im Header erscheint der Trail nirgends. Für Layouts ganz ohne Header:
   `<TablefyPage schema={page} inlineBreadcrumbs />` rendert ihn wieder oben auf der Seite.
+- **Spaltenbreite:** jeder Layout-Baustein kann `.span(n)` — wie viele Spalten des
+  umgebenden `Grid` er einnimmt. `Grid.make(1).span(8)` ist der Weg, eigene Komponenten
+  breit zu setzen, ohne sie in eine Card zu stecken:
+
+  ```tsx
+  Grid.make(12).schema([
+    Grid.make(1).span(8).schema([<TablefyTransfer … />]),
+    Grid.make(1).span(4).schema([<CardBody … bare />, Section.make("Details").schema([…])]),
+  ])
+  ```
+
+- **`<TablefyTransfer>`** (aus `/cards`) ist die Zuweisung zweier Listen: links was zugeordnet
+  werden kann, rechts was zugeordnet ist. Die Zeilen kommen aus einem `CardSchema` (sinnvoll:
+  `.compact()`), die Schaltfläche sitzt dort, wo sonst die Aktionen sitzen, und das Package
+  führt den Schreibvorgang selbst aus — die Seite sagt nur wohin:
+
+  ```tsx
+  <TablefyTransfer
+    schema={serviceRow}
+    available={allServices} assigned={category.services}
+    attach={{ url: (s) => update(s.id), data: () => ({ service_category_id: id }), only: ["assigned", "all"] }}
+    detach={{ url: (s) => update(s.id), data: () => ({ service_category_id: null }), only: ["assigned", "all"] }}
+  />
+  ```
+
+  `only` und `preserveState` gibt es an **jedem** deklarativen Schreibvorgang (auch
+  `ToggleColumn.patch`, `FlagColumn.patch`): neben einer langen Liste soll ein Schalter nicht
+  die ganze Seite nachladen.
+
 - Ein konditionales Element im `.schema([…])` (z.B. `hasStats && <TablefyStats … />`) wird sauber
   **übersprungen**, wenn es `false`/`null` ist — kein Crash.
 
