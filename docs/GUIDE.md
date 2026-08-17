@@ -191,7 +191,7 @@ ToggleColumn.make<Tax>("is_active")
 FlagColumn.make<Tax>("is_default")
   .label("Standard")
   .setLabel("Als Standard setzen")
-  .hidden((row) => row.readonly)         // weder Marker noch Aktion
+  .disabled((row) => row.readonly)       // weder Marker noch Aktion
   .patch((row) => TaxResource.routes.update(row.id), {
     data: () => ({ is_active: true }),   // was zusätzlich mitgeht
   })

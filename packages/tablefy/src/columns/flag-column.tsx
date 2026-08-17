@@ -11,7 +11,7 @@ interface FlagColumnConfig<TData> extends BaseColumnConfig<TData> {
   markedIcon?: string;
   setLabel?: string;
   write?: WriteRequest<TData>;
-  hiddenFn?: (row: TData) => boolean;
+  disabledFn?: (row: TData) => boolean;
 }
 
 /**
@@ -65,9 +65,13 @@ export class FlagColumn<TData> extends BaseColumn<
     return this;
   }
 
-  /** Rows that may not take the flag — they show neither marker nor action. */
-  hidden(fn: (row: TData) => boolean): this {
-    this.config.hiddenFn = fn;
+  /**
+   * Rows that may not take the flag — they show neither marker nor action.
+   * Same name and meaning as on ToggleColumn; `hidden()` stays what it is on
+   * every column, which is "leave this column out".
+   */
+  disabled(fn: (row: TData) => boolean): this {
+    this.config.disabledFn = fn;
     return this;
   }
 
@@ -79,7 +83,7 @@ export class FlagColumn<TData> extends BaseColumn<
       markedIcon = "check-circle",
       setLabel,
       write,
-      hiddenFn,
+      disabledFn,
     } = this.config;
     const key = accessor as string;
     const displayLabel = label || key;
@@ -110,7 +114,7 @@ export class FlagColumn<TData> extends BaseColumn<
           );
         }
 
-        if (hiddenFn?.(record) || !write || !setLabel) {
+        if (disabledFn?.(record) || !write || !setLabel) {
           return <span className="text-muted-foreground">—</span>;
         }
 
