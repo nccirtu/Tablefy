@@ -997,7 +997,11 @@ CardSchema.make<Category>()
   .plain()                                   // ohne Rahmen: Bild, Titel, Badges
   .image("image_url")
   .heading(TextColumn.make("name"))
-  .badges([{ label: (r) => `${r.count} Leistungen` }, { label: "System", variant: "outline" }])
+  .badges([
+    { label: (r) => `${r.count} Leistungen`, variant: "info" },
+    { label: (r) => r.isSystem ? "System" : "Individuell",
+      variant: (r) => r.isSystem ? "muted" : "success" },   // Variante darf vom Datensatz kommen
+  ])
   .href((r) => `/kategorien/${r.id}`)        // ganze Kachel verlinkt
 ```
 

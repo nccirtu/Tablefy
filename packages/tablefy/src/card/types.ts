@@ -2,11 +2,22 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { ActionItem } from "../columns/row-actions";
 import type { FilterConfig, HeaderAction, SearchConfig } from "../types";
 
+export type CardBadgeVariant =
+  | "default"
+  | "secondary"
+  | "outline"
+  | "destructive"
+  | "success"
+  | "warning"
+  | "info"
+  | "muted";
+
 /** A badge under the card heading. */
 export interface CardBadge<T extends Record<string, any>> {
   /** Text; a function receives the record. */
   label: string | ((record: T) => string | number | null | undefined);
-  variant?: "default" | "secondary" | "outline" | "destructive";
+  /** Fixed, or derived from the record — a badge often says *which* state. */
+  variant?: CardBadgeVariant | ((record: T) => CardBadgeVariant);
   /** Hide the badge for records it does not apply to. */
   hidden?: (record: T) => boolean;
 }

@@ -65,7 +65,8 @@ export function CardBody<T extends Record<string, any>>({
     heading || trailingEl || (imageVariant === "avatar" && imageUrl);
 
   return (
-    <div className={className}>
+    // Bare tiles space picture and text; a framed card lets its padding do it.
+    <div className={cn(bare && "flex flex-col gap-3", className)}>
       {imageVariant === "cover" && imageUrl && (
         <img
           src={imageUrl}
@@ -118,8 +119,13 @@ export function CardBody<T extends Record<string, any>>({
                   return null;
                 }
 
+                const variant =
+                  typeof badge.variant === "function"
+                    ? badge.variant(record)
+                    : badge.variant;
+
                 return (
-                  <Badge key={i} variant={badge.variant ?? "secondary"}>
+                  <Badge key={i} variant={variant ?? "secondary"}>
                     {label}
                   </Badge>
                 );
