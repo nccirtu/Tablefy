@@ -132,11 +132,11 @@ function TabsNode({ node }: { node: SchemaNode }) {
     setActive(value);
 
     const tab = tabs.find((candidate) => String(candidate.props.value) === value);
-    const lazy = tab?.props.lazy as string | undefined;
+    const lazy = tab?.props.lazy as string[] | undefined;
 
-    if (lazy && !loaded.includes(value)) {
+    if (lazy?.length && !loaded.includes(value)) {
       setLoaded((seen) => [...seen, value]);
-      router.reload({ only: [lazy] });
+      router.reload({ only: lazy });
     }
 
     if (queryKey) {

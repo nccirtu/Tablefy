@@ -64,9 +64,9 @@ export class RadioGroup<
         )}
       >
         {cfg.options.map((opt) => (
-          <div key={opt.value} className="flex items-center space-x-2">
+          <div key={String(opt.value)} className="flex items-center space-x-2">
             <RadioGroupItem
-              value={opt.value}
+              value={String(opt.value)}
               id={`${cfg.name}-${opt.value}`}
               disabled={opt.disabled}
               className={cn(error && "border-destructive")}

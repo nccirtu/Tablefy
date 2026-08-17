@@ -16,6 +16,11 @@ export interface ServerCardsProps<T extends Record<string, any>> {
   /** Inertia prop name returning `{ items, hasMore }` (match the backend). */
   prop?: string;
   /**
+   * Props to fetch along with this one — a picker the grid's form needs, say.
+   * They ride in the same request instead of costing a second one.
+   */
+  also?: string[];
+  /**
    * Query parameter carrying the page. Two grids on one screen need one each,
    * or paging in the first would page the second (match the backend).
    */
@@ -42,6 +47,7 @@ export function ServerCards<T extends Record<string, any>>({
   perPage = 12,
   loadMode = "button",
   prop = "cards",
+  also,
   pageParameter = "cards_page",
   perPageParameter = "cards_per_page",
   loadMoreLabel,
@@ -77,7 +83,7 @@ export function ServerCards<T extends Record<string, any>>({
       preserveState: true,
       preserveScroll: true,
       replace: true,
-      only: [prop],
+      only: [prop, ...(also ?? [])],
     });
   };
 
@@ -89,7 +95,7 @@ export function ServerCards<T extends Record<string, any>>({
   const fetchPage = (next: number, replace: boolean) => {
     setLoading(true);
     router.reload({
-      only: [prop],
+      only: [prop, ...(also ?? [])],
       data: { [pageParameter]: next, [perPageParameter]: perPage },
       preserveScroll: true,
       preserveState: true,

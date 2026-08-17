@@ -17,7 +17,8 @@ import {
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BaseField } from "./base-field";
 import { SelectConfig, SelectOption } from "../types/field";
@@ -30,6 +31,10 @@ import { FieldType, FieldRenderProps } from "../types/form";
  * inside the dialog's focus scope (typing/selection work). Outside a dialog it
  * portals to <body>. Values compare as strings (backend option values are
  * strings while a record's FK is a number).
+ *
+ * With `multiple` it keeps an array instead of one value: the chosen entries
+ * sit in the trigger as removable chips, the list stays open, and picking an
+ * entry that is already in toggles it back out.
  */
 function SelectCombobox({
   value,
@@ -39,22 +44,47 @@ function SelectCombobox({
   disabled,
   error,
   clearable,
+  multiple,
   className,
 }: {
-  value: string | number | null | undefined;
-  onChange: (value: string) => void;
+  value: string | number | Array<string | number> | null | undefined;
+  onChange: (value: string | Array<string | number>) => void;
   options: SelectOption[];
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;
   clearable?: boolean;
+  multiple?: boolean;
   className?: string;
 }): ReactNode {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
-  const current = value === null || value === undefined ? "" : String(value);
+
+  const chosen = multiple
+    ? (Array.isArray(value) ? value : []).map(String)
+    : [];
+  const current =
+    value === null || value === undefined || Array.isArray(value)
+      ? ""
+      : String(value);
   const selected = options.find((o) => String(o.value) === current);
+  const chosenOptions = chosen
+    .map((v) => options.find((o) => String(o.value) === v))
+    .filter((o): o is SelectOption => o !== undefined);
+
+  /** Adds or removes one entry, keeping the order the options come in. */
+  const toggle = (optValue: string) => {
+    const next = chosen.includes(optValue)
+      ? chosen.filter((v) => v !== optValue)
+      : [...chosen, optValue];
+
+    onChange(
+      options
+        .filter((o) => next.includes(String(o.value)))
+        .map((o) => o.value),
+    );
+  };
 
   const handleOpenChange = (next: boolean) => {
     if (next) {
@@ -77,13 +107,35 @@ function SelectCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal",
-            !selected && "text-muted-foreground",
+            "h-auto min-h-9 w-full justify-between font-normal",
+            !selected && chosenOptions.length === 0 && "text-muted-foreground",
             error && "border-destructive",
             className,
           )}
         >
-          {selected?.label ?? placeholder ?? "Select..."}
+          {multiple ? (
+            chosenOptions.length === 0 ? (
+              (placeholder ?? "Select...")
+            ) : (
+              <span className="flex flex-wrap gap-1 py-1 text-left">
+                {chosenOptions.map((opt) => (
+                  <Badge key={String(opt.value)} variant="secondary">
+                    {opt.label}
+                    <X
+                      className="ml-1 size-3 shrink-0"
+                      onClick={(event) => {
+                        // Take it out without opening the list.
+                        event.stopPropagation();
+                        toggle(String(opt.value));
+                      }}
+                    />
+                  </Badge>
+                ))}
+              </span>
+            )
+          ) : (
+            (selected?.label ?? placeholder ?? "Select...")
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -107,6 +159,13 @@ function SelectCombobox({
                     value={`${opt.label} ${optValue}`}
                     disabled={opt.disabled}
                     onSelect={() => {
+                      if (multiple) {
+                        // Stays open: picking several is the point.
+                        toggle(optValue);
+
+                        return;
+                      }
+
                       onChange(clearable && optValue === current ? "" : optValue);
                       setOpen(false);
                     }}
@@ -114,7 +173,9 @@ function SelectCombobox({
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        optValue === current ? "opacity-100" : "opacity-0",
+                        (multiple ? chosen.includes(optValue) : optValue === current)
+                          ? "opacity-100"
+                          : "opacity-0",
                       )}
                     />
                     {opt.label}
@@ -202,8 +263,9 @@ export class Select<
         ? cfg.options(data)
         : cfg.options;
 
-    // Searchable → shadcn combobox (Command + Popover).
-    if (cfg.searchable) {
+    // Searchable, or picking several — both want the combobox. The plain
+    // shadcn select holds exactly one value and has nowhere to put chips.
+    if (cfg.searchable || cfg.multiple) {
       return (
         <SelectCombobox
           value={value ?? ""}
@@ -213,6 +275,7 @@ export class Select<
           disabled={disabled}
           error={!!error}
           clearable={cfg.clearable}
+          multiple={cfg.multiple}
           className={cfg.className}
         />
       );
@@ -232,8 +295,8 @@ export class Select<
         <SelectContent>
           {resolvedOptions.map((opt) => (
             <SelectItem
-              key={opt.value}
-              value={opt.value}
+              key={String(opt.value)}
+              value={String(opt.value)}
               disabled={opt.disabled}
             >
               {opt.label}

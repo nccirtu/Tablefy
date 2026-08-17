@@ -92,7 +92,11 @@ export interface TextareaConfig<TData extends Record<string, any>>
 
 export interface SelectOption {
   label: string;
-  value: string;
+  /**
+   * A foreign key is a number, an enum a string — the field takes both and
+   * compares as string, which is what the rendered DOM works in anyway.
+   */
+  value: string | number;
   disabled?: boolean;
   group?: string;
   description?: string;

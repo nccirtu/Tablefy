@@ -82,7 +82,7 @@ export class Tab extends LayoutComponent {
 
   private tabBadge?: string | number;
 
-  private lazyProp?: string;
+  private lazyProps?: string[];
 
   static make(label: string, value?: string): Tab {
     const tab = new Tab();
@@ -103,9 +103,13 @@ export class Tab extends LayoutComponent {
     return this;
   }
 
-  /** Load this Inertia prop when the tab is first opened. */
-  lazy(prop: string): this {
-    this.lazyProp = prop;
+  /**
+   * Load these Inertia props when the tab is first opened. Usually one — the
+   * tab's list — but a tab whose form needs a picker names that prop too, so
+   * both arrive in the same request instead of the form opening empty.
+   */
+  lazy(...props: string[]): this {
+    this.lazyProps = props;
     return this;
   }
 
@@ -118,7 +122,7 @@ export class Tab extends LayoutComponent {
         label: this.tabLabel,
         icon: this.tabIcon,
         badge: this.tabBadge,
-        lazy: this.lazyProp,
+        lazy: this.lazyProps,
       },
       children: this.buildChildren(),
     };

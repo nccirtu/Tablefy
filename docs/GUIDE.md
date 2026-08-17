@@ -1066,6 +1066,22 @@ CardSchema.make<Service>()
 `<ServerCards>` nimmt zusätzlich `pageParameter` / `perPageParameter`: zwei Raster auf einem
 Screen brauchen je einen eigenen, sonst blättert das eine das andere mit.
 
+**Mehrfachauswahl.** `Select` konnte `.multiple()` schon sagen, gerendert wurde es nicht — jetzt
+schon: die Gewählten sitzen als entfernbare Chips im Auslöser, die Liste bleibt beim Klicken offen,
+ein zweiter Klick nimmt wieder heraus. Zusammen mit `.searchable()` ist das der Weg durch mehrere
+hundert Optionen:
+
+```tsx
+Select.make<BuildingType>("room_template_ids")
+  .options(rooms)          // value darf jetzt auch number sein (Fremdschlüssel!)
+  .multiple()
+  .searchable()
+```
+
+**`<ServerCards also={[…]}>`** lädt weitere Props in derselben Anfrage — etwa die Auswahlliste,
+die das Formular des Rasters braucht. Und `Tab.lazy()` nimmt mehrere Prop-Namen, für denselben
+Zweck beim Tabwechsel.
+
 **Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy-v2/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
 ```tsx
 import { CardSchema, CardRow } from "@nccirtu/tablefy-v2/card";

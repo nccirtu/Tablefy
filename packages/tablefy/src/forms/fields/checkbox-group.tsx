@@ -66,12 +66,12 @@ export class CheckboxGroup<
         )}
       >
         {cfg.options.map((opt) => (
-          <div key={opt.value} className="flex items-center space-x-2">
+          <div key={String(opt.value)} className="flex items-center space-x-2">
             <ShadcnCheckbox
               id={`${cfg.name}-${opt.value}`}
-              checked={selectedValues.includes(opt.value)}
+              checked={selectedValues.includes(String(opt.value))}
               onCheckedChange={(checked) =>
-                handleToggle(opt.value, !!checked)
+                handleToggle(String(opt.value), !!checked)
               }
               disabled={disabled || opt.disabled}
               className={cn(error && "border-destructive")}
