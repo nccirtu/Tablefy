@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -19,6 +19,10 @@ const badgeVariants = cva(
         warning: "border-transparent bg-amber-500 text-white",
         info: "border-transparent bg-sky-500 text-white",
         muted: "border-transparent bg-muted text-muted-foreground",
+        // Solides Grau mit weißer Schrift — die neutrale Markierung des
+        // Designs ("System", "Vorlage"). `muted` ist die *stille* Variante mit
+        // hellem Grund; diese hier soll gelesen werden.
+        neutral: "border-transparent bg-faint text-white",
       },
     },
     defaultVariants: { variant: "default" },

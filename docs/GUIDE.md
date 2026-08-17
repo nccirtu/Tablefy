@@ -1000,7 +1000,7 @@ CardSchema.make<Category>()
   .badges([
     { label: (r) => `${r.count} Leistungen`, variant: "info" },
     { label: (r) => r.isSystem ? "System" : "Individuell",
-      variant: (r) => r.isSystem ? "muted" : "success" },   // Variante darf vom Datensatz kommen
+      variant: (r) => r.isSystem ? "neutral" : "success" },  // Variante darf vom Datensatz kommen
   ])
   .href((r) => `/kategorien/${r.id}`)        // ganze Kachel verlinkt
 ```

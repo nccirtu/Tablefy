@@ -10,7 +10,8 @@ export type CardBadgeVariant =
   | "success"
   | "warning"
   | "info"
-  | "muted";
+  | "muted"
+  | "neutral";
 
 /** A badge under the card heading. */
 export interface CardBadge<T extends Record<string, any>> {
