@@ -73,6 +73,33 @@ export class CardSchema<T extends Record<string, any>> {
     return this;
   }
 
+  /**
+   * Compact list card: name over a subline on a tinted ground, no picture —
+   * what a catalogue of hundreds of entries needs.
+   */
+  compact(compact = true): this {
+    this.config.compact = compact;
+    return this;
+  }
+
+  /** The line under the heading on a compact card. */
+  subline(cell: CardCell): this {
+    this.config.subline = cell;
+    return this;
+  }
+
+  /** Group the grid, one heading per group. */
+  groupBy(fn: (record: T) => string): this {
+    this.config.groupBy = fn;
+    return this;
+  }
+
+  /** Mark a record with a corner flag. */
+  flagged(fn: (record: T) => boolean): this {
+    this.config.flagged = fn;
+    return this;
+  }
+
   // --- the header above the grid: same names as TableSchema ---
 
   title(text: string): this {

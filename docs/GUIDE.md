@@ -1008,6 +1008,21 @@ CardSchema.make<Category>()
   .href((r) => `/kategorien/${r.id}`)        // ganze Kachel verlinkt
 ```
 
+**Lange Kataloge: kompakt und gruppiert.** Wo ein Kachelraster unlesbar würde, trägt dasselbe
+Schema eine Listenform:
+
+```tsx
+CardSchema.make<Service>()
+  .compact()                                    // Name über Unterzeile, getönter Grund, kein Bild
+  .heading(TextColumn.make("name"))
+  .subline(TextColumn.make("description"))
+  .groupBy((s) => s.category_name ?? "Ohne Kategorie")   // je Gruppe eine Überschrift
+  .flagged((s) => !s.isSystem)                  // Eck-Markierung
+```
+
+`<ServerCards>` nimmt zusätzlich `pageParameter` / `perPageParameter`: zwei Raster auf einem
+Screen brauchen je einen eigenen, sonst blättert das eine das andere mit.
+
 **Card-Inhalt — geteiltes `CardSchema`** (`@nccirtu/tablefy-v2/card`): **dieselben Table-Column-Typen** als Zellen, angeordnet in Rows/Columns. Dasselbe Schema nutzen **Kanban-Cards UND Grid-Cards**.
 ```tsx
 import { CardSchema, CardRow } from "@nccirtu/tablefy-v2/card";

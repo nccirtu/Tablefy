@@ -15,6 +15,12 @@ export interface ServerCardsProps<T extends Record<string, any>> {
   loadMode?: "button" | "infinite";
   /** Inertia prop name returning `{ items, hasMore }` (match the backend). */
   prop?: string;
+  /**
+   * Query parameter carrying the page. Two grids on one screen need one each,
+   * or paging in the first would page the second (match the backend).
+   */
+  pageParameter?: string;
+  perPageParameter?: string;
   loadMoreLabel?: string;
   emptyText?: string;
   className?: string;
@@ -36,16 +42,18 @@ export function ServerCards<T extends Record<string, any>>({
   perPage = 12,
   loadMode = "button",
   prop = "cards",
+  pageParameter = "cards_page",
+  perPageParameter = "cards_per_page",
   loadMoreLabel,
   emptyText,
   className,
 }: ServerCardsProps<T>): ReactNode {
   const page = usePage();
 
-  // Reset when search/filters change (ignore the cards_page param itself).
+  // Reset when search/filters change (ignore this grid's own page param).
   const [path, queryStr] = page.url.split("?");
   const params = new URLSearchParams(queryStr ?? "");
-  params.delete("cards_page");
+  params.delete(pageParameter);
   const baseKey = `${path}?${params.toString()}`;
 
   // Search and filters live in the URL, exactly as the table's do — the
@@ -61,7 +69,7 @@ export function ServerCards<T extends Record<string, any>>({
 
   const navigate = (mutate: (next: URLSearchParams) => void) => {
     const next = new URLSearchParams(queryStr ?? "");
-    next.delete("cards_page");
+    next.delete(pageParameter);
     mutate(next);
 
     const query = next.toString();
@@ -82,7 +90,7 @@ export function ServerCards<T extends Record<string, any>>({
     setLoading(true);
     router.reload({
       only: [prop],
-      data: { cards_page: next, cards_per_page: perPage },
+      data: { [pageParameter]: next, [perPageParameter]: perPage },
       preserveScroll: true,
       preserveState: true,
       onSuccess: (visit: { props: Record<string, any> }) => {

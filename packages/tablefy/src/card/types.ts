@@ -59,6 +59,24 @@ export interface CardSchemaConfig<T extends Record<string, any>> {
   /** No frame: image, heading and badges only — a catalogue tile. */
   plain?: boolean;
 
+  /**
+   * Compact list card: name over a subline on a tinted ground, no picture.
+   * The shape a long catalogue uses where a tile grid would be unreadable.
+   */
+  compact?: boolean;
+
+  /** A line of text under the heading, on compact cards. */
+  subline?: CardCell;
+
+  /**
+   * Group the grid by this value; each group gets a heading. Sorting inside a
+   * group is whatever order the records arrive in.
+   */
+  groupBy?: (record: T) => string;
+
+  /** Marks a record with a corner flag — "not one of ours". */
+  flagged?: (record: T) => boolean;
+
   // The header above the grid — same vocabulary as TableSchema, so a screen
   // reads the same whether it shows a table or a grid.
   title?: string;

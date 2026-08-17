@@ -64,6 +64,40 @@ export function CardBody<T extends Record<string, any>>({
   const hasHeaderRow =
     heading || trailingEl || (imageVariant === "avatar" && imageUrl);
 
+  // Compact: name over a subline on a tinted ground, and a corner flag for a
+  // record that is not one of ours. No picture — a long catalogue reads as a
+  // list, not as a wall of images.
+  if (config.compact) {
+    return (
+      <div
+        className={cn(
+          "relative flex items-center gap-4 overflow-hidden rounded-md bg-detail-surface p-3 transition-shadow hover:shadow-md",
+          className,
+        )}
+      >
+        {config.flagged?.(record) && (
+          <span
+            aria-hidden="true"
+            className="absolute right-0 top-0 h-0 w-0 border-l-[22px] border-t-[22px] border-l-transparent border-t-success"
+          />
+        )}
+        <div className="min-w-0 grow space-y-1">
+          {heading && (
+            <p className="truncate text-xs font-medium leading-none">
+              {heading}
+            </p>
+          )}
+          {config.subline && (
+            <p className="truncate text-xs text-muted-foreground">
+              {renderCellValue(config.subline, record)}
+            </p>
+          )}
+        </div>
+        {trailingEl}
+      </div>
+    );
+  }
+
   return (
     // Bare tiles space picture and text; a framed card lets its padding do it.
     <div className={cn(bare && "flex flex-col gap-3", className)}>

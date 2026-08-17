@@ -59,8 +59,17 @@ export function TablefyCards<T extends Record<string, any>>({
   onFilterChange,
   onResetFilters,
 }: TablefyCardsProps<T>): ReactNode {
-  const { title, description, headerActions, search, filters, href, plain } =
-    schema.config;
+  const {
+    title,
+    description,
+    headerActions,
+    search,
+    filters,
+    href,
+    plain,
+    compact,
+    groupBy,
+  } = schema.config;
 
   // The same header the table draws — title and description left, search,
   // filters and the create button right — so a screen reads the same whether
@@ -120,6 +129,16 @@ export function TablefyCards<T extends Record<string, any>>({
       />
     );
 
+    if (compact) {
+      return href ? (
+        <Link key={getItemValue(record)} href={href(record)}>
+          {body}
+        </Link>
+      ) : (
+        <div key={getItemValue(record)}>{body}</div>
+      );
+    }
+
     if (plain) {
       return href ? (
         <Link
@@ -146,9 +165,26 @@ export function TablefyCards<T extends Record<string, any>>({
   return (
     <div className={className}>
       {header}
-      <div className={cn("grid gap-4", GRID_COLS[columns] ?? GRID_COLS[3])}>
-        {records.map((record) => tile(record))}
-      </div>
+      {groupBy ? (
+        // One heading per group, each with its own grid — the shape a long
+        // catalogue needs to stay findable.
+        <div className="space-y-8">
+          {groupRecords(records, groupBy).map(([group, rows]) => (
+            <div key={group}>
+              <h3 className="mb-4 text-lg font-semibold">{group}</h3>
+              <div
+                className={cn("grid gap-4", GRID_COLS[columns] ?? GRID_COLS[3])}
+              >
+                {rows.map((record) => tile(record))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={cn("grid gap-4", GRID_COLS[columns] ?? GRID_COLS[3])}>
+          {records.map((record) => tile(record))}
+        </div>
+      )}
 
       {hasMore && (
         <div ref={sentinel} className="mt-4 flex justify-center">
@@ -164,4 +200,22 @@ export function TablefyCards<T extends Record<string, any>>({
       )}
     </div>
   );
+}
+
+/** Records by group, in the order the groups first appear. */
+function groupRecords<T>(
+  records: T[],
+  groupBy: (record: T) => string,
+): Array<[string, T[]]> {
+  const groups = new Map<string, T[]>();
+
+  records.forEach((record) => {
+    const key = groupBy(record);
+    const bucket = groups.get(key);
+
+    if (bucket) bucket.push(record);
+    else groups.set(key, [record]);
+  });
+
+  return [...groups.entries()];
 }
