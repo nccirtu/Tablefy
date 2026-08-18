@@ -3,9 +3,33 @@ import React, { ReactNode, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Upload, X, File } from "lucide-react";
+import { getPageProps } from "../../dialog/store";
 import { BaseField } from "./base-field";
 import { FileUploadConfig } from "../types/field";
 import { FieldType, FieldRenderProps } from "../types/form";
+
+/**
+ * The largest file the server will actually take, in bytes.
+ *
+ * Shared by the host as `maxUploadSize` (in Laravel:
+ * `UploadedFile::getMaxFilesize()`, the smaller of upload_max_filesize and
+ * post_max_size). Offering more than that is how an upload ends up doing
+ * nothing: the file goes, PHP drops it, and the form has nothing to show.
+ */
+function serverLimit(): number | undefined {
+  const shared = getPageProps().maxUploadSize;
+
+  return typeof shared === "number" && shared > 0 ? shared : undefined;
+}
+
+/** "2 MB" rather than "2097152". */
+function formatBytes(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+
+  return mb >= 1
+    ? `${Math.round(mb * 10) / 10} MB`
+    : `${Math.round(bytes / 1024)} KB`;
+}
 
 export class FileUpload<
   TData extends Record<string, any>,
@@ -70,14 +94,26 @@ export class FileUpload<
 
     const files: File[] = Array.isArray(value) ? value : value ? [value] : [];
 
+    // Whichever is lower: what this field allows, or what the server takes.
+    // Saying nothing is the normal case — then the server's limit is the limit,
+    // and no screen has to know a number.
+    const limits = [cfg.maxSize, serverLimit()].filter(
+      (candidate): candidate is number => typeof candidate === "number",
+    );
+    const limit = limits.length > 0 ? Math.min(...limits) : undefined;
+
+    // A file over the limit is kept rather than dropped: it stays visible, it
+    // says why it will not do, and the reader can take it out. Dropping it
+    // silently is how an upload "does nothing" with nothing to read anywhere —
+    // and a message held in component state does not survive the form
+    // re-rendering around it.
+    const oversized = limit
+      ? files.find((file) => file.size > limit)
+      : undefined;
+
     const handleFiles = (fileList: FileList | null) => {
       if (!fileList) return;
       const newFiles = Array.from(fileList);
-
-      if (cfg.maxSize) {
-        const oversized = newFiles.find((f) => f.size > cfg.maxSize!);
-        if (oversized) return;
-      }
 
       if (cfg.multiple) {
         const combined = [...files, ...newFiles].slice(0, cfg.maxFiles);
@@ -120,19 +156,21 @@ export class FileUpload<
         >
           <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Drag & drop or{" "}
+            Datei hierher ziehen oder{" "}
             <button
               type="button"
               className="text-primary underline"
               onClick={() => inputRef.current?.click()}
               disabled={disabled}
             >
-              browse
+              auswählen
             </button>
           </p>
-          {cfg.accept && (
+          {(cfg.accept || limit) && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Accepted: {cfg.accept}
+              {[cfg.accept, limit ? `max. ${formatBytes(limit)}` : null]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           )}
           <input
@@ -145,6 +183,13 @@ export class FileUpload<
             disabled={disabled}
           />
         </div>
+
+        {oversized && limit && (
+          <p data-field-error className="text-sm text-destructive">
+            {oversized.name} ist {formatBytes(oversized.size)} groß — erlaubt
+            sind {formatBytes(limit)}.
+          </p>
+        )}
 
         {files.length > 0 && (
           <ul className="space-y-1">

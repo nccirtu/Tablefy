@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode, useMemo, useCallback, useRef } from "react";
+import React, { ReactNode, useMemo, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FormBuildResult, BuiltField } from "../types/form";
@@ -40,6 +40,20 @@ export function FormRenderer<TData extends Record<string, any>>({
   operation,
 }: FormRendererProps<TData>): ReactNode {
   const { fields, config } = schema;
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // A form long enough to scroll can fail entirely below the fold: the request
+  // comes back, nothing visibly happens, and the message sits behind the
+  // footer. Bring the first failing field to the reader instead.
+  const errorCount = Object.keys(errors).length;
+
+  useEffect(() => {
+    if (errorCount === 0) return;
+
+    formRef.current
+      ?.querySelector("[data-field-error]")
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [errorCount, errors]);
 
   const fieldByName = useMemo(() => {
     const map: Record<string, BuiltField<TData>> = {};
@@ -244,7 +258,7 @@ export function FormRenderer<TData extends Record<string, any>>({
 
   return (
     <TablefyDataContext.Provider value={external ?? {}}>
-      {content}
+      <div ref={formRef}>{content}</div>
     </TablefyDataContext.Provider>
   );
 }

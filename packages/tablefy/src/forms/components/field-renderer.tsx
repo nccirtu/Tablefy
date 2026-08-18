@@ -98,7 +98,13 @@ export function FieldRenderer<TData extends Record<string, any>>({
         data,
         external,
       })}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        // Marked so the form can bring the first failing field into view — a
+        // message below the fold is a message nobody reads.
+        <p data-field-error className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {!error && !skipHelper && field.config.helperText && (
         <p className="text-sm text-muted-foreground">
           {field.config.helperText}

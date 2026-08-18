@@ -1066,6 +1066,17 @@ CardSchema.make<Service>()
 `<ServerCards>` nimmt zusätzlich `pageParameter` / `perPageParameter`: zwei Raster auf einem
 Screen brauchen je einen eigenen, sonst blättert das eine das andere mit.
 
+**Datei-Upload.** `FileUpload` deckelt sich selbst: der Host teilt `maxUploadSize` als Prop mit
+(in Laravel `UploadedFile::getMaxFilesize()` — das Kleinere aus `upload_max_filesize` und
+`post_max_size`), das Feld zeigt die Grenze an und meldet eine zu große Datei, statt sie
+stillschweigend fallen zu lassen. Die Seite gibt **keine** Zahl vor:
+
+```tsx
+FileUpload.make<BuildingType>("image").label("Bild").image().required()
+```
+
+`.maxSize(n)` gibt es weiterhin — als Übersteuerung nach unten, nie nach oben.
+
 **Mehrfachauswahl.** `Select` konnte `.multiple()` schon sagen, gerendert wurde es nicht — jetzt
 schon: die Gewählten sitzen als entfernbare Chips im Auslöser, die Liste bleibt beim Klicken offen,
 ein zweiter Klick nimmt wieder heraus. Zusammen mit `.searchable()` ist das der Weg durch mehrere
